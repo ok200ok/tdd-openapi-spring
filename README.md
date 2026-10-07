@@ -36,11 +36,36 @@
 
 ## 🗺 開発ロードマップ
 
-| ステップ | フェーズ | 概要 |
-| :--- | :--- | :--- |
-| **1** | **環境構築とテスト基盤の準備** | `Spring Boot` プロジェクトの初期化。依存関係の整理と `Testcontainers` を用いた `PostgreSQL` コンテナ接続テストの成功 |
-| **2** | **データ層（`JPA`）の実装** | `@DataJpaTest` と `Testcontainers` を用いて `User` および `Todo` の `Repository` テストを記述し、`Entity` と `Repository` を実装してテストをパスさせる |
-| **3** | **ドメイン・ビジネスロジック層の実装** | `JUnit 5` と `Mockito` を使い、`UserService` および `TodoService` の高速単体テストを記述。データ検証・ビジネスロジックを実装 |
-| **4** | **`JWT` 認証・認可基盤の構築** | `Spring Security` を導入。認証・認可用フィルターと `JWT` 発行・検証ロジックのテストを書き、ログイン `API` を実装 |
-| **5** | **API層（`Controller`）と `OpenAPI`** | `@WebMvcTest` で認証保護された `API` リクエスト/レスポンスのテストを記述。`Controller`・`DTO`（`record`）を実装し、`Swagger UI` で動作確認 |
-| **6** | **結合テストと総仕上げ** | `@SpringBootTest` で `DB` から `API` エンドポイントまで一気通貫の結合テストを実施。動作確認とドキュメント整備 |
+### 🟩 Step 1: 環境構築とテスト基盤の準備
+- [x] `Git` リポジトリ初期化・`.github/copilot-instructions.md` および `README.md` の作成
+- [ ] `build.gradle` の依存関係（`Spring Boot Starter`, `PostgreSQL`, `Testcontainers`, `Lombok` 等）の確認・追加
+- [ ] `Docker Desktop` の起動確認と `Testcontainers` の仕組み理解
+- [ ] `Testcontainers` を用いた `PostgreSQL` 接続確認テストの作成と実行（`GREEN` 確認）
+
+### 🟩 Step 2: データ層（`JPA` / `Repository`）の `TDD` 実装
+- [ ] `JPA` エンティティと `Repository`（`Spring Data JPA`）の役割理解
+- [ ] `User` エンティティおよび `UserRepository` のテスト作成（`@DataJpaTest` + `Testcontainers`）（`RED`）
+- [ ] `User` エンティティおよび `UserRepository` の実装（`GREEN`）
+- [ ] `Todo` エンティティ（`@ManyToOne` リレーション含む）および `TodoRepository` のテスト作成（`RED`）
+- [ ] `Todo` エンティティおよび `TodoRepository` の実装（`GREEN`）
+
+### 🟩 Step 3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
+- [ ] `Mockito` を用いたモック化（`@Mock`, `@InjectMocks`）と単体テスト手法の理解
+- [ ] `UserService` の単体テスト作成（`RED`）と実装（`GREEN`）
+- [ ] `TodoService` の `CRUD` 単体テスト作成（`RED`）と実装（`GREEN`）
+
+### 🟩 Step 4: `JWT` 認証・認可基盤の構築
+- [ ] `Spring Security` のフィルターチェーンとステートレス認証（`JWT`）の仕組み理解
+- [ ] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
+- [ ] ログイン `API` および `AuthenticationFilter` の実装と動作検証
+
+### 🟩 Step 5: API層（`Controller`）と `OpenAPI` の `TDD` 実装
+- [ ] `Java 21` の `record`（`DTO`）定義と `Validation`（入力バリデーション）の整理
+- [ ] `@WebMvcTest` と `MockMvc` を用いた `UserController` / `AuthController` のテスト作成（`RED`）と実装（`GREEN`）
+- [ ] 認証保護された `TodoController` のテスト作成（`RED`）と実装（`GREEN`）
+- [ ] `springdoc-openapi` による `Swagger UI` ドキュメント生成とブラウザでの動作検証
+
+### 🟩 Step 6: 結合テスト（`Integration Test`）と総仕上げ
+- [ ] `@SpringBootTest` + `Testcontainers` による一気通貫エンドツーエンドテストの作成・実行
+- [ ] `./gradlew test` による全テストスイートの一括実行確認
+- [ ] 最終コードレビューとドキュメント整理
