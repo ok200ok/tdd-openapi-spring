@@ -30,41 +30,63 @@
 このプロジェクトは学習目的のため、ローカル環境での実行・テスト検証を中心としています。
 
 * **`Java 21`** のインストール
-* **`Docker Desktop`** の起動（`Testcontainers` を用いたテスト実行に必須）
-* **`GitHub Copilot`** エージェントが利用可能な `IDE`（`Eclipse` 等）
+* **`Docker Desktop`** の起動（開発用PostgreSQLおよび`Testcontainers`に必須）
+* **`GitHub Copilot`** エージェントが利用可能な `IDE`（`Zed` 等）
+
+## 🐘 ローカル開発用データベース
+
+開発時のPostgreSQLはDocker Composeで起動し、名前付きvolumeにデータを保持します。アプリケーション自体はローカルで実行します。テスト時は開発用DBを共有せず、Testcontainersが独立したPostgreSQLコンテナを起動します。
+
+```powershell
+docker compose up -d --wait
+docker compose ps
+mise exec -- .\gradlew.bat bootRun
+```
+
+アプリはホスト側ポート `localhost:5433` 経由で `api_todo` データベースに接続します（コンテナ内ポートは5432）。ホスト側5432番はローカルPostgreSQLサーバーとの競合を避けるため5433番にしています。ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。本番環境の認証情報として使用しないでください。
+
+pgAdminから接続する場合は、新しいサーバー接続を登録し、Hostに `127.0.0.1`、Portに `5433`、Maintenance databaseに `api_todo`、Usernameに `api_todo` を指定します。pgAdminは接続クライアントであり、PostgreSQLサーバーとは別のものです。
+
+```powershell
+docker compose down
+```
+
+`down` はコンテナを停止・削除しますが、DBデータはvolumeに残ります。データも削除する場合に限り `docker compose down -v` を実行してください。
 
 ## 🗺 開発ロードマップ
 
-### Step 1: 環境構築とテスト基盤の準備
+### Section1: 環境構築とテスト基盤の準備
 - [x] `Git` リポジトリ初期化・`.github/copilot-instructions.md` および `README.md` の作成
-- [ ] `build.gradle` の依存関係（`Spring Boot Starter`, `PostgreSQL`, `Testcontainers`, `Lombok` 等）の確認・追加
-- [ ] `Docker Desktop` の起動確認と `Testcontainers` の仕組み理解
-- [ ] `Testcontainers` を用いた `PostgreSQL` 接続確認テストの作成と実行（`GREEN` 確認）
+- [x] `build.gradle` の依存関係（`Spring Boot Starter`, `PostgreSQL`, `Testcontainers`, `Lombok` 等）の確認・追加
+- [x] `Docker Desktop` の起動確認と `Testcontainers` の仕組み理解
+- [x] `Testcontainers` を用いた `PostgreSQL` 接続確認テストの作成と実行（`GREEN` 確認）
+- [x] Docker Composeによる開発用`PostgreSQL`と永続volumeの構成
+- [x] 開発用DBの起動、アプリ接続、および停止後のデータ永続化確認
 
-### Step 2: データ層（`JPA` / `Repository`）の `TDD` 実装
+### Section2: データ層（`JPA` / `Repository`）の `TDD` 実装
 - [ ] `JPA` エンティティと `Repository`（`Spring Data JPA`）の役割理解
 - [ ] `User` エンティティおよび `UserRepository` のテスト作成（`@DataJpaTest` + `Testcontainers`）（`RED`）
 - [ ] `User` エンティティおよび `UserRepository` の実装（`GREEN`）
 - [ ] `Todo` エンティティ（`@ManyToOne` リレーション含む）および `TodoRepository` のテスト作成（`RED`）
 - [ ] `Todo` エンティティおよび `TodoRepository` の実装（`GREEN`）
 
-### Step 3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
+### Section3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
 - [ ] `Mockito` を用いたモック化（`@Mock`, `@InjectMocks`）と単体テスト手法の理解
 - [ ] `UserService` の単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] `TodoService` の `CRUD` 単体テスト作成（`RED`）と実装（`GREEN`）
 
-### Step 4: `JWT` 認証・認可基盤の構築
+### Section4: `JWT` 認証・認可基盤の構築
 - [ ] `Spring Security` のフィルターチェーンとステートレス認証（`JWT`）の仕組み理解
 - [ ] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] ログイン `API` および `AuthenticationFilter` の実装と動作検証
 
-### Step 5: API層（`Controller`）と `OpenAPI` の `TDD` 実装
+### Section5: API層（`Controller`）と `OpenAPI` の `TDD` 実装
 - [ ] `Java 21` の `record`（`DTO`）定義と `Validation`（入力バリデーション）の整理
 - [ ] `@WebMvcTest` と `MockMvc` を用いた `UserController` / `AuthController` のテスト作成（`RED`）と実装（`GREEN`）
 - [ ] 認証保護された `TodoController` のテスト作成（`RED`）と実装（`GREEN`）
 - [ ] `springdoc-openapi` による `Swagger UI` ドキュメント生成とブラウザでの動作検証
 
-### Step 6: 結合テスト（`Integration Test`）と総仕上げ
+### Section6: 結合テスト（`Integration Test`）と総仕上げ
 - [ ] `@SpringBootTest` + `Testcontainers` による一気通貫エンドツーエンドテストの作成・実行
 - [ ] `./gradlew test` による全テストスイートの一括実行確認
 - [ ] 最終コードレビューとドキュメント整理
