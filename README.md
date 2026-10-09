@@ -62,6 +62,8 @@ docker compose down
 - [x] `Testcontainers` を用いた `PostgreSQL` 接続確認テストの作成と実行（`GREEN` 確認）
 - [x] Docker Composeによる開発用`PostgreSQL`と永続volumeの構成
 - [x] 開発用DBの起動、アプリ接続、および停止後のデータ永続化確認
+- [ ] GitHub ActionsによるCIパイプラインの構築（作業ブランチへのpushと`main`向けPRでGradleテストおよびTestcontainersを実行し、GitHub上で成功・失敗を確認）
+- [ ] `main`ブランチの保護と必須CIチェックの設定（PR経由のマージを必須化し、CI成功がマージ条件になることを確認）
 
 ### Section2: データ層（`JPA` / `Repository`）の `TDD` 実装
 - [ ] `JPA` エンティティと `Repository`（`Spring Data JPA`）の役割理解

@@ -1,0 +1,50 @@
+# リポジトリのActionsタブやプルリクエストに表示するワークフロー名。
+name: CI
+
+# すべてのブランチへのpushで実行する。
+# main向けのプルリクエストも検証する。openedは作成時、synchronizeは追加push時、reopenedは再オープン時にそれぞれチェックを実行する。
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+# GITHUB_TOKENにはリポジトリの読み取りに必要な権限だけを与える。テストではパッケージ公開やリポジトリ内容の変更を行わない。
+permissions:
+  contents: read
+
+# ワークフロー名とブランチ／プルリクエストの参照先で実行をグループ化する。同じ参照先で新しいコミットの実行が始まったら、古い実行をキャンセルする。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Java 21)
+    # GitHubホストランナーは毎回新しい環境で、開発用Compose DBを起動しなくてもTestcontainersが利用するDockerを使用できる。
+    runs-on: ubuntu-latest
+    # ビルドが停止したままランナー時間を使い続けないよう、実行時間に上限を設ける。
+    timeout-minutes: 15
+    steps:
+      # ワークフローを起動したコミットをランナーの作業領域へ取得する。
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      # ローカル開発と同じJavaメジャーバージョンをインストールする。
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Gradleを設定し、ワークフロー実行間で依存関係をキャッシュする。実際に使用するGradleのバージョンは、引き続きプロジェクトのWrapperが決める。
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Testcontainersを使うテストを含め、プロジェクトのJUnitテストを実行する。
+      - name: Run tests
+        run: ./gradlew test
