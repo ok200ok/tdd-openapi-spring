@@ -1,3 +1,4 @@
+// Spring Bootアプリの実行・依存関係管理とJavaプラグインを適用する
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.1.1'
@@ -7,16 +8,19 @@ plugins {
 group = 'com.github.200okmk'
 version = '0.0.1-SNAPSHOT'
 
+// JavaのコンパイルとツールチェーンにJava 21を要求する
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
+// アプリケーションとテストで使用するライブラリを取得するリポジトリ
 repositories {
 	mavenCentral()
 }
 
+// アプリ本体で使用するWeb、JPA、入力検証、PostgreSQL関連の依存関係
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -25,6 +29,7 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
+	// テスト用Spring Boot連携、JUnit/Testcontainers、PostgreSQLコンテナの依存関係
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
@@ -36,6 +41,7 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
+// JUnit Platform上でJUnit 5のテストを実行する
 tasks.named('test') {
 	useJUnitPlatform()
 }

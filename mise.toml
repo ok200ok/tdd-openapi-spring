@@ -1,2 +1,3 @@
+# プロジェクト内で使用するJDKをTemurinのJava 21に揃える
 [tools]
 java = "temurin-21"

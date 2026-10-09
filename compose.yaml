@@ -1,14 +1,20 @@
+# ローカル開発時にアプリが接続するPostgreSQLを起動する
 services:
   postgres:
+    # テスト用Testcontainersと同じPostgreSQL 17系を使う
     image: postgres:17-alpine
+    # 以下の認証情報はローカル学習専用で、本番環境では使用しない
     environment:
       POSTGRES_DB: api_todo
       POSTGRES_USER: api_todo
       POSTGRES_PASSWORD: api_todo_dev
+    # ホスト側5432番をコンテナ内5432番へ転送する
     ports:
       - "5432:5432"
+    # コンテナを作り直してもDBデータを保持する名前付きvolume
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # PostgreSQLが接続を受け付ける状態になってからhealthyとする
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U api_todo -d api_todo"]
       interval: 5s
@@ -16,4 +22,5 @@ services:
       retries: 10
 
 volumes:
+  # Composeの停止・再作成後もDBデータを保持する
   postgres_data:

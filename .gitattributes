@@ -1,3 +1,6 @@
+# Unix系環境でもGradle Wrapperを実行できるよう、LF改行を維持する
 /gradlew text eol=lf
+# Windows用バッチファイルはCRLF改行に統一する
 *.bat text eol=crlf
+# JARはテキスト改行変換の対象にしない
 *.jar binary

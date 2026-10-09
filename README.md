@@ -1,37 +1,39 @@
 # `OpenAPI` 実装 ＆ テスト駆動開発
 
-テスト駆動開発（`TDD`）とベストプラクティスに基づいた実践的な `REST API` を構築するための学習用プロジェクトです。`OpenAPI`（`Swagger UI`）の自動生成や `JWT` を用いたステートレスな認証・認可機能を備えた `Todo` 管理バックエンドを構築します。
-
 ## 🎯 学習目標
 
-このプロジェクトを通して以下のスキルと知識を習得します。
+このプロジェクトを通して以下のスキルと知識の習得を目指す
 
-* **`Spring Framework` / `Spring Boot 4.x`**: ベストプラクティスに沿ったディレクトリ設計と各種アノテーションの実践的な活用
-* **`Spring Data JPA` & `Hibernate`**: `Java` のデファクトスタンダードである `ORM` を用いたデータベース操作
-* **自動テストと `TDD`（テスト駆動開発）**: `JUnit 5`, `Mockito`, `Testcontainers` を活用し、テストから実装を進める開発サイクルの習得
-* **`OpenAPI` / `Swagger`**: コードファースト（`springdoc-openapi`）による `API` 仕様書の自動生成と、`Java 21` の `record`（`DTO`）を用いた適切なデータ隠蔽
-* **認証・認可**: `Spring Security` を用いた `JWT`（`JSON Web Token`）ベースのステートレスな認証機構の構築
-* **`AI` 駆動開発**: `Eclipse IDE` 内で `GitHub Copilot` エージェントを活用したシームレスな開発手法の確立
+- **自動テストとテスト駆動開発**: `JUnit 5`, `Mockito`の使用、 `Testcontainers` によるテスト専用分離環境の構築
+- **AI駆動開発**: `AGENTS.md`によるエージェント制御、各`/`コマンド使い分けの実践（今回は `GitHub Copilot` Freeプランを使用）
+- **迅速な環境構築**: `Mise`による言語バージョン統一（`Java 21`）、`Docker Compose`による開発用DBとテスト用DBの立ち上げ
+- **CIとリポジトリ安全性**: リモートリポジトリに対して`Github Actions`によるCI、`main`ブランチ保護ルールセット策定などで安全性を確保
+- **`Spring Framework` / `Spring Boot 4.x`**: ベストプラクティスに沿ったレイヤードアーキテクチャ、ディレクトリ設計、各種アノテーション
+- **`Spring Data JPA`仕様 と `Hibernate`**: `Spring` においてよりデファクトであるらしい `Hibernate`を用いたデータベース操作（MyBatisORMは学習済みのため）
+- **`OpenAPI` / `Swag5ger`**: コードファースト（`springdoc-openapi`）による `API` 仕様ドキュメントサイトの自動生成と、の `record`（`DTO`）を用いた適切なデータ隠蔽
+- **認証・認可**: `Spring Security` モジュールで `JWT`（`JSON Web Token`）ベースのステートレスな認証機構の構築
 
 ## 🛠 技術スタック
 
-* **言語**: `Java 21`
-* **フレームワーク**: `Spring Boot 4.x`
-* **ビルドツール**: `Gradle` (`Groovy`)
-* **データベース**: `PostgreSQL` (開発環境)
-* **ORM**: `Spring Data JPA` (`Hibernate`)
-* **APIドキュメント**: `springdoc-openapi` (`Swagger UI`)
-* **セキュリティ**: `Spring Security` (`JWT`)
-* **テスト**: `JUnit 5`, `Mockito`, `Testcontainers`
-* **その他**: `Lombok`, `Spring Boot DevTools`, `Validation`
+- **言語**: `Java 21`
+- **フレームワーク**: `Spring Boot 4.x`
+- **ビルドツール**: `Gradle` (`Groovy`)
+- **DB**: `Docker Compose`, `PostgreSQL` (開発環境とテスト環境)
+- **ORM**: `Spring Data JPA` (`Hibernate`)
+- **APIドキュメント**: `springdoc-openapi` (`Swagger UI`)
+- **認証**: `Spring Security` (`JWT`)
+- **テスト**: `JUnit 5`, `Mockito`, `Testcontainers`
+- **CI**: `Github Actions`
+- **その他**: `Lombok`, `Spring Boot DevTools`, `Validation`
+- **コーディングエージェント**: `GitHub Copilot`
 
 ## 📋 前提条件 (Prerequisites)
 
 このプロジェクトは学習目的のため、ローカル環境での実行・テスト検証を中心としています。
 
-* **`Java 21`** のインストール
-* **`Docker Desktop`** の起動（開発用PostgreSQLおよび`Testcontainers`に必須）
-* **`GitHub Copilot`** エージェントが利用可能な `IDE`（`Zed` 等）
+- **`Java 21`** のインストール
+- **`Docker Desktop`** の起動（開発用PostgreSQLおよび`Testcontainers`に必須）
+- **`GitHub Copilot`** エージェントが利用可能な `IDE`（`Zed` 等）
 
 ## 🐘 ローカル開発用データベース
 
@@ -62,8 +64,8 @@ docker compose down
 - [x] `Testcontainers` を用いた `PostgreSQL` 接続確認テストの作成と実行（`GREEN` 確認）
 - [x] Docker Composeによる開発用`PostgreSQL`と永続volumeの構成
 - [x] 開発用DBの起動、アプリ接続、および停止後のデータ永続化確認
-- [ ] GitHub ActionsによるCIパイプラインの構築（作業ブランチへのpushと`main`向けPRでGradleテストおよびTestcontainersを実行し、GitHub上で成功・失敗を確認）
-- [ ] `main`ブランチの保護と必須CIチェックの設定（PR経由のマージを必須化し、CI成功がマージ条件になることを確認）
+- [x] GitHub ActionsによるCIパイプラインの構築（作業ブランチへのpushと`main`向けPRでGradleテストおよびTestcontainersを実行し、GitHub上で成功・失敗を確認）
+- [ ] `main`ブランチの保護と必須CIチェックの設定（リポジトリをPublicにするまではルール有効かができないため保留）
 
 ### Section2: データ層（`JPA` / `Repository`）の `TDD` 実装
 - [ ] `JPA` エンティティと `Repository`（`Spring Data JPA`）の役割理解
