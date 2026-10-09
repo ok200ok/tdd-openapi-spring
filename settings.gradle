@@ -1,1 +1,2 @@
+// Gradle上で表示・参照するルートプロジェクト名
 rootProject.name = 'api-todo'

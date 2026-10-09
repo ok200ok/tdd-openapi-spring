@@ -1,3 +1,10 @@
 spring:
   application:
     name: api-todo
+  # 環境変数が設定されていない場合はローカルCompose DBへ接続する
+  datasource:
+    # 環境ごとの接続先に切り替えられるよう環境変数とローカル既定値を用意する
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/api_todo}
+    username: ${DB_USERNAME:api_todo}
+    # この既定パスワードはローカル学習用で、本番では必ず環境変数等で上書きする
+    password: ${DB_PASSWORD:api_todo_dev}

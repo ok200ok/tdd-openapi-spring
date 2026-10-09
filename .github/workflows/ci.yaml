@@ -1,0 +1,49 @@
+# リポジトリのActionsタブやプルリクエストに表示するワークフロー名
+name: CI
+
+# すべてのブランチへのpushとmain向けプルリクエストでCIを実行し、作成・追加push・再オープン時にも検証する
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+# テストに必要なリポジトリ読み取り権限だけをGITHUB_TOKENに与える
+permissions:
+  contents: read
+
+# 同じブランチやプルリクエストへの新しい実行が始まったら古い実行をキャンセルする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Java 21)
+    # GitHubホストランナーのDockerを使い、開発用Compose DBとは分離してTestcontainersを実行する
+    runs-on: ubuntu-latest
+    # CIが停止したままランナー時間を消費しないよう15分で打ち切る
+    timeout-minutes: 15
+    steps:
+      # CIを起動したコミットをランナーの作業領域へ取得する
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      # ローカル開発と同じJava 21をTemurinディストリビューションで用意する
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Gradle依存関係を実行間でキャッシュし、実際のGradleバージョンはプロジェクトのWrapperに任せる
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Testcontainersを使うテストを含め、プロジェクトのJUnitテストを実行する
+      - name: Run tests
+        run: ./gradlew test

@@ -1,3 +1,4 @@
+# Gradleのキャッシュや生成物はリポジトリに含めない
 HELP.md
 .gradle
 build/
@@ -5,7 +6,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### STS ###
+# Eclipse/STSが生成する個人環境の設定や一時ファイルは共有しない
 .apt_generated
 .classpath
 .factorypath
@@ -17,7 +18,7 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA固有のワークスペース設定やビルド生成物は共有しない
 .idea
 *.iws
 *.iml
@@ -26,12 +27,12 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### NetBeans ###
+# NetBeans固有の個人設定やビルド生成物は共有しない
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
+# VS Code固有の個人設定は共有しない
 .vscode/
