@@ -49,7 +49,9 @@ mise install
 
 4. その後、[シェルでmiseを有効化](https://mise.jdx.dev/getting-started.html#activate-mise)します。
 
-## 🐘 開発用のDBとSpringサーバ起動方法
+## 🚀 起動方法
+
+### 🐋 開発用DB
 
 開発時のPostgreSQLはDocker Composeで起動し、名前付きvolumeにデータを保持します。アプリケーション自体はローカルで実行します。テスト時は開発用DBを共有せず、Testcontainersが独立したPostgreSQLコンテナを起動します。
 
@@ -60,25 +62,29 @@ docker compose up -d --wait
 docker compose ps
 ```
 
-アプリケーションはリポジトリのルートディレクトリから起動します。miseをシェルで有効化済みなら、プロジェクト内で選択されるJava 21を使って次のコマンドを実行できます。
-
-↓macOS / Linuxなら、
-```sh
-./gradlew bootRun
-```
-
-↓Windowsなら、
-```powershell
-.\gradlew.bat bootRun
-```
-
-いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
+コンテナ終了は
 
 ```
 docker compose down
 ```
 
 `down` はコンテナを停止・削除しますが、DBデータはvolumeに残ります。データも削除する場合に限り `docker compose down -v` を実行してください。
+
+### 🐘 開発用Springサーバー
+
+miseをシェルで有効化済みなら、`mise exec --`を省略できるので、
+
+↓macOS / Linuxなら
+```sh
+./gradlew bootRun
+```
+
+↓Windowsなら
+```powershell
+.\gradlew.bat bootRun
+```
+
+いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
 
 ## 🗺 開発ロードマップ
 
