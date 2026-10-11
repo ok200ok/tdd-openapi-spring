@@ -31,21 +31,48 @@
 
 このプロジェクトは学習目的のため、ローカル環境での実行・テスト検証を中心としています。
 
-- **`Java 21`** のインストール
-- **`Docker Desktop`** の起動（開発用PostgreSQLおよび`Testcontainers`に必須）
-- **`GitHub Copilot`** エージェントが利用可能な `IDE`（`Zed` 等）
+- **`mise` CLI**（Java 21の導入とバージョン管理に使用）
+- **Dockerクライアント** の起動（`Docker Desktop`や`OrbStack`など。開発用PostgreSQLおよび`Testcontainers`による分離テスト環境に必須）
 
-## 🐘 ローカル開発用データベース
+## ☕ MiseによるJava環境の準備
+
+このプロジェクトでは `mise.toml` でJava 21（Temurin）を指定しています。初回は次の手順でmiseとプロジェクト指定のJavaを準備してください。
+
+1. [mise公式ドキュメント](https://mise.jdx.dev/getting-started.html)に従ってmise CLIをインストールします
+2. リポジトリをクローンし、プロジェクトのルートディレクトリへ移動します
+3. `mise.toml` の内容を確認してから、下記コマンドで特定バージョンの言語やツールをインストールします
+
+```sh
+mise install
+```
+> ”既にmise.tomlファイルが存在するプロジェクトに参加する場合、まずmiseをインストールし、プロジェクトのmise.tomlファイルを読み、次にプロジェクトディレクトリでmise installを実行します。”
+
+4. その後、[シェルでmiseを有効化](https://mise.jdx.dev/getting-started.html#activate-mise)します。
+
+## 🐘 開発用のDBとSpringサーバ起動方法
 
 開発時のPostgreSQLはDocker Composeで起動し、名前付きvolumeにデータを保持します。アプリケーション自体はローカルで実行します。テスト時は開発用DBを共有せず、Testcontainersが独立したPostgreSQLコンテナを起動します。
+
+ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。**本番環境の認証情報として使用しないでください**
 
 ```
 docker compose up -d --wait
 docker compose ps
-mise exec -- .\gradlew.bat bootRun
 ```
 
-ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。本番環境の認証情報として使用しないでください。
+アプリケーションはリポジトリのルートディレクトリから起動します。miseをシェルで有効化済みなら、プロジェクト内で選択されるJava 21を使って次のコマンドを実行できます。
+
+↓macOS / Linuxなら、
+```sh
+./gradlew bootRun
+```
+
+↓Windowsなら、
+```powershell
+.\gradlew.bat bootRun
+```
+
+いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
 
 ```
 docker compose down
