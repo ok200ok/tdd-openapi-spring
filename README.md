@@ -39,17 +39,15 @@
 
 開発時のPostgreSQLはDocker Composeで起動し、名前付きvolumeにデータを保持します。アプリケーション自体はローカルで実行します。テスト時は開発用DBを共有せず、Testcontainersが独立したPostgreSQLコンテナを起動します。
 
-```powershell
+```
 docker compose up -d --wait
 docker compose ps
 mise exec -- .\gradlew.bat bootRun
 ```
 
-アプリはホスト側ポート `localhost:5432` 経由で `api_todo` データベースに接続します（コンテナ内ポートも5432）。ホスト側5432番が他のPostgreSQLサーバーに使われている場合は、競合するサーバーを停止するか、Composeと `application.yaml` のポートを同じ別番号に変更してください。ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。本番環境の認証情報として使用しないでください。
+ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。本番環境の認証情報として使用しないでください。
 
-pgAdminから接続する場合は、新しいサーバー接続を登録し、Hostに `127.0.0.1`、Portに `5432`、Maintenance databaseに `api_todo`、Usernameに `api_todo` を指定します。pgAdminは接続クライアントであり、PostgreSQLサーバーとは別のものです。
-
-```powershell
+```
 docker compose down
 ```
 
