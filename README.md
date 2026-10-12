@@ -10,7 +10,7 @@
 - **CIとリポジトリ安全性**: リモートリポジトリに対して`Github Actions`によるCI、`main`ブランチ保護ルールセット策定などで安全性を確保
 - **`Spring Framework` / `Spring Boot 4.x`**: ベストプラクティスに沿ったレイヤードアーキテクチャ、ディレクトリ設計、各種アノテーション
 - **`Spring Data JPA`仕様 と `Hibernate`**: `Spring` においてよりデファクトであるらしい `Hibernate`を用いたデータベース操作（MyBatisORMは学習済みのため）
-- **`OpenAPI` / `Swag5ger`**: コードファースト（`springdoc-openapi`）による `API` 仕様ドキュメントサイトの自動生成と、の `record`（`DTO`）を用いた適切なデータ隠蔽
+- **`OpenAPI` / `Swagger`**: コードファースト（`springdoc-openapi`）による `API` 仕様ドキュメントサイトの自動生成と、の `record`（`DTO`）を用いた適切なデータ隠蔽
 - **認証・認可**: `Spring Security` モジュールで `JWT`（`JSON Web Token`）ベースのステートレスな認証機構の構築
 
 ## 🛠 技術スタック
@@ -99,11 +99,13 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [ ] `main`ブランチの保護と必須CIチェックの設定（リポジトリをPublicにするまではルール有効かができないため保留）
 
 ### Section2: データ層（`JPA` / `Repository`）の `TDD` 実装
-- [ ] `JPA` エンティティと `Repository`（`Spring Data JPA`）の役割理解
-- [ ] `User` エンティティおよび `UserRepository` のテスト作成（`@DataJpaTest` + `Testcontainers`）（`RED`）
-- [ ] `User` エンティティおよび `UserRepository` の実装（`GREEN`）
-- [ ] `Todo` エンティティ（`@ManyToOne` リレーション含む）および `TodoRepository` のテスト作成（`RED`）
-- [ ] `Todo` エンティティおよび `TodoRepository` の実装（`GREEN`）
+- [x] `User` / `Todo` のユースケース、所有権、カラム・制約を含むデータモデルを確認・確定する（[`docs/contexts/section2-data-modeling.md`](docs/contexts/section2-data-modeling.md)）
+- [ ] JPA EntityとSpring Data Repositoryの役割、および`@DataJpaTest`がPostgreSQL Testcontainersを使う仕組みを理解する
+- [ ] Userの基本マッピング（UUID、必須・任意カラム、長さ、作成・更新時刻）をRepositoryテストで確認する
+- [ ] `userName`の正規化・形式・一意性と検索をテストし、UserRepositoryの役割を確認する
+- [ ] Todoの基本マッピング（採番ID、タイトル・説明・状態、作成・更新時刻）をRepositoryテストで確認する
+- [ ] TodoとUserの必須リレーション、外部キー、遅延ロード、削除制約をテストし、所有者別データアクセスの土台を確認する
+- [ ] Section 2のRepositoryテストと既存テストを実行し、結果とデータモデル文書・チェック項目を照合する
 
 ### Section3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
 - [ ] `Mockito` を用いたモック化（`@Mock`, `@InjectMocks`）と単体テスト手法の理解
@@ -116,6 +118,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [ ] ログイン `API` および `AuthenticationFilter` の実装と動作検証
 
 ### Section5: API層（`Controller`）と `OpenAPI` の `TDD` 実装
+- [ ] URL・HTTPメソッド・DTO・ステータスコード・エラー形式・認証要件を含むAPI契約をControllerテスト作成前に設計
 - [ ] `Java 21` の `record`（`DTO`）定義と `Validation`（入力バリデーション）の整理
 - [ ] `@WebMvcTest` と `MockMvc` を用いた `UserController` / `AuthController` のテスト作成（`RED`）と実装（`GREEN`）
 - [ ] 認証保護された `TodoController` のテスト作成（`RED`）と実装（`GREEN`）

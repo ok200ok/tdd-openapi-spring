@@ -8,3 +8,7 @@ spring:
     username: ${DB_USERNAME:api_todo}
     # この既定パスワードはローカル学習用で、本番では必ず環境変数等で上書きする
     password: ${DB_PASSWORD:api_todo_dev}
+  jpa:
+    # ローカル学習環境でEntityの変更をDBへ反映する。本番環境ではスキーママイグレーションを使う
+    hibernate:
+      ddl-auto: update
