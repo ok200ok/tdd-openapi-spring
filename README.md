@@ -88,6 +88,20 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 
 ## 🗺 開発ロードマップ
 
+### タスクの進め方
+
+各チェックボックスを一つの学習タスクとして扱い、次の段階を小分けに進める。各段階で説明と確認を行い、開発者の質問・合意を待ってから次へ進む。Entity、Repository、Service、Controllerなどの役割単位は「レイヤーコンポーネント」と呼び、個々の責務だけでなく相互の依存・協調関係と全体の開発フロー上の位置づけも学ぶ。
+
+1. 目的・範囲・仕様・受け入れ条件を確認し、曖昧な前提を合意する
+2. テストケースと期待結果を決め、何をどのレイヤーで検証するか合意する
+3. 新規機能はテストコードだけを作成する。開発者が実行してREDを確認し、結果を共有するまで本番コードへ進まない
+4. REDの理由を確認後、最小限の実装を行い、重要なコードと設計理由を解説する。開発者がGREENを確認した後、必要なら振る舞いを保つRefactorを行い、再実行する
+5. 必要な追加検証やドキュメント更新を行い、結果を照合してタスク完了を判断する
+
+RED/GREENの確認は開発者が実行結果を共有した場合に限る。機能上のREDと環境・ビルド上の失敗を区別し、Refactorは必要な場合のみ行う。学習価値のあるクラス・メソッド・アノテーションの役割や理由は、冗長にならないコメント/Javadocと段階的なガイドで説明する。
+
+Section 2は先行実装済みコードを振り返る例外であり、実施していないTDDのRED/GREENを演出しない。既存コードとテストを段階的に読み解き、開発者自身によるテスト実行で挙動を確認する。理解を確認するまではチェック項目を完了扱いにしない。
+
 ### Section1: 環境構築とテスト基盤の準備
 - [x] `Git` リポジトリ初期化・`.github/copilot-instructions.md` および `README.md` の作成
 - [x] `build.gradle` の依存関係（`Spring Boot Starter`, `PostgreSQL`, `Testcontainers`, `Lombok` 等）の確認・追加
@@ -98,7 +112,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] GitHub ActionsによるCIパイプラインの構築（作業ブランチへのpushと`main`向けPRでGradleテストおよびTestcontainersを実行し、GitHub上で成功・失敗を確認）
 - [ ] `main`ブランチの保護と必須CIチェックの設定（リポジトリをPublicにするまではルール有効かができないため保留）
 
-### Section2: データ層（`JPA` / `Repository`）の `TDD` 実装
+### Section2: データ層（`JPA` / `Repository`）の段階的な振り返り
 - [x] `User` / `Todo` のユースケース、所有権、カラム・制約を含むデータモデルを確認・確定する（[`docs/contexts/section2-data-modeling.md`](docs/contexts/section2-data-modeling.md)）
 - [ ] JPA EntityとSpring Data Repositoryの役割、および`@DataJpaTest`がPostgreSQL Testcontainersを使う仕組みを理解する
 - [ ] Userの基本マッピング（UUID、必須・任意カラム、長さ、作成・更新時刻）をRepositoryテストで確認する

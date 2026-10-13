@@ -16,6 +16,10 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+/**
+* @Entity や @Column などでJavaオブジェクトとDBテーブル・カラムの対応を定義し、JPAがそのオブジェクトを保存・取得できるようにしている JPA Entity。
+* User
+ */
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "user_name"))
 @Check(name = "ck_users_username_lower_alphanumeric", constraints = "user_name ~ '^[a-z0-9]+$'")
