@@ -117,7 +117,7 @@ Section 2は先行実装済みコードを振り返る例外であり、実施�
 - [x] JPA EntityとSpring Data Repositoryの役割、および`@DataJpaTest`がPostgreSQL Testcontainersを使う仕組みを理解する
 - [x] Userの基本マッピング（UUID、必須・任意カラム、長さ、作成・更新時刻）をRepositoryテストで確認する
 - [x] `userName`の正規化・形式・一意性と検索をテストし、UserRepositoryの役割を確認する
-- [ ] Todoの基本マッピング（採番ID、タイトル・説明・状態、作成・更新時刻）をRepositoryテストで確認する
+- [x] Todoの基本マッピング（採番ID、タイトル・説明・状態、作成・更新時刻）をRepositoryテストで確認する
 - [ ] TodoとUserの必須リレーション、外部キー、遅延ロード、削除制約をテストし、所有者別データアクセスの土台を確認する
 - [ ] Section 2のRepositoryテストと既存テストを実行し、結果とデータモデル文書・チェック項目を照合する
 
