@@ -94,30 +94,58 @@ class UserRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * userNameが必須であるというJPAマッピングとDBのNOT NULL制約が、永続化時に作用することを確認する
+	 * userName以外の必須値は与えたUserを保存し、欠落した項目だけが原因となるようにする
+	 * {@code saveAndFlush}でINSERTをDBへ送ると制約違反が発生し、Springのデータアクセス例外{@code DataIntegrityViolationException}として通知されることを検証する
+	 * このRepositoryテストはEntityのアプリケーション側入力検証ではなく、永続化先の制約を確認する
+	 */
 	@Test
 	void rejectsMissingUsername() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(new User(null, "{encoded}secret", null, "ROLE_USER")))
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * passwordが必須であるというJPAマッピングとDBのNOT NULL制約が、永続化時に作用することを確認する
+	 * userNameとroleを有効値にし、passwordだけをnullにしたEntityを保存して、DB制約違反を検証する
+	 * {@code assertThatThrownBy}はラムダ内の操作が例外を投げることを表明し、続く{@code isInstanceOf}で期待する例外型を確認する
+	 */
 	@Test
 	void rejectsMissingPassword() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(new User("alice", null, null, "ROLE_USER")))
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * roleが必須であるというJPAマッピングとDBのNOT NULL制約が、永続化時に作用することを確認する
+	 * userNameとpasswordを有効値にし、roleだけをnullにして保存することで、この制約だけを検証する
+	 * flush時にDBが拒否した結果をSpringの{@code DataIntegrityViolationException}として受け取る
+	 */
 	@Test
 	void rejectsMissingRole() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(new User("alice", "{encoded}secret", null, null)))
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * userName列の最大長が50文字であることを超過値の保存で確認する
+	 * {@code "a".repeat(51)}で上限より1文字長い値を作り、他の必須値はヘルパーで有効値にする
+	 * {@code saveAndFlush}でDBまで同期し、長さ制約違反がSpringのデータアクセス例外として表面化することを検証する
+	 * これは上限超過の拒否だけを検証し、50文字ちょうどが受け入れられる境界値ケースではない
+	 */
 	@Test
 	void rejectsUsernameExceedingMaximumLength() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(user("a".repeat(51), null)))
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * password列の最大長が255文字であることを、256文字の超過値を保存して確認する
+	 * userNameとroleは有効値にし、passwordだけを列長より長くすることで失敗原因を限定する
+	 * {@code saveAndFlush}によりINSERTをDBへ送り、列長制約違反を検出する
+	 * このテストは上限を超えた値の拒否を確認するもので、ハッシュ形式やパスワード検証は対象外
+	 */
 	@Test
 	void rejectsPasswordExceedingMaximumLength() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(
@@ -125,6 +153,11 @@ class UserRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * 任意のdisplayNameにもVARCHAR(50)の最大長が適用されることを確認する
+	 * userName、password、roleを有効値にし、displayNameだけを51文字にしてDBへ保存する
+	 * {@code DataIntegrityViolationException}を期待することで、任意項目であることと長さ制約があることを区別する
+	 */
 	@Test
 	void rejectsDisplayNameExceedingMaximumLength() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(
@@ -132,6 +165,10 @@ class UserRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * role列の最大長が50文字であることを51文字の値で確認する
+	 * その他の必須値は有効に保ち、roleの長さ超過だけで保存が拒否されることを検証する
+	 */
 	@Test
 	void rejectsRoleExceedingMaximumLength() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(
@@ -139,6 +176,11 @@ class UserRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * displayNameは任意項目であり、nullのまま保存・取得できることを確認する
+	 * 保存後にIDで検索し、再取得したEntityのdisplayNameがnullであることを検証する
+	 * このテストはnullableの挙動を対象とし、同一永続化コンテキスト内の検索なのでDBからの再読込までは保証しない
+	 */
 	@Test
 	void allowsDisplayNameToBeNull() {
 		User saved = userRepository.saveAndFlush(user("alice", null));
@@ -146,6 +188,13 @@ class UserRepositoryTests {
 		assertThat(userRepository.findById(saved.getId()).orElseThrow().getDisplayName()).isNull();
 	}
 
+	/**
+	 * Userの更新でdisplayNameを変更したとき、updatedAtが更新前より後の時刻になることを確認する
+	 * {@code saveAndFlush}で初回保存を完了させ、その時点のupdatedAtを比較元として保持する
+	 * {@code Thread.sleep(10)}は変更前後の時刻に差が出るよう短い間隔を置く。時刻精度や実行環境に依存するため厳密な長さではなく前後関係だけを検証する
+	 * {@code changeDisplayName}でEntityを変更した後、{@code flush}でHibernateに変更をDBへ同期させ、{@code @PreUpdate}の更新時刻設定を発生させる
+	 * {@code isAfter}は更新時刻が元の値より後であることを表明する。テスト用トランザクションはcommitされず、他テストへ変更を残さない
+	 */
 	@Test
 	void updatesUpdatedAtWhenUserChanges() throws InterruptedException {
 		User saved = userRepository.saveAndFlush(user("alice", "Before"));
