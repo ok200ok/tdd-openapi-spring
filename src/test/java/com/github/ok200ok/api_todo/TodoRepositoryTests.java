@@ -39,6 +39,13 @@ class TodoRepositoryTests {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
+	/**
+	 * Todoの保存時にDB採番IDと作成・更新時刻が設定されることを確認する
+	 * TodoはUserを必須とするため先にUserを保存しているが、関連の必須性や外部キーの詳しい検証はリレーションのタスクで扱う
+	 * {@code GenerationType.IDENTITY}ではDBがINSERT時にIDを採番し、{@code saveAndFlush}後にEntityから確認できる
+	 * 時刻は{@code @PrePersist}がINSERT前に設定するため、厳密な時刻値でなくnullでないことを検証する
+	 * 最後のOwner ID照合も同じテスト内にあるが、これは次タスクで関連付けの観点から解説する
+	 */
 	@Test
 	void savesTodoWithGeneratedIdAndRequiredUser() {
 		User user = userRepository.saveAndFlush(user("alice"));
