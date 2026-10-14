@@ -71,15 +71,15 @@
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 必須Ownerと関連ID | 保存前にUserを永続化し、Todoの関連がそのUser IDを参照することを確認する。OwnerがnullのTodoはDB制約で拒否される。所有者別検索や認可はこのRepositoryテストでは検証しない | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L52)、[`rejectsMissingTodoOwner`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L160) | 👓 |
-| 遅延ロード | DBから再取得した直後はTodoのuser関連が未ロードであり、userNameへのアクセス時に関連を利用できる | [`keepsUserAssociationLazyUntilAccessed`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L93) | 👓 |
-| 外部キーと削除制約 | todos.user_idの外部キーが存在し、参照中Userの削除がDB制約で拒否される。テストはTodo行数の事後確認までは行わない | [`doesNotDeleteTodosWhenTheirUserIsDeleted`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L222) | 👓 |
+| 必須Ownerと関連ID | 保存前にUserを永続化し、Todoの関連がそのUser IDを参照することを確認する。OwnerがnullのTodoはDB制約で拒否される。所有者別検索や認可はこのRepositoryテストでは検証しない | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L52)、[`rejectsMissingTodoOwner`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L160) | ✅ |
+| 遅延ロード | DBから再取得した直後はTodoのuser関連が未ロードであり、userNameへのアクセス時に関連を利用できる | [`keepsUserAssociationLazyUntilAccessed`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L93) | ✅ |
+| 外部キーと削除制約 | todos.user_idの外部キーが存在し、参照中Userの削除がDB制約で拒否される。テストはTodo行数の事後確認までは行わない | [`doesNotDeleteTodosWhenTheirUserIsDeleted`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L222) | ✅ |
 
 ### タスク7: Section 2全体のテストと設計照合
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| Repositoryテスト一式と既存テスト | 開発者が実行した結果を、データモデル文書と各ケースの期待結果に照らして確認する | [UserRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java)、[TodoRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java) | 🚧 |
+| Section 2のRepositoryテストと既存結合テスト | `.\gradlew.bat test`で全27件（UserRepositoryTests 14件、TodoRepositoryTests 11件、ApiTodoApplicationTests 2件）が失敗・エラーなく成功する。Repositoryテストの結果をデータモデル文書と各ケースの期待結果に照らし、カタログ・READMEの記載と一致することを確認する | [UserRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java)、[TodoRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java)、[ApiTodoApplicationTests](../src/test/java/com/github/ok200ok/api_todo/ApiTodoApplicationTests.java) | ✅ |
 
 ## Section 3以降
 
