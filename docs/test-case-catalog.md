@@ -16,9 +16,9 @@
 | 状態 | 意味 |
 | --- | --- |
 | 🚧未検討 | 対象タスクの仕様・ケースをまだ協議していない |
-| 🤝合意済み | 仕様、ケース、期待結果に合意した |
-| 👓読解済み・実行待ち | 対象テストコードと実装の意図を確認・理解したが、開発者によるテスト実行結果の共有が残っている |
-| ✅実行確認済み | 開発者がテストを実行し、共有された結果と期待結果の一致を確認した |
+| 🤝合意済み | 仕様、ケース、期待結果に合意したが、対象テストコードや実装内容の確認・理解は未実施|
+| 👓読解済み・実行待ち | 対象テストコードと実装の意図を確認・理解したが、開発者によるテスト実行は未実施 |
+| ✅実行確認済み | 開発者がテストを実行し、その結果と期待結果の一致を確認した |
 
 ## Section 2: JPA / Repository
 
@@ -87,14 +87,19 @@
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換、テスト範囲、検証方法を協議する | 🚧 |
-| Section 3: UserService | ユースケース仕様合意後にケースを記録する | 🚧 |
-| Section 3: TodoService CRUD | CRUD仕様・所有者認可などを合意後にケースを記録する | 🚧 |
-| Section 4: Spring Security / JWTの仕組み | 認証・認可の責務とテスト範囲を協議する | 🚧 |
-| Section 4: JWT発行・検証 | トークン仕様合意後にケースを記録する | 🚧 |
-| Section 4: ログインAPI・AuthenticationFilter | 認証フロー合意後にケースを記録する | 🚧 |
-| Section 5: API契約・DTO・Validation | URL、HTTP、応答、エラー、入力制約を合意後にケースを記録する | 🚧 |
-| Section 5: User/Auth Controller | Controller契約合意後にケースを記録する | 🚧 |
-| Section 5: Todo Controller | 認証を含むAPI契約合意後にケースを記録する | 🚧 |
-| Section 5: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
-| Section 6: 結合テスト | 対象フローとTestcontainersの検証範囲を合意後にケースを記録する | 🚧 |
+| Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換と検証境界を理解する | 🚧 |
+| Section 3: TodoService作成 | 所有者を含む作成仕様を合意後にケースを記録する | 🚧 |
+| Section 3: TodoService ID指定取得 | 所有者条件を含む取得と対象なしの扱いを合意後にケースを記録する | 🚧 |
+| Section 3: TodoService所有者別一覧 | 対象所有者のTodoだけを返す仕様を合意後にケースを記録する | 🚧 |
+| Section 3: TodoService更新 | 所有者条件を含む更新と対象なしの扱いを合意後にケースを記録する | 🚧 |
+| Section 3: TodoService削除 | 所有者条件を含む削除と対象なしの扱いを合意後にケースを記録する | 🚧 |
+| Section 4: Todo API契約・DTO・Validation | URL、HTTP、入出力、エラー、入力制約を合意後にケースを記録する。ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする | 🚧 |
+| Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
+| Section 4: ローカル所有者境界 | API動作確認用ユーザーとControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
+| Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
+| Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
+| Section 6: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
+| Section 6: Spring Security / JWT | 認証・認可の責務、トークン仕様、テスト範囲を合意後に記録する | 🚧 |
+| Section 6: ログインAPI・AuthenticationFilter | 認証フローとTodo APIへの認証済み所有者連携を合意後に記録する | 🚧 |
+| Section 6: 認証要件のAPI契約・OpenAPI反映 | 未認証時の応答と認証要件の追加ケースを合意後に記録する | 🚧 |
+| Section 7: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
