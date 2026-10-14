@@ -33,6 +33,7 @@ class TodoRepositoryTests {
 	@Autowired
 	private UserRepository userRepository;
 
+	// JPAの永続化コンテキストを操作し、保存済みEntityを1次キャッシュから切り離すために使う
 	@Autowired
 	private EntityManager entityManager;
 
@@ -58,6 +59,13 @@ class TodoRepositoryTests {
 		assertThat(saved.getUser().getId()).isEqualTo(user.getId());
 	}
 
+	/**
+	 * Todoのタイトル、null説明、状態がDB保存後にJPA経由で再取得できることを確認する
+	 * {@code saveAndFlush}後に{@code entityManager.clear()}で現在の永続化コンテキストにあるEntityをすべて切り離し、{@code findById}がDBから読み直すようにする
+	 * {@code orElseThrow()}は検索結果の{@code Optional}が空ならテストを失敗させ、対象Todoが存在しない状態を見逃さない
+	 * titleとdescriptionは列マッピングを、statusはEnumからの復元を検証する。実際のDB列がEnum名の文字列かは別テストでSQLを直接確認する
+	 * 最後のUser名取得は関連アクセスを伴うため、その関連の検証目的は次のリレーションタスクで扱う
+	 */
 	@Test
 	void reloadsAllTodoFieldsAndEnumAsItsStringValue() {
 		User user = userRepository.saveAndFlush(user("alice"));
@@ -86,6 +94,13 @@ class TodoRepositoryTests {
 		assertThat(reloaded.getUser().getUserName()).isEqualTo("alice");
 	}
 
+	/**
+	 * Userとの関連は除外し、16,000文字のTodo説明をPostgreSQLのTEXT列へ保存できることを確認する
+	 * {@code repeat(2_000)}で8文字の文字列を繰り返して長文を作り、保存値と同じ内容であることを検証する
+	 * {@code saveAndFlush}はDBへのINSERTまで進めるため、Javaオブジェクト内の値比較だけでなく永続化処理を通過したことを確認できる
+	 * Entityの{@code columnDefinition = "text"}はHibernateが生成するDDLでPostgreSQLのTEXT型を指定し、短いVARCHAR列長で拒否されないことを確かめる
+	 * TEXTに固定のVARCHAR上限がないことは、DB容量や実用上の格納量が無制限という意味ではない
+	 */
 	@Test
 	void allowsLongDescriptionText() {
 		User user = userRepository.saveAndFlush(user("alice"));
@@ -97,6 +112,12 @@ class TodoRepositoryTests {
 		assertThat(saved.getDescription()).isEqualTo(description);
 	}
 
+	/**
+	 * Java Enumの全状態がDBでも定数名の文字列として保存されることを確認する
+	 * {@code TodoStatusEnum.values()}で定義済みの全状態を列挙し、それぞれをTodoのstatusに指定して保存する
+	 * {@code JdbcTemplate.queryForList}はRepositoryやEntityの変換を通さずSQL結果を直接読むため、DB列の実際の値を確認できる
+	 * {@code containsExactly}は値と順序の両方を検証し、Enum名が定義順どおりに保存されたことを確かめる
+	 */
 	@Test
 	void persistsAllStatusesByTheirEnumNames() {
 		User user = user("alice");
@@ -108,6 +129,12 @@ class TodoRepositoryTests {
 				.containsExactly("PENDING", "IN_PROGRESS", "COMPLETED");
 	}
 
+	/**
+	 * Todoの状態変更でupdatedAtが更新前より後になることを確認する
+	 * 作成時刻と更新時刻を初期化したTodoを保存し、更新時刻を比較元に保持する
+	 * 短い待機後にstatusを変更し、flushでUPDATEと{@code @PreUpdate}を発生させる。時刻の厳密値でなく前後関係だけを検証する
+	 * {@code isAfter}で新しい更新時刻が比較元より後であることを表明する
+	 */
 	@Test
 	void updatesUpdatedAtWhenTodoChanges() throws InterruptedException {
 		User user = user("alice");
@@ -129,6 +156,11 @@ class TodoRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * titleがDB上で必須であり、nullのTodoを保存できないことを確認する
+	 * Userとstatusは有効値にし、titleだけをnullにすることでNOT NULL制約の検証対象を一つに限定する
+	 * {@code saveAndFlush}でINSERTをDBへ送り、違反がSpringの{@code DataIntegrityViolationException}として通知されることを確認する
+	 */
 	@Test
 	void rejectsMissingTodoTitle() {
 		User user = user("alice");
@@ -137,6 +169,11 @@ class TodoRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * statusがDB上で必須であり、nullのTodoを保存できないことを確認する
+	 * Userとtitleを有効値に保ち、statusだけをnullにして永続化する
+	 * Enumの許可値ではなく、まずNOT NULL制約による必須性を検証するケース
+	 */
 	@Test
 	void rejectsMissingTodoStatus() {
 		User user = user("alice");
@@ -145,6 +182,12 @@ class TodoRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * title列の最大長が100文字であり、101文字の値を保存できないことを確認する
+	 * Userとstatusは有効値で用意し、タイトル長だけを上限超過させる
+	 * {@code saveAndFlush}でDBへ反映し、列長制約違反を{@code DataIntegrityViolationException}として検証する
+	 * このケースは超過値の拒否を確認するもので、100文字ちょうどが受け入れられることまでは検証しない
+	 */
 	@Test
 	void rejectsTitleExceedingMaximumLength() {
 		User user = userRepository.saveAndFlush(user("alice"));

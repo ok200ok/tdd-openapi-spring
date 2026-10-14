@@ -60,20 +60,20 @@
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 採番IDと作成時刻 | Todo保存時にDB採番IDと作成/更新時刻が設定される。Ownerの関連ID検証はタスク6で扱う | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L50) | 👓 |
-| 各フィールドとEnum文字列保存 | Todoのタイトル、任意の説明、状態を保存でき、各Enum名を文字列としてDBに保存する | [`reloadsAllTodoFieldsAndEnumAsItsStringValue`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L55)、[`persistsAllStatusesByTheirEnumNames`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L94) | 🚧 |
-| 長い説明文 | `description`に長文を保存できる | [`allowsLongDescriptionText`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L83) | 🚧 |
-| 更新時の`updatedAt` | 状態変更をflushすると、更新時刻が変更前より後になる | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L105) | 🚧 |
-| 必須のタイトルと状態 | `title`または`status`を欠くTodoの保存がDB制約違反になる | [`rejectsMissingTodoTitle`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L126)、[`rejectsMissingTodoStatus`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L134) | 🚧 |
-| タイトルの最大長 | 101文字のタイトルを保存するとDB制約違反になる | [`rejectsTitleExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L142) | 🚧 |
+| 採番IDと作成時刻 | Todo保存時にDB採番IDと作成/更新時刻が設定される。Ownerの関連ID検証はタスク6で扱う | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L51) | 👓 |
+| 各フィールドとEnum文字列保存 | Todoのタイトル、任意の説明、状態を保存・再取得でき、各Enum名を文字列としてDBに保存する | [`reloadsAllTodoFieldsAndEnumAsItsStringValue`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L70)、[`persistsAllStatusesByTheirEnumNames`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L122) | 👓 |
+| 長い説明文 | `description`に長文を保存できる | [`allowsLongDescriptionText`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L105) | 👓 |
+| 更新時の`updatedAt` | 状態変更をflushすると、更新時刻が変更前より後になる | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L139) | 👓 |
+| 必須のタイトルと状態 | `title`または`status`を欠くTodoの保存がDB制約違反になる | [`rejectsMissingTodoTitle`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L170)、[`rejectsMissingTodoStatus`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L183) | 👓 |
+| タイトルの最大長 | 101文字のタイトルを保存するとDB制約違反になる | [`rejectsTitleExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L197) | 👓 |
 
 ### タスク6: TodoとUserのリレーション
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 必須Ownerと関連ID | Todo保存時にUserが必須であり、保存された関連が期待するUser IDを参照する | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L43)、[`rejectsMissingTodoOwner`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L119) | 🚧 |
-| 遅延ロード | Todo取得直後はUser関連が未ロードで、関連プロパティへアクセスすると読み込まれる | [`keepsUserAssociationLazyUntilAccessed`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L70) | 🚧 |
-| 外部キーと削除制約 | Userを削除してもTodoを連鎖削除せず、参照中Userの削除が外部キー制約で拒否される | [`doesNotDeleteTodosWhenTheirUserIsDeleted`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L151) | 🚧 |
+| 必須Ownerと関連ID | Todo保存時にUserが必須であり、保存された関連が期待するUser IDを参照する | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L51)、[`rejectsMissingTodoOwner`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L153) | 🚧 |
+| 遅延ロード | Todo取得直後はUser関連が未ロードで、関連プロパティへアクセスすると読み込まれる | [`keepsUserAssociationLazyUntilAccessed`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L85) | 🚧 |
+| 外部キーと削除制約 | Userを削除してもTodoを連鎖削除せず、参照中Userの削除が外部キー制約で拒否される | [`doesNotDeleteTodosWhenTheirUserIsDeleted`](../src/test/java/com/github/ok200ok/api_todo/TodoRepositoryTests.java#L201) | 🚧 |
 
 ### タスク7: Section 2全体のテストと設計照合
 
