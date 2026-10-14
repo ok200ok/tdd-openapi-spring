@@ -114,7 +114,7 @@ Section 2は先行実装済みコードを振り返る例外であり、実施�
 
 ### Section2: データ層（`JPA` / `Repository`）の段階的な振り返り
 - [x] `User` / `Todo` のユースケース、所有権、カラム・制約を含むデータモデルを確認・確定する（[`docs/contexts/section2-data-modeling.md`](docs/contexts/section2-data-modeling.md)）
-- [ ] JPA EntityとSpring Data Repositoryの役割、および`@DataJpaTest`がPostgreSQL Testcontainersを使う仕組みを理解する
+- [x] JPA EntityとSpring Data Repositoryの役割、および`@DataJpaTest`がPostgreSQL Testcontainersを使う仕組みを理解する
 - [ ] Userの基本マッピング（UUID、必須・任意カラム、長さ、作成・更新時刻）をRepositoryテストで確認する
 - [ ] `userName`の正規化・形式・一意性と検索をテストし、UserRepositoryの役割を確認する
 - [ ] Todoの基本マッピング（採番ID、タイトル・説明・状態、作成・更新時刻）をRepositoryテストで確認する

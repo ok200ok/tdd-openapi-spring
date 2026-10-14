@@ -19,6 +19,9 @@ import com.github.ok200ok.api_todo.repository.UserRepository;
 /**
  * UserのJPAマッピングとUserRepositoryの永続化操作を、テスト用データベースで確認する
  * {@code @DataJpaTest}はJPA関連のレイヤーコンポーネントを中心にテスト環境を構成し、各テストを通常トランザクション内で実行して終了時にロールバックする
+ * テストからDBまでの呼び出し経路は、UserRepository、Spring Data JPAの実装、JPAのEntityManager、Hibernate、JDBCを経てTestcontainersのPostgreSQLへ至る
+ * {@code showSql = false}はHibernateが生成するSQLをログに出さない指定で、テスト出力を読みやすく保つ
+ * {@code spring.jpa.hibernate.ddl-auto=create-drop}はEntity定義からテスト用スキーマを作成し、テストコンテキスト終了時に破棄する指定
  */
 @DataJpaTest(showSql = false, properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 // @DataJpaTest既定の組み込みDBへの差し替えを無効にし、TestcontainersのPostgreSQLを使う
@@ -27,15 +30,17 @@ import com.github.ok200ok.api_todo.repository.UserRepository;
 @Import(TestcontainersConfiguration.class)
 class UserRepositoryTests {
 
+	// Springテストコンテキストが用意したUserRepository実装を注入し、テスト対象の永続化操作に使う
 	@Autowired
 	private UserRepository userRepository;
 
+	// Repositoryを介さずSQLを実行し、実際の接続先DBのバージョンを確かめる
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
 	/**
 	 * UserRepositoryを通じて保存操作とID検索を行い、Entityの基本情報と接続先DBを確認する
-		* save() はRepositoryに保存を依頼し、EntityをJPAの永続化コンテキストに登録する
+	 * {@code save}はRepositoryに保存を依頼し、EntityをJPAの永続化コンテキストに登録する
 	 * {@code saveAndFlush}はsaveに加えて保留中の変更をDBへ同期するため、この時点でSQLやDB制約の問題を検出できる。ただしトランザクションをcommitするわけではない
 	 * 続くID検索はRepositoryの検索操作を確認する。保存したEntityが同じ永続化コンテキスト内に残っているため、DBからの再読込そのものを保証するテストではない
 	 * IDと時刻の検証は保存時の値設定を、各フィールドの検証は保存対象の値を、PostgreSQLのバージョン検証はTestcontainersの接続先を確認する
@@ -53,6 +58,7 @@ class UserRepositoryTests {
 		assertThat(reloaded.getPassword()).isEqualTo("{encoded}secret");
 		assertThat(reloaded.getDisplayName()).isEqualTo("Alice Example");
 		assertThat(reloaded.getRole()).isEqualTo("ROLE_USER");
+		// Repository経由の保存確認とは別に、SQLを直接実行して実際の接続先がPostgreSQL 17であることを検証する
 		assertThat(jdbcTemplate.queryForObject("SELECT version()", String.class))
 				.contains("PostgreSQL 17");
 	}
