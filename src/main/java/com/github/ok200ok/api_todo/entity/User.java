@@ -17,11 +17,13 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 /**
-* @Entity や @Column などでJavaオブジェクトとDBテーブル・カラムの対応を定義し、JPAがそのオブジェクトを保存・取得可能な JPA Entity。
-* User
+ * usersテーブルに対応し、JPAが永続化・取得するUserの状態を表すEntity
+ * ユーザー名の正規化と作成・更新時刻の設定は永続化ライフサイクルに合わせて行い、形式・一意性はDB制約でも保証する
  */
 @Entity
+// テーブル名とuser_nameの一意制約を定義し、正規化後のログイン名重複をDBでも防ぐ
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "user_name"))
+// アプリケーションの外から直接DBへ書き込まれた場合にも小文字英数字以外を拒否するCHECK制約
 @Check(name = "ck_users_username_lower_alphanumeric", constraints = "user_name ~ '^[a-z0-9]+$'")
 public class User {
 
@@ -64,7 +66,10 @@ public class User {
 		this.role = role;
 	}
 
-	// Entityが初めて永続化される直前に呼ばれ、初期値をDBへのINSERT前に設定する
+	/**
+	 * Entityが初めて永続化される直前にJPAから呼び出されるコールバック
+	 * INSERT前にログイン名を正規化し、作成時刻と更新時刻を同じ現在時刻で初期化する
+	 */
 	@PrePersist
 	void beforeInsert() {
 		canonicalizeUserName();
@@ -73,7 +78,10 @@ public class User {
 		updatedAt = now;
 	}
 
-	// 永続化済みEntityの変更がDBへ反映される直前に呼ばれ、更新時刻を設定する
+	/**
+	 * 永続化済みEntityの変更をDBへ反映する直前にJPAから呼び出されるコールバック
+	 * 更新時刻を進め、ログイン名も正規化する。SQL発行のたびではなくEntity更新時に実行される
+	 */
 	@PreUpdate
 	void beforeUpdate() {
 		canonicalizeUserName();
@@ -82,6 +90,7 @@ public class User {
 
 	private void canonicalizeUserName() {
 		if (userName != null) {
+			// Locale.ROOTでロケール依存の大小文字変換を避け、ログイン名の正規化を実行環境間で一定にする
 			userName = userName.toLowerCase(Locale.ROOT);
 		}
 	}

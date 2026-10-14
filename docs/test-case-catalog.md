@@ -51,10 +51,10 @@
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 小文字への正規化と検索 | 大文字を含むユーザー名を保存すると小文字で保持され、小文字名で検索できる | [`canonicalizesUsernameAndFindsItByCanonicalName`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L67) | 🚧 |
-| 正規化後の一意性 | 大文字小文字だけが異なる重複ユーザー名を保存できず、DB制約違反になる | [`rejectsDuplicateCanonicalUsernames`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L84) | 🚧 |
-| 許容文字 | 小文字英数字以外を含むユーザー名はDB制約違反になる | [`rejectsUsernamesContainingNonAlphanumericCharacters`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L92) | 🚧 |
-| 表示名の重複許可 | 異なるUserに同じ`displayName`を設定して両方保存できる | [`allowsDuplicateDisplayNames`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L76) | 🚧 |
+| 小文字への正規化と検索 | 大文字を含むユーザー名を保存するとEntityが小文字へ正規化し、小文字の名前で検索できる | [`canonicalizesUsernameAndFindsItByCanonicalName`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L73) | ✅ |
+| 正規化後の一意性 | 大文字小文字だけが異なる2件目を保存すると正規化後の名前が重複し、DBの一意制約で拒否される | [`rejectsDuplicateCanonicalUsernames`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L100) | ✅ |
+| 許容文字 | 小文字英数字以外を含む名前はEntity正規化だけでは除去されず、DBのCHECK制約で拒否される | [`rejectsUsernamesContainingNonAlphanumericCharacters`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L113) | ✅ |
+| 表示名の重複許可 | 異なるユーザー名のUser 2件に同じ`displayName`を設定しても、両方保存できる | [`allowsDuplicateDisplayNames`](../src/test/java/com/github/ok200ok/api_todo/UserRepositoryTests.java#L87) | ✅ |
 
 ### タスク5: Todoの基本マッピング
 

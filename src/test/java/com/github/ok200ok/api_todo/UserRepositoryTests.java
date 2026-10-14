@@ -63,6 +63,12 @@ class UserRepositoryTests {
 				.contains("PostgreSQL 17");
 	}
 
+	/**
+	 * 保存時に大文字を含むuserNameが小文字へ正規化され、その正規化後の値で検索できることを確認する
+	 * {@code saveAndFlush}は{@code @PrePersist}を実行させ、Entity内の正規化結果をDBへ反映する
+	 * {@code findByUserName}はSpring Data JPAのクエリメソッドで、メソッド名からuserName一致検索を導出する
+	 * {@code Optional.map}で検索結果があればEntityからuserNameを取り出し、{@code contains}でaliceが見つかったことを検証する
+	 */
 	@Test
 	void canonicalizesUsernameAndFindsItByCanonicalName() {
 		userRepository.saveAndFlush(user("ALICE", null));
@@ -72,6 +78,11 @@ class UserRepositoryTests {
 				.contains("alice");
 	}
 
+	/**
+	 * userNameは一意だがdisplayNameは重複可能というドメイン上の違いを確認する
+	 * 異なる一意キーaliceとbobを持つUserに同じ表示名を設定し、両方の保存後に件数が2であることを検証する
+	 * {@code count}はRepositoryが提供する件数取得操作であり、表示名に一意制約がないため保存が両方成功する
+	 */
 	@Test
 	void allowsDuplicateDisplayNames() {
 		userRepository.saveAndFlush(user("alice", "Same Name"));
@@ -80,6 +91,11 @@ class UserRepositoryTests {
 		assertThat(userRepository.count()).isEqualTo(2);
 	}
 
+	/**
+	 * 大文字小文字を正規化した結果、同じuserNameとなるUserを2件保存できないことを確認する
+	 * 1件目のaliceをflushしてDBに一意キーを登録し、2件目のALICEは{@code @PrePersist}でaliceとなる
+	 * 2件目のflushでusers.user_nameの一意制約違反が発生し、SpringがDataIntegrityViolationExceptionとして通知することを検証する
+	 */
 	@Test
 	void rejectsDuplicateCanonicalUsernames() {
 		userRepository.saveAndFlush(user("alice", null));
@@ -88,6 +104,11 @@ class UserRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * userNameは小文字英数字のみ許可するDB CHECK制約が働くことを確認する
+	 * Entityの正規化は大文字を小文字に変換するだけで、ピリオドなどの禁止文字を取り除かない
+	 * alice.smithをflushし、PostgreSQLのCHECK制約が拒否した結果をDataIntegrityViolationExceptionとして確認する
+	 */
 	@Test
 	void rejectsUsernamesContainingNonAlphanumericCharacters() {
 		assertThatThrownBy(() -> userRepository.saveAndFlush(user("alice.smith", null)))
