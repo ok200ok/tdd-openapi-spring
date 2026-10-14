@@ -42,10 +42,11 @@ class TodoRepositoryTests {
 
 	/**
 	 * Todoの保存時にDB採番IDと作成・更新時刻が設定されることを確認する
-	 * TodoはUserを必須とするため先にUserを保存しているが、関連の必須性や外部キーの詳しい検証はリレーションのタスクで扱う
+	 * TodoはUserを必須とするため、まずUserを保存してから関連付けたTodoを保存する
 	 * {@code GenerationType.IDENTITY}ではDBがINSERT時にIDを採番し、{@code saveAndFlush}後にEntityから確認できる
 	 * 時刻は{@code @PrePersist}がINSERT前に設定するため、厳密な時刻値でなくnullでないことを検証する
-	 * 最後のOwner ID照合も同じテスト内にあるが、これは次タスクで関連付けの観点から解説する
+	 * Userを先に保存するのは、Todoのuser_id外部キーが参照できる行を先にDBへ作るため
+	 * 最後のOwner ID照合は、Todoの関連が保存したUserを指していることを確認する
 	 */
 	@Test
 	void savesTodoWithGeneratedIdAndRequiredUser() {
@@ -81,6 +82,13 @@ class TodoRepositoryTests {
 		assertThat(reloaded.getUser().getUserName()).isEqualTo("alice");
 	}
 
+	/**
+	 * Todo検索でUser関連を即時取得せず、関連プロパティへアクセスしたときに利用可能となることを確認する
+	 * {@code entityManager.clear()}で保存時のEntityを永続化コンテキストから外し、Repository検索による取得状態を観察する
+	 * {@code Persistence.getPersistenceUtil().isLoaded(entity, "user")}はJPA標準APIで関連がロード済みかを調べる。直後がfalseであることからLAZY設定を確認する
+	 * その後userNameへアクセスし値を検証することで、遅延ロードされた関連を実際に利用できることを確認する
+	 * このアクセスはEntityManagerが有効なテストトランザクション内で行っている。トランザクション終了後の関連アクセス可否はこのテストでは扱わない
+	 */
 	@Test
 	void keepsUserAssociationLazyUntilAccessed() {
 		User user = userRepository.saveAndFlush(user("alice"));
@@ -149,6 +157,12 @@ class TodoRepositoryTests {
 		assertThat(todo.getUpdatedAt()).isAfter(originalUpdatedAt);
 	}
 
+	/**
+	 * Todoの所有者Userが必須であり、OwnerなしのTodoをDBへ保存できないことを確認する
+	 * 他の必須フィールドには有効値を指定し、userだけをnullにして関連の必須性を単独で検証する
+	 * {@code saveAndFlush}でINSERTをDBへ送り、{@code user_id}のNOT NULL制約違反がSpringの{@code DataIntegrityViolationException}として通知されることを確認する
+	 * このケースは所有者の認可ではなく、TodoにOwnerが存在するというデータ整合性を検証する
+	 */
 	@Test
 	void rejectsMissingTodoOwner() {
 		assertThatThrownBy(() -> todoRepository.saveAndFlush(
@@ -197,6 +211,13 @@ class TodoRepositoryTests {
 				.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	/**
+	 * TodoがUser行を外部キー参照しており、User削除時にTodoを連鎖削除せず削除を拒否することを確認する
+	 * まずPostgreSQLのシステムカタログpg_constraintを直接問い合わせ、todosテーブルに外部キー制約が定義されていることを確認する
+	 * {@code entityManager.clear()}でUserとTodoを永続化コンテキストから切り離してからUserを削除し、JPAのメモリ上の状態ではなくDB上の参照制約を検証する
+	 * {@code flush()}時に参照中UserのDELETEが外部キー制約で拒否され、Springの{@code DataIntegrityViolationException}となることを確認する
+	 * テストは削除後のTodo行数を直接照合していないため、連鎖削除されないことは削除失敗と外部キーの存在から確認する範囲に留まる
+	 */
 	@Test
 	void doesNotDeleteTodosWhenTheirUserIsDeleted() {
 		User user = user("alice");
