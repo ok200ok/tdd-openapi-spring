@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -87,6 +88,43 @@ class TodoControllerInputValidationTests {
 				.andExpect(status().isCreated());
 
 		verify(todoService).createTodo(eq(ownerId), eq(title), isNull());
+	}
+
+	/**
+	 * 作成時の説明省略とnullを同じ入力として扱い、長い説明も受け付けてServiceへ渡す
+	 */
+	@Test
+	void acceptsOptionalNullAndLongDescriptionOnCreate() throws Exception {
+		String title = "Write tests";
+		String longDescription = "x".repeat(5_000);
+		UUID ownerId = UUID.randomUUID();
+		Todo createdTodo = new Todo(
+				new User("alice", "hashed-password", null, "ROLE_USER"),
+				title,
+				null,
+				TodoStatusEnum.PENDING);
+		ReflectionTestUtils.setField(createdTodo, "id", 42L);
+		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
+		when(todoService.createTodo(eq(ownerId), eq(title), isNull())).thenReturn(createdTodo);
+		when(todoService.createTodo(eq(ownerId), eq(title), eq(longDescription))).thenReturn(createdTodo);
+
+		mockMvc.perform(post("/api/v1/todos")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"" + title + "\"}"))
+				.andExpect(status().isCreated());
+
+		mockMvc.perform(post("/api/v1/todos")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"" + title + "\",\"description\":null}"))
+				.andExpect(status().isCreated());
+
+		mockMvc.perform(post("/api/v1/todos")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"title\":\"" + title + "\",\"description\":\"" + longDescription + "\"}"))
+				.andExpect(status().isCreated());
+
+		verify(todoService, times(2)).createTodo(eq(ownerId), eq(title), isNull());
+		verify(todoService).createTodo(eq(ownerId), eq(title), eq(longDescription));
 	}
 
 	/**
