@@ -128,7 +128,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] 所有者を指定したTodoのID検索のService単体テスト作成（`RED`）と実装（`GREEN`）
 - [x] 所有者別Todo一覧のService単体テスト作成（`RED`）と実装（`GREEN`）
 - [x] Todo更新のService単体テスト作成（`RED`）と実装（`GREEN`）
-- [ ] Todo削除のService単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] Todo削除のService単体テスト作成（`RED`）と実装（`GREEN`）
 
 ### Section4: API層（`Controller`）と `OpenAPI` の `TDD` 実装
 - [ ] Todo APIのURL・HTTPメソッド・DTO・ステータスコード・エラー形式をControllerテスト作成前に設計する（ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする）
