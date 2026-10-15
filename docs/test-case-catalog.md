@@ -133,15 +133,22 @@ Serviceは所有者条件付きでTodoを取得してから削除する。不存
 | 所有者本人のTodo削除 | 所有者条件付きで取得したTodoがRepositoryへ削除依頼され、Serviceは正常終了する | [`deletesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L215) | ✅ |
 | 不存在・別所有者のTodo削除 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Repositoryへ削除依頼しない | [`throwsTodoNotFoundExceptionWhenDeletingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L233) | ✅ |
 
+## Section 4: API層（`Controller`）と `OpenAPI`
+
+### タスク2: UTC基準の日時型への見直し
+
+UserとTodoの`createdAt`／`updatedAt`を`Instant`で扱い、PostgreSQLの`timestamptz`へ保存する。RepositoryテストではPostgreSQL Testcontainersを使い、保存後に永続化コンテキストをクリアしてDBから再読込する。テストメソッドのリンクはテストコード作成後に追加する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| Userの作成・更新日時の永続化 | Userの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsUserTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L77) | 🤝 |
+| Todoの作成・更新日時の永続化 | Todoの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsTodoTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L70) | 🤝 |
+| User更新時の日時 | User更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenUserChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L248) | 🤝 |
+| Todo更新時の日時 | Todo更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L226) | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換と検証境界を理解する | ✅ |
-| Section 3: TodoService作成 | 合意した所有者付き作成ケースをService単体テストで確認する | ✅ |
-| Section 3: TodoService ID指定取得 | 合意した所有者条件付き検索と不存在のケースをService単体・Repository実DBテストで確認する | ✅ |
-| Section 3: TodoService所有者別一覧 | 合意した所有者境界、空リスト、更新日時・ID順をService単体・Repository実DBテストで確認する | ✅ |
-| Section 3: TodoService更新 | 合意した所有者本人の一括更新と不存在時のケースをService単体テストで確認する | ✅ |
-| Section 3: TodoService削除 | 合意した所有者本人の削除呼び出しと不存在時のケースをService単体テストで確認する | ✅ |
-| Section 4: UTC日時への見直し | `Instant`とPostgreSQL `timestamptz`のEntityマッピング・時刻設定をRepositoryテストで確認するケースを合意後に記録する | 🚧 |
+| Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | 🤝 |
 | Section 4: Todo一覧ページネーション | RepositoryのDBページ分割とServiceの委譲を検証するケースを合意後に記録する | 🚧 |
 | Section 4: DTO・Validation | 入出力項目、入力制約、Problem Details拡張項目を合意後にケースを記録する | 🚧 |
 | Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |

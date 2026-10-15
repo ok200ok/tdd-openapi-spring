@@ -3,7 +3,10 @@ package com.github.ok200ok.api_todo.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
@@ -58,6 +61,26 @@ class TodoRepositoryTests {
 		assertThat(saved.getCreatedAt()).isNotNull();
 		assertThat(saved.getUpdatedAt()).isNotNull();
 		assertThat(saved.getUser().getId()).isEqualTo(user.getId());
+	}
+
+	/**
+	 * Todoの2つの監査日時がInstantとしてPostgreSQLのtimestamptz列に保存され、DB再読込後も保たれることを確認する
+	 */
+	@Test
+	void persistsTodoTimestampsAsInstantsInPostgres() {
+		User user = userRepository.saveAndFlush(user("alice"));
+		Todo saved = todoRepository.saveAndFlush(
+				new Todo(user, "Write tests", null, TodoStatusEnum.PENDING));
+		Instant expectedCreatedAt = asInstant(saved.getCreatedAt());
+		Instant expectedUpdatedAt = asInstant(saved.getUpdatedAt());
+		entityManager.clear();
+
+		Todo reloaded = todoRepository.findById(saved.getId()).orElseThrow();
+
+		assertTimestampMatchesPostgresPrecision(expectedCreatedAt, asInstant(reloaded.getCreatedAt()));
+		assertTimestampMatchesPostgresPrecision(expectedUpdatedAt, asInstant(reloaded.getUpdatedAt()));
+		assertTimestampColumnIsTimestamptz("todos", "created_at");
+		assertTimestampColumnIsTimestamptz("todos", "updated_at");
 	}
 
 	/**
@@ -196,18 +219,23 @@ class TodoRepositoryTests {
 	 * 短い待機後にstatusを変更し、flushでUPDATEと{@code @PreUpdate}を発生させる。時刻の厳密値でなく前後関係だけを検証する
 	 * {@code isAfter}で新しい更新時刻が比較元より後であることを表明する
 	 */
+	/**
+	 * Todo更新時はupdatedAtだけが進み、作成時刻createdAtは維持されることを確認する
+	 */
 	@Test
 	void updatesUpdatedAtWhenTodoChanges() throws InterruptedException {
 		User user = user("alice");
 		Todo todo = todoRepository.saveAndFlush(
 				new Todo(user, "Write tests", null, TodoStatusEnum.PENDING));
-		LocalDateTime originalUpdatedAt = todo.getUpdatedAt();
+		Instant originalCreatedAt = asInstant(todo.getCreatedAt());
+		Instant originalUpdatedAt = asInstant(todo.getUpdatedAt());
 
 		Thread.sleep(10);
 		todo.changeStatus(TodoStatusEnum.COMPLETED);
 		todoRepository.flush();
 
-		assertThat(todo.getUpdatedAt()).isAfter(originalUpdatedAt);
+		assertThat(asInstant(todo.getCreatedAt())).isEqualTo(originalCreatedAt);
+		assertThat(asInstant(todo.getUpdatedAt())).isAfter(originalUpdatedAt);
 	}
 
 	/**
@@ -289,6 +317,30 @@ class TodoRepositoryTests {
 
 	private User user(String userName) {
 		return userRepository.saveAndFlush(new User(userName, "{encoded}secret", null, "ROLE_USER"));
+	}
+
+	private Instant asInstant(Object value) {
+		assertThat(value).isInstanceOf(Instant.class);
+		return Instant.class.cast(value);
+	}
+
+	/**
+	 * PostgreSQLのマイクロ秒精度を考慮し、永続化前後の時点の差が1マイクロ秒以内であることを確認する
+	 */
+	private void assertTimestampMatchesPostgresPrecision(Instant expected, Instant actual) {
+		assertThat(Duration.between(expected, actual).abs())
+				.isLessThanOrEqualTo(Duration.of(1, ChronoUnit.MICROS));
+	}
+
+	/**
+	 * PostgreSQLのカタログから対象列の型を読み、タイムゾーン付きtimestampであることを確認する
+	 */
+	private void assertTimestampColumnIsTimestamptz(String tableName, String columnName) {
+		String dataType = jdbcTemplate.queryForObject(
+				"SELECT data_type FROM information_schema.columns WHERE table_name = ? AND column_name = ?",
+				String.class, tableName, columnName);
+
+		assertThat(dataType).isEqualTo("timestamp with time zone");
 	}
 
 }
