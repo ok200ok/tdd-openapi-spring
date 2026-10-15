@@ -3,7 +3,11 @@ package com.github.ok200ok.api_todo.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +38,9 @@ class UserRepositoryTests {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private EntityManager entityManager;
+
 	// Repositoryを介さずSQLを実行し、実際の接続先DBのバージョンを確かめる
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -61,6 +68,24 @@ class UserRepositoryTests {
 		// Repository経由の保存確認とは別に、SQLを直接実行して実際の接続先がPostgreSQL 17であることを検証する
 		assertThat(jdbcTemplate.queryForObject("SELECT version()", String.class))
 				.contains("PostgreSQL 17");
+	}
+
+	/**
+	 * Userの2つの監査日時がInstantとしてPostgreSQLのtimestamptz列に保存され、DB再読込後も保たれることを確認する
+	 */
+	@Test
+	void persistsUserTimestampsAsInstantsInPostgres() {
+		User saved = userRepository.saveAndFlush(user("alice", "Alice Example"));
+		Instant expectedCreatedAt = asInstant(saved.getCreatedAt());
+		Instant expectedUpdatedAt = asInstant(saved.getUpdatedAt());
+		entityManager.clear();
+
+		User reloaded = userRepository.findById(saved.getId()).orElseThrow();
+
+		assertTimestampMatchesPostgresPrecision(expectedCreatedAt, asInstant(reloaded.getCreatedAt()));
+		assertTimestampMatchesPostgresPrecision(expectedUpdatedAt, asInstant(reloaded.getUpdatedAt()));
+		assertTimestampColumnIsTimestamptz("users", "created_at");
+		assertTimestampColumnIsTimestamptz("users", "updated_at");
 	}
 
 	/**
@@ -216,16 +241,45 @@ class UserRepositoryTests {
 	 * {@code changeDisplayName}でEntityを変更した後、{@code flush}でHibernateに変更をDBへ同期させ、{@code @PreUpdate}の更新時刻設定を発生させる
 	 * {@code isAfter}は更新時刻が元の値より後であることを表明する。テスト用トランザクションはcommitされず、他テストへ変更を残さない
 	 */
+	/**
+	 * User更新時はupdatedAtだけが進み、作成時刻createdAtは維持されることを確認する
+	 */
 	@Test
 	void updatesUpdatedAtWhenUserChanges() throws InterruptedException {
 		User saved = userRepository.saveAndFlush(user("alice", "Before"));
-		LocalDateTime originalUpdatedAt = saved.getUpdatedAt();
+		Instant originalCreatedAt = asInstant(saved.getCreatedAt());
+		Instant originalUpdatedAt = asInstant(saved.getUpdatedAt());
 
 		Thread.sleep(10);
 		saved.changeDisplayName("After");
 		userRepository.flush();
 
-		assertThat(saved.getUpdatedAt()).isAfter(originalUpdatedAt);
+		assertThat(asInstant(saved.getCreatedAt())).isEqualTo(originalCreatedAt);
+		assertThat(asInstant(saved.getUpdatedAt())).isAfter(originalUpdatedAt);
+	}
+
+	private Instant asInstant(Object value) {
+		assertThat(value).isInstanceOf(Instant.class);
+		return Instant.class.cast(value);
+	}
+
+	/**
+	 * PostgreSQLのマイクロ秒精度を考慮し、永続化前後の時点の差が1マイクロ秒以内であることを確認する
+	 */
+	private void assertTimestampMatchesPostgresPrecision(Instant expected, Instant actual) {
+		assertThat(Duration.between(expected, actual).abs())
+				.isLessThanOrEqualTo(Duration.of(1, ChronoUnit.MICROS));
+	}
+
+	/**
+	 * PostgreSQLのカタログから対象列の型を読み、タイムゾーン付きtimestampであることを確認する
+	 */
+	private void assertTimestampColumnIsTimestamptz(String tableName, String columnName) {
+		String dataType = jdbcTemplate.queryForObject(
+				"SELECT data_type FROM information_schema.columns WHERE table_name = ? AND column_name = ?",
+				String.class, tableName, columnName);
+
+		assertThat(dataType).isEqualTo("timestamp with time zone");
 	}
 
 	private User user(String userName, String displayName) {

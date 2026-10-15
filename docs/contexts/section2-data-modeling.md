@@ -22,8 +22,10 @@
 | `password` | `VARCHAR(255)` | 不可 | ハッシュ化済みパスワード |
 | `display_name` | `VARCHAR(50)` | 可 | 表示名。重複可能 |
 | `role` | `VARCHAR(50)` | 不可 | 例: `ROLE_USER` |
-| `created_at` | `TIMESTAMP WITHOUT TIME ZONE` | 不可 | 作成時にアプリケーションが設定 |
-| `updated_at` | `TIMESTAMP WITHOUT TIME ZONE` | 不可 | 作成時と更新時にアプリケーションが設定 |
+| `created_at` | `TIMESTAMP WITH TIME ZONE` (`timestamptz`) | 不可 | 作成時にUTC基準の時点をアプリケーションが設定 |
+| `updated_at` | `TIMESTAMP WITH TIME ZONE` (`timestamptz`) | 不可 | 作成時と更新時にUTC基準の時点をアプリケーションが設定 |
+
+Javaでは両プロパティを`Instant`で表し、実行環境のローカルタイムゾーンに依存しない時点として扱う。PostgreSQLの`timestamptz`は元のタイムゾーン名を保持する型ではなく、時点を保存する型である。
 
 Javaプロパティは`userName`とし、`@Column(name = "user_name")`でDBカラムへ明示的に対応付ける。その他のcamelCaseプロパティはsnake_caseカラムへ対応付ける。UserのUUIDはアプリケーションコードでなく、`@GeneratedValue(strategy = GenerationType.UUID)`を介してJPAプロバイダーが生成する。
 
@@ -36,8 +38,8 @@ Javaプロパティは`userName`とし、`@Column(name = "user_name")`でDBカ�
 | `title` | `VARCHAR(100)` | 不可 | Todoタイトル |
 | `description` | `TEXT` | 可 | 詳細説明 |
 | `status` | `VARCHAR(32)` | 不可 | Enum名を文字列で保存。DB CHECK制約で`PENDING`, `IN_PROGRESS`, `COMPLETED`に限定 |
-| `created_at` | `TIMESTAMP WITHOUT TIME ZONE` | 不可 | 作成時にアプリケーションが設定 |
-| `updated_at` | `TIMESTAMP WITHOUT TIME ZONE` | 不可 | 作成時と更新時にアプリケーションが設定 |
+| `created_at` | `TIMESTAMP WITH TIME ZONE` (`timestamptz`) | 不可 | 作成時にUTC基準の時点をアプリケーションが設定 |
+| `updated_at` | `TIMESTAMP WITH TIME ZONE` (`timestamptz`) | 不可 | 作成時と更新時にUTC基準の時点をアプリケーションが設定 |
 
 `todos(user_id)`に所有者ごとの検索用インデックスを設ける。JPA関連は必須の`@ManyToOne(fetch = LAZY)`とし、削除カスケードは設定しない。Todo作成時の初期状態`PENDING`は後続のServiceが明示的に設定し、Repository/Entityは指定された状態を永続化する。DBのDEFAULTにはせず、`NOT NULL`制約で未設定値を拒否する。これにより業務上の初期値をアプリケーション側で一元管理し、JPA Entityの状態とDBの状態を揃える。Todoの初期状態`PENDING`はDB DEFAULTにせず、Todoを作成するServiceが明示的に設定する。DBの`NOT NULL`制約は未設定値を拒否する役割とする。
 

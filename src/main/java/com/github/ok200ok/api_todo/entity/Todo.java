@@ -1,6 +1,6 @@
 package com.github.ok200ok.api_todo.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.hibernate.annotations.Check;
 
@@ -78,18 +78,19 @@ public class Todo {
 	private TodoStatusEnum status;
 
 	/**
-	 * Todoが作成された時刻を保存する必須カラム
-	 * {@code @PrePersist}で設定し、更新時には変更しないため、作成時点を保持できる
+	 * Todoが作成された時点をUTC基準の{@code Instant}で保存する必須カラム
+	 * PostgreSQLでは{@code timestamptz}に対応付け、{@code @PrePersist}で設定して更新時には変更しない
 	 */
 	@Column(name = "created_at", nullable = false)
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	/**
-	 * Todoの作成・最終更新時刻を保存する必須カラム
+	 * Todoの作成・最終更新時点をUTC基準の{@code Instant}で保存する必須カラム
+	 * PostgreSQLでは{@code timestamptz}に対応付ける
 	 * {@code @PrePersist}で初期化し、{@code @PreUpdate}でEntityの変更をDBへ反映する際に更新する
 	 */
 	@Column(name = "updated_at", nullable = false)
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
 	protected Todo() {
 	}
@@ -103,22 +104,22 @@ public class Todo {
 
 	/**
 	 * Entityを初めて永続化する直前にJPAから呼び出される
-	 * DBのNOT NULL制約を満たすため、INSERT前に作成時刻と更新時刻を初期化する
+	 * DBのNOT NULL制約を満たすため、INSERT前に作成時点と更新時点をUTC基準で初期化する
 	 */
 	@PrePersist
 	void beforeInsert() {
-		LocalDateTime now = LocalDateTime.now();
+		Instant now = Instant.now();
 		createdAt = now;
 		updatedAt = now;
 	}
 
 	/**
 	 * 永続化済みEntityの変更をDBへ反映する直前にJPAから呼び出される
-	 * 作成時刻は保持し、更新時刻だけを現在時刻へ進める
+	 * 作成時点は保持し、更新時点だけをUTC基準の現在時刻へ進める
 	 */
 	@PreUpdate
 	void beforeUpdate() {
-		updatedAt = LocalDateTime.now();
+		updatedAt = Instant.now();
 	}
 
 	public void changeDetails(String title, String description) {
@@ -150,11 +151,11 @@ public class Todo {
 		return status;
 	}
 
-	public LocalDateTime getCreatedAt() {
+	public Instant getCreatedAt() {
 		return createdAt;
 	}
 
-	public LocalDateTime getUpdatedAt() {
+	public Instant getUpdatedAt() {
 		return updatedAt;
 	}
 

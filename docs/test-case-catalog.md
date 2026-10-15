@@ -82,9 +82,9 @@
 | --- | --- | --- | --- |
 | Section 2のRepositoryテストと既存結合テスト | `.\gradlew.bat test`で全27件（UserRepositoryTests 14件、TodoRepositoryTests 11件、ApiTodoApplicationTests 2件）が失敗・エラーなく成功する。Repositoryテストの結果をデータモデル文書と各ケースの期待結果に照らし、カタログ・READMEの記載と一致することを確認する | [UserRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java)、[TodoRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java)、[ApiTodoApplicationTests](../src/test/java/com/github/ok200ok/api_todo/ApiTodoApplicationTests.java) | ✅ |
 
-## Section 3以降
+## Section 3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
 
-未合意の後続タスクは、仕様とテストケースを開発者と合意した時点で具体的な観点・期待結果・テストリンクを追記する。ケース内容を先回りして固定しない。
+後続タスクのテストケースは、仕様と検証境界を開発者と合意した時点で具体的な観点・期待結果・テストリンクを追記する。ケース内容を先回りして固定しない。
 
 ### タスク: Todo作成のService単体テスト
 
@@ -133,17 +133,49 @@ Serviceは所有者条件付きでTodoを取得してから削除する。不存
 | 所有者本人のTodo削除 | 所有者条件付きで取得したTodoがRepositoryへ削除依頼され、Serviceは正常終了する | [`deletesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L215) | ✅ |
 | 不存在・別所有者のTodo削除 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Repositoryへ削除依頼しない | [`throwsTodoNotFoundExceptionWhenDeletingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L233) | ✅ |
 
+## Section 4: API層（`Controller`）と `OpenAPI`
+
+### タスク2: UTC基準の日時型への見直し
+
+UserとTodoの`createdAt`／`updatedAt`を`Instant`で扱い、PostgreSQLの`timestamptz`へ保存する。RepositoryテストではPostgreSQL Testcontainersを使い、保存後に永続化コンテキストをクリアしてDBから再読込する。テストメソッドのリンクはテストコード作成後に追加する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| Userの作成・更新日時の永続化 | Userの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsUserTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L77) | ✅ |
+| Todoの作成・更新日時の永続化 | Todoの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsTodoTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L71) | ✅ |
+| User更新時の日時 | User更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenUserChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L248) | ✅ |
+| Todo更新時の日時 | Todo更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L227) | ✅ |
+
+### タスク3: Todo一覧のDBページネーション
+
+Repositoryは所有者条件・ページ分割・`updatedAt`降順、同時刻ではID降順の順序をPostgreSQL上で適用する。Serviceは所有者IDとページ指定をRepositoryへ委譲し、総件数を含む`Page<Todo>`を返す。RepositoryはTestcontainersのPostgreSQL、ServiceはMockito単体テストで検証する。公開APIの1始まりページ番号や不正なHTTPクエリ値の`400`応答は後続のControllerタスクで扱う。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| Repositoryの所有者別複数ページ取得 | 所有者のTodoを複数ページに分割し、他所有者のTodoを含めない。各ページは`updatedAt`降順、同時刻ではID降順とし、`totalElements`と`totalPages`も正しい | [`findsOwnerTodosAcrossPagesWithStableOrderAndPageTotals`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L146) | ✅ |
+| Repositoryの範囲外ページ | 最終ページより後のページは内容が空になるが、総件数と総ページ数は実データに基づく値を返す | [`returnsEmptyPageBeyondLastOwnerTodoPageWithActualTotals`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L180) | ✅ |
+| Serviceのページ検索委譲 | Serviceが指定所有者IDと`Pageable`をRepositoryへ渡し、Repositoryから返された`Page<Todo>`を返す | [`findsTodosForOwnerPage`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L176) | ✅ |
+
+### タスク4: DTO・Validationの詳細設計
+
+DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-validation.md)のとおり合意済み。Controller境界のテストは後続の`@WebMvcTest`タスクで作成するため、現時点では合意済みケースとして記録する。入力DTO単体で確認する項目とHTTPのProblem Details応答を区別する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 作成・更新DTOの正常入力 | 作成DTOはタイトルと任意説明を受け付け、状態・ユーザーIDを持たない。更新DTOはタイトル・説明・状態を受け付ける。タイトル前後の空白は除去される | Controllerテスト作成後にリンクを追加 | 🤝 |
+| タイトルの検証 | 欠落・`null`・空白のみを拒否し、trim後101文字を拒否する。trim後100文字は受け入れる | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 説明の省略・null | 作成時は説明省略を許容する。PUTでは説明の省略または`null`を既存説明の削除として扱う。説明長はこのAPIでは制限しない | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 状態と未知JSONフィールド | 更新時の状態欠落・不正値を拒否する。作成時の`status`、ユーザーID、その他未知のJSONフィールドも`400 Bad Request`として拒否する | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 応答DTOの契約 | Todo応答に合意済み各フィールドとUTCの`Z`日時を含める。一覧応答は`items`、1始まりの`page`、`size`、`totalElements`、`totalPages`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換と検証境界を理解する | ✅ |
-| Section 3: TodoService作成 | 合意した所有者付き作成ケースをService単体テストで確認する | ✅ |
-| Section 3: TodoService ID指定取得 | 合意した所有者条件付き検索と不存在のケースをService単体・Repository実DBテストで確認する | ✅ |
-| Section 3: TodoService所有者別一覧 | 合意した所有者境界、空リスト、更新日時・ID順をService単体・Repository実DBテストで確認する | ✅ |
-| Section 3: TodoService更新 | 合意した所有者本人の一括更新と不存在時のケースをService単体テストで確認する | ✅ |
-| Section 3: TodoService削除 | 合意した所有者本人の削除呼び出しと不存在時のケースをService単体テストで確認する | ✅ |
-| Section 4: Todo API契約・DTO・Validation | URL、HTTP、入出力、エラー、入力制約を合意後にケースを記録する。ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする | 🚧 |
+| Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
+| Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | ✅ |
+| Section 4: DTO・Validation | record DTOの入出力契約、Validation、未知JSON項目の拒否、Problem Details拡張、UTC日時とページ応答を合意する | 🤝 |
 | Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
-| Section 4: ローカル所有者境界 | API動作確認用ユーザーとControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
+| Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
 | Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
 | Section 6: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |

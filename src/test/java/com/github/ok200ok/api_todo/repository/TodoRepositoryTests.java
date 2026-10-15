@@ -3,7 +3,11 @@ package com.github.ok200ok.api_todo.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
@@ -16,6 +20,8 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import com.github.ok200ok.api_todo.TestcontainersConfiguration;
 import com.github.ok200ok.api_todo.entity.Todo;
@@ -61,6 +67,26 @@ class TodoRepositoryTests {
 	}
 
 	/**
+	 * Todoの2つの監査日時がInstantとしてPostgreSQLのtimestamptz列に保存され、DB再読込後も保たれることを確認する
+	 */
+	@Test
+	void persistsTodoTimestampsAsInstantsInPostgres() {
+		User user = userRepository.saveAndFlush(user("alice"));
+		Todo saved = todoRepository.saveAndFlush(
+				new Todo(user, "Write tests", null, TodoStatusEnum.PENDING));
+		Instant expectedCreatedAt = asInstant(saved.getCreatedAt());
+		Instant expectedUpdatedAt = asInstant(saved.getUpdatedAt());
+		entityManager.clear();
+
+		Todo reloaded = todoRepository.findById(saved.getId()).orElseThrow();
+
+		assertTimestampMatchesPostgresPrecision(expectedCreatedAt, asInstant(reloaded.getCreatedAt()));
+		assertTimestampMatchesPostgresPrecision(expectedUpdatedAt, asInstant(reloaded.getUpdatedAt()));
+		assertTimestampColumnIsTimestamptz("todos", "created_at");
+		assertTimestampColumnIsTimestamptz("todos", "updated_at");
+	}
+
+	/**
 	 * TodoのIDと関連UserのIDを条件に検索し、本人のTodoだけが取得されることをPostgreSQLで確認する
 	 * 別のUserも保存して同じTodo IDをそのUser IDと組み合わせ、結果が空になることを検証する
 	 * これはSpring Data JPAの派生クエリが関連プロパティuser.idをSQL条件へ反映することを確かめ、Serviceのモックテストでは検証できないDB問い合わせを担保する
@@ -97,9 +123,9 @@ class TodoRepositoryTests {
 				new Todo(owner, "Tied second", null, TodoStatusEnum.PENDING));
 		Todo anotherOwnersTodo = todoRepository.saveAndFlush(
 				new Todo(anotherUser, "Another owner", null, TodoStatusEnum.PENDING));
-		LocalDateTime olderTime = LocalDateTime.of(2025, 1, 1, 10, 0);
-		LocalDateTime newerTime = LocalDateTime.of(2025, 1, 2, 10, 0);
-		LocalDateTime newestTime = LocalDateTime.of(2025, 1, 3, 10, 0);
+		OffsetDateTime olderTime = OffsetDateTime.of(2025, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC);
+		OffsetDateTime newerTime = OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC);
+		OffsetDateTime newestTime = OffsetDateTime.of(2025, 1, 3, 10, 0, 0, 0, ZoneOffset.UTC);
 		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", olderTime, oldest.getId());
 		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newerTime, tiedFirst.getId());
 		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newerTime, tiedSecond.getId());
@@ -111,6 +137,60 @@ class TodoRepositoryTests {
 		assertThat(todos)
 				.extracting(Todo::getId)
 				.containsExactly(tiedSecond.getId(), tiedFirst.getId(), oldest.getId());
+	}
+
+	/**
+	 * 所有者条件・DBページ分割・更新時刻とIDの順序、およびページ集計情報を一度に確認する
+	 */
+	@Test
+	void findsOwnerTodosAcrossPagesWithStableOrderAndPageTotals() {
+		User owner = userRepository.saveAndFlush(user("alice"));
+		User anotherUser = userRepository.saveAndFlush(user("bob"));
+		Todo oldest = saveTodo(owner, "Oldest");
+		Todo tiedFirst = saveTodo(owner, "Tied first");
+		Todo tiedSecond = saveTodo(owner, "Tied second");
+		Todo newest = saveTodo(owner, "Newest");
+		Todo anotherOwnersTodo = saveTodo(anotherUser, "Another owner's newest");
+		setUpdatedAt(oldest, OffsetDateTime.of(2025, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(tiedFirst, OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(tiedSecond, OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(newest, OffsetDateTime.of(2025, 1, 3, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(anotherOwnersTodo, OffsetDateTime.of(2025, 1, 4, 10, 0, 0, 0, ZoneOffset.UTC));
+		entityManager.clear();
+
+		Page<Todo> firstPage = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(
+				owner.getId(), PageRequest.of(0, 2));
+		Page<Todo> secondPage = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(
+				owner.getId(), PageRequest.of(1, 2));
+
+		assertThat(firstPage.getContent()).extracting(Todo::getId)
+				.containsExactly(newest.getId(), tiedSecond.getId());
+		assertThat(secondPage.getContent()).extracting(Todo::getId)
+				.containsExactly(tiedFirst.getId(), oldest.getId());
+		assertThat(firstPage.getTotalElements()).isEqualTo(4);
+		assertThat(firstPage.getTotalPages()).isEqualTo(2);
+		assertThat(secondPage.getTotalElements()).isEqualTo(4);
+		assertThat(secondPage.getTotalPages()).isEqualTo(2);
+	}
+
+	/**
+	 * 最終ページを越えても空の内容と、所有者に属する実データの集計値が返ることを確認する
+	 */
+	@Test
+	void returnsEmptyPageBeyondLastOwnerTodoPageWithActualTotals() {
+		User owner = userRepository.saveAndFlush(user("alice"));
+		saveTodo(owner, "First");
+		saveTodo(owner, "Second");
+		saveTodo(owner, "Third");
+		entityManager.flush();
+		entityManager.clear();
+
+		Page<Todo> page = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(
+				owner.getId(), PageRequest.of(3, 1));
+
+		assertThat(page.getContent()).isEmpty();
+		assertThat(page.getTotalElements()).isEqualTo(3);
+		assertThat(page.getTotalPages()).isEqualTo(3);
 	}
 
 	/**
@@ -196,18 +276,23 @@ class TodoRepositoryTests {
 	 * 短い待機後にstatusを変更し、flushでUPDATEと{@code @PreUpdate}を発生させる。時刻の厳密値でなく前後関係だけを検証する
 	 * {@code isAfter}で新しい更新時刻が比較元より後であることを表明する
 	 */
+	/**
+	 * Todo更新時はupdatedAtだけが進み、作成時刻createdAtは維持されることを確認する
+	 */
 	@Test
 	void updatesUpdatedAtWhenTodoChanges() throws InterruptedException {
 		User user = user("alice");
 		Todo todo = todoRepository.saveAndFlush(
 				new Todo(user, "Write tests", null, TodoStatusEnum.PENDING));
-		LocalDateTime originalUpdatedAt = todo.getUpdatedAt();
+		Instant originalCreatedAt = asInstant(todo.getCreatedAt());
+		Instant originalUpdatedAt = asInstant(todo.getUpdatedAt());
 
 		Thread.sleep(10);
 		todo.changeStatus(TodoStatusEnum.COMPLETED);
 		todoRepository.flush();
 
-		assertThat(todo.getUpdatedAt()).isAfter(originalUpdatedAt);
+		assertThat(asInstant(todo.getCreatedAt())).isEqualTo(originalCreatedAt);
+		assertThat(asInstant(todo.getUpdatedAt())).isAfter(originalUpdatedAt);
 	}
 
 	/**
@@ -289,6 +374,38 @@ class TodoRepositoryTests {
 
 	private User user(String userName) {
 		return userRepository.saveAndFlush(new User(userName, "{encoded}secret", null, "ROLE_USER"));
+	}
+
+	private Todo saveTodo(User owner, String title) {
+		return todoRepository.saveAndFlush(new Todo(owner, title, null, TodoStatusEnum.PENDING));
+	}
+
+	private void setUpdatedAt(Todo todo, OffsetDateTime updatedAt) {
+		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", updatedAt, todo.getId());
+	}
+
+	private Instant asInstant(Object value) {
+		assertThat(value).isInstanceOf(Instant.class);
+		return Instant.class.cast(value);
+	}
+
+	/**
+	 * PostgreSQLのマイクロ秒精度を考慮し、永続化前後の時点の差が1マイクロ秒以内であることを確認する
+	 */
+	private void assertTimestampMatchesPostgresPrecision(Instant expected, Instant actual) {
+		assertThat(Duration.between(expected, actual).abs())
+				.isLessThanOrEqualTo(Duration.of(1, ChronoUnit.MICROS));
+	}
+
+	/**
+	 * PostgreSQLのカタログから対象列の型を読み、タイムゾーン付きtimestampであることを確認する
+	 */
+	private void assertTimestampColumnIsTimestamptz(String tableName, String columnName) {
+		String dataType = jdbcTemplate.queryForObject(
+				"SELECT data_type FROM information_schema.columns WHERE table_name = ? AND column_name = ?",
+				String.class, tableName, columnName);
+
+		assertThat(dataType).isEqualTo("timestamp with time zone");
 	}
 
 }
