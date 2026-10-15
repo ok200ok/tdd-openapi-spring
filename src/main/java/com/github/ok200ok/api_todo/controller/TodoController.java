@@ -4,6 +4,8 @@ import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.github.ok200ok.api_todo.dto.CreateTodoRequest;
 import com.github.ok200ok.api_todo.dto.TodoResponse;
+import com.github.ok200ok.api_todo.dto.UpdateTodoRequest;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 import jakarta.validation.Valid;
@@ -43,5 +46,18 @@ public class TodoController {
 				.buildAndExpand(todo.getId())
 				.toUri();
 		return ResponseEntity.created(location).body(TodoResponse.from(todo));
+	}
+
+	@PutMapping("/{todoId}")
+	public ResponseEntity<TodoResponse> updateTodo(
+			@PathVariable Long todoId,
+			@Valid @RequestBody UpdateTodoRequest request) {
+		var todo = todoService.updateTodoForOwner(
+				todoId,
+				ownerIdResolver.resolveOwnerId(),
+				request.title(),
+				request.description(),
+				request.status());
+		return ResponseEntity.ok(TodoResponse.from(todo));
 	}
 }
