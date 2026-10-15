@@ -132,7 +132,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 
 ### Section4: API層（`Controller`）と `OpenAPI` の `TDD` 実装
 - [x] Todo API契約の設計（URL、メソッド、入出力、ステータス、エラーの合意）
-- [ ] UTC基準の日時型への見直し（Entityの日時型をInstant、PostgreSQL列をtimestamptzとする設計・実装。Repositoryテストで永続化と時点を確認）
+- [x] UTC基準の日時型への見直し（Entityの日時型をInstant、PostgreSQL列をtimestamptzとする設計・実装。Repositoryテストで永続化と時点を確認）
 - [ ] Todo一覧のDBページネーション（RepositoryでDBページ分割し、Serviceが所有者条件とページ指定を委譲。公開APIは1始まり、既定サイズ5、最大100。Repository実DBテストとService単体テストで確認）
 - [ ] DTO・Validationの詳細設計（Java record DTO、入力制約、Problem Detailsの入力エラー拡張を合意し、Controllerテストケースをテストケース一覧へ記録）
 - [ ] TodoControllerのTDD（`@WebMvcTest`／`MockMvc`でHTTP境界、Validation、応答とService連携をテストし、RED・GREENを確認）

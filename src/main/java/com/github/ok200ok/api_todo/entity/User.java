@@ -1,6 +1,6 @@
 package com.github.ok200ok.api_todo.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -48,13 +48,13 @@ public class User {
 	@Column(nullable = false, length = 50)
 	private String role;
 
-	// 作成時に設定し、以後の更新では値を変えないタイムスタンプ
+	// InstantでUTC基準の時点を表す。HibernateはPostgreSQLでtimestamp with time zone列へ対応付ける
 	@Column(name = "created_at", nullable = false)
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
-	// 新規作成時と更新時にEntityのライフサイクルコールバックで設定するタイムスタンプ
+	// InstantでUTC基準の時点を表し、新規作成時と更新時にEntityのライフサイクルコールバックで設定する
 	@Column(name = "updated_at", nullable = false)
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
 	protected User() {
 	}
@@ -68,24 +68,24 @@ public class User {
 
 	/**
 	 * Entityが初めて永続化される直前にJPAから呼び出されるコールバック
-	 * INSERT前にログイン名を正規化し、作成時刻と更新時刻を同じ現在時刻で初期化する
+	 * INSERT前にログイン名を正規化し、作成時刻と更新時刻をUTC基準の同じ現在時点で初期化する
 	 */
 	@PrePersist
 	void beforeInsert() {
 		canonicalizeUserName();
-		LocalDateTime now = LocalDateTime.now();
+		Instant now = Instant.now();
 		createdAt = now;
 		updatedAt = now;
 	}
 
 	/**
 	 * 永続化済みEntityの変更をDBへ反映する直前にJPAから呼び出されるコールバック
-	 * 更新時刻を進め、ログイン名も正規化する。SQL発行のたびではなくEntity更新時に実行される
+	 * 更新時点をUTC基準の現在時刻へ進め、ログイン名も正規化する。SQL発行のたびではなくEntity更新時に実行される
 	 */
 	@PreUpdate
 	void beforeUpdate() {
 		canonicalizeUserName();
-		updatedAt = LocalDateTime.now();
+		updatedAt = Instant.now();
 	}
 
 	private void canonicalizeUserName() {
@@ -119,11 +119,11 @@ public class User {
 		return role;
 	}
 
-	public LocalDateTime getCreatedAt() {
+	public Instant getCreatedAt() {
 		return createdAt;
 	}
 
-	public LocalDateTime getUpdatedAt() {
+	public Instant getUpdatedAt() {
 		return updatedAt;
 	}
 

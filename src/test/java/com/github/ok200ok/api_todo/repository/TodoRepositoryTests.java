@@ -5,7 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -120,9 +121,9 @@ class TodoRepositoryTests {
 				new Todo(owner, "Tied second", null, TodoStatusEnum.PENDING));
 		Todo anotherOwnersTodo = todoRepository.saveAndFlush(
 				new Todo(anotherUser, "Another owner", null, TodoStatusEnum.PENDING));
-		LocalDateTime olderTime = LocalDateTime.of(2025, 1, 1, 10, 0);
-		LocalDateTime newerTime = LocalDateTime.of(2025, 1, 2, 10, 0);
-		LocalDateTime newestTime = LocalDateTime.of(2025, 1, 3, 10, 0);
+		OffsetDateTime olderTime = OffsetDateTime.of(2025, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC);
+		OffsetDateTime newerTime = OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC);
+		OffsetDateTime newestTime = OffsetDateTime.of(2025, 1, 3, 10, 0, 0, 0, ZoneOffset.UTC);
 		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", olderTime, oldest.getId());
 		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newerTime, tiedFirst.getId());
 		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newerTime, tiedSecond.getId());
