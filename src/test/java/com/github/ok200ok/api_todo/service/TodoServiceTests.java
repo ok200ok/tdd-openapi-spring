@@ -156,4 +156,44 @@ class TodoServiceTests {
 		assertThat(todoService.findTodosForOwner(ownerId)).isEmpty();
 		verify(todoRepository).findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
 	}
+
+	/**
+	 * 指定所有者のTodoについてタイトル・説明・状態をまとめて変更し、同じ更新済みEntityを返すことを確認する
+	 * Repository検索をモックし、DBアクセスではなくServiceが所有者条件付き取得後にEntityの変更操作を呼ぶことを検証する
+	 * 3項目すべてを確認することで、更新操作が一部の値だけを取りこぼさないことを担保する
+	 */
+	@Test
+	void updatesTodoForOwner() {
+		Long todoId = 42L;
+		UUID ownerId = UUID.randomUUID();
+		Todo todo = new Todo(new User("alice", "hashed-password", null, "ROLE_USER"),
+				"Old title", "Old description", TodoStatusEnum.PENDING);
+		when(todoRepository.findByIdAndUser_Id(todoId, ownerId)).thenReturn(Optional.of(todo));
+
+		Todo result = todoService.updateTodoForOwner(
+				todoId, ownerId, "Updated title", "Updated description", TodoStatusEnum.COMPLETED);
+
+		assertThat(result).isSameAs(todo);
+		assertThat(result.getTitle()).isEqualTo("Updated title");
+		assertThat(result.getDescription()).isEqualTo("Updated description");
+		assertThat(result.getStatus()).isEqualTo(TodoStatusEnum.COMPLETED);
+		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+	}
+
+	/**
+	 * 指定所有者に属するTodoが見つからない場合、更新を行わずTodoNotFoundExceptionとなることを確認する
+	 * 所有者条件付きRepository検索の空結果を設定し、Serviceが不存在と所有者不一致を同じ失敗として扱うことを検証する
+	 */
+	@Test
+	void throwsTodoNotFoundExceptionWhenUpdatingTodoNotOwnedByUser() {
+		Long todoId = 42L;
+		UUID ownerId = UUID.randomUUID();
+		when(todoRepository.findByIdAndUser_Id(todoId, ownerId)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> todoService.updateTodoForOwner(
+				todoId, ownerId, "Updated title", "Updated description", TodoStatusEnum.COMPLETED))
+				.isInstanceOf(TodoNotFoundException.class);
+
+		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+	}
 }

@@ -121,8 +121,8 @@ Serviceは所有者条件付きでTodoを取得し、タイトル・説明・状
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者本人のTodo更新 | タイトル・説明・状態のすべてが変更され、更新後のTodoが返る | `updatesTodoForOwner`（作成予定） | 🤝 |
-| 不存在・別所有者のTodo更新 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Entityの変更操作は行われない | `throwsTodoNotFoundExceptionWhenUpdatingTodoNotOwnedByUser`（作成予定） | 🤝 |
+| 所有者本人のTodo更新 | タイトル・説明・状態のすべてが変更され、更新後のTodoが返る | [`updatesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L166) | 🤝 |
+| 不存在・別所有者のTodo更新 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Entityの変更操作は行われない | [`throwsTodoNotFoundExceptionWhenUpdatingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L188) | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
