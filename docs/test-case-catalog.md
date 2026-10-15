@@ -10,6 +10,7 @@
 - テストメソッド名のリンクはソースファイルと行番号へ結び付ける。コード変更で行番号や名前が変わった場合はリンクを更新する。
 - 各タスクの完了前に、合意済みケースの記載漏れ、期待結果、リンク、状態を確認する。
 - 後続タスクの具体的なケースは仕様合意時に決める。未合意のテスト内容を先回りして仕様として固定しない。
+- Section 3以降は一般的に必ず担保すべき基本要件に絞り、重要な振る舞いを少数の明確なケースで検証する。網羅性を目的にケースやテストコードを増やさず、Section 2の既存記録は変更しない。
 
 ## 状態
 
@@ -83,7 +84,16 @@
 
 ## Section 3以降
 
-以下のタスクは、仕様とテストケースを開発者と合意した時点で具体的な観点・期待結果・テストリンクを追記する。ケース内容は未合意のため、ここではテスト仕様を先取りしない。
+未合意の後続タスクは、仕様とテストケースを開発者と合意した時点で具体的な観点・期待結果・テストリンクを追記する。ケース内容を先回りして固定しない。
+
+### タスク: Todo作成のService単体テスト
+
+MockitoでRepositoryを置き換え、TodoServiceの作成処理を検証する。DBクエリやSpringコンテキストはこの単体テストの対象外とする。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 所有者・内容・初期状態を指定したTodo作成 | `ownerId`から取得したUser、指定したタイトルと説明、初期状態`PENDING`を持つTodoがTodoRepositoryへ保存され、保存結果がServiceから返る | [`createsTodoForOwnerWithPendingStatus`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L47) | 🤝 |
+| 存在しない所有者での作成 | UserRepositoryに所有者が見つからない場合、`UserNotFoundException`で失敗し、TodoRepositoryへ保存要求を行わない | [`throwsUserNotFoundExceptionWhenCreatingTodoForUnknownOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L66) | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
