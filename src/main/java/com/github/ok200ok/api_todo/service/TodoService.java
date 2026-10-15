@@ -3,6 +3,8 @@ package com.github.ok200ok.api_todo.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +69,18 @@ public class TodoService {
 	 */
 	public List<Todo> findTodosForOwner(UUID ownerId) {
 		return todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
+	}
+
+	/**
+	 * 指定された所有者のTodoをページ単位で取得する
+	 * 所有者条件とページ指定をRepositoryへ委譲し、総件数などのページ情報を含む結果を返す
+	 *
+	 * @param ownerId Todo所有者のID
+	 * @param pageable ページ番号・件数・順序の指定
+	 * @return 所有者に属するTodoのページ
+	 */
+	public Page<Todo> findTodosForOwner(UUID ownerId, Pageable pageable) {
+		return todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId, pageable);
 	}
 
 	/**
