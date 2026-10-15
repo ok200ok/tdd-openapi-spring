@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
@@ -77,6 +78,39 @@ class TodoRepositoryTests {
 				.contains(savedTodo.getId());
 		assertThat(todoRepository.findByIdAndUser_Id(savedTodo.getId(), anotherUser.getId()))
 				.isEmpty();
+	}
+
+	/**
+	 * 所有者別一覧が他UserのTodoを含めず、更新日時降順、同時刻ではID降順で返ることをPostgreSQLで確認する
+	 * 各TodoをRepositoryから保存した後、JdbcTemplateでupdated_atを既知の値に設定し、時刻差と同時刻のID順を決定的に検証する
+	 * 別所有者にはより新しい日時を設定して、所有者条件が並び順に埋もれず適用されることも確認する
+	 */
+	@Test
+	void findsTodosByOwnerOrderedByUpdatedAtAndIdDescending() {
+		User owner = userRepository.saveAndFlush(user("alice"));
+		User anotherUser = userRepository.saveAndFlush(user("bob"));
+		Todo oldest = todoRepository.saveAndFlush(
+				new Todo(owner, "Oldest", null, TodoStatusEnum.PENDING));
+		Todo tiedFirst = todoRepository.saveAndFlush(
+				new Todo(owner, "Tied first", null, TodoStatusEnum.PENDING));
+		Todo tiedSecond = todoRepository.saveAndFlush(
+				new Todo(owner, "Tied second", null, TodoStatusEnum.PENDING));
+		Todo anotherOwnersTodo = todoRepository.saveAndFlush(
+				new Todo(anotherUser, "Another owner", null, TodoStatusEnum.PENDING));
+		LocalDateTime olderTime = LocalDateTime.of(2025, 1, 1, 10, 0);
+		LocalDateTime newerTime = LocalDateTime.of(2025, 1, 2, 10, 0);
+		LocalDateTime newestTime = LocalDateTime.of(2025, 1, 3, 10, 0);
+		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", olderTime, oldest.getId());
+		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newerTime, tiedFirst.getId());
+		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newerTime, tiedSecond.getId());
+		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", newestTime, anotherOwnersTodo.getId());
+		entityManager.clear();
+
+		List<Todo> todos = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(owner.getId());
+
+		assertThat(todos)
+				.extracting(Todo::getId)
+				.containsExactly(tiedSecond.getId(), tiedFirst.getId(), oldest.getId());
 	}
 
 	/**

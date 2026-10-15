@@ -111,9 +111,9 @@ Serviceは所有者IDをRepositoryへ渡して一覧取得を委譲する。0件
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | `findsTodosForOwner`（作成予定） | 🤝 |
-| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | `returnsEmptyListWhenOwnerHasNoTodos`（作成予定） | 🤝 |
-| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | `findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`（作成予定） | 🤝 |
+| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | [`findsTodosForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L132) | 🤝 |
+| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | [`returnsEmptyListWhenOwnerHasNoTodos`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L152) | 🤝 |
+| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | [`findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L89) | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |

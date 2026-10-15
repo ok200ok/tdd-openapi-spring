@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -120,5 +121,39 @@ class TodoServiceTests {
 				.isInstanceOf(TodoNotFoundException.class);
 
 		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+	}
+
+	/**
+	 * 指定した所有者IDでRepositoryを検索し、得られたTodo一覧をServiceが返すことを確認する
+	 * Repositoryの応答をMockitoで設定することで、DB検索ではなくServiceの委譲と戻り値に検証範囲を絞る
+	 * 一覧の所有者条件と並び順はRepositoryの実DBテストで検証する
+	 */
+	@Test
+	void findsTodosForOwner() {
+		UUID ownerId = UUID.randomUUID();
+		List<Todo> todos = List.of(
+				new Todo(new User("alice", "hashed-password", null, "ROLE_USER"),
+						"First", null, TodoStatusEnum.PENDING),
+				new Todo(new User("alice", "hashed-password", null, "ROLE_USER"),
+						"Second", null, TodoStatusEnum.IN_PROGRESS));
+		when(todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId)).thenReturn(todos);
+
+		List<Todo> result = todoService.findTodosForOwner(ownerId);
+
+		assertThat(result).isSameAs(todos);
+		verify(todoRepository).findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
+	}
+
+	/**
+	 * 所有者にTodoがない場合、Serviceが未検出例外ではなく空リストを返すことを確認する
+	 * TodoRepositoryの空リストをスタブし、一覧取得で0件が正常な結果として扱われる契約を検証する
+	 */
+	@Test
+	void returnsEmptyListWhenOwnerHasNoTodos() {
+		UUID ownerId = UUID.randomUUID();
+		when(todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId)).thenReturn(List.of());
+
+		assertThat(todoService.findTodosForOwner(ownerId)).isEmpty();
+		verify(todoRepository).findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
 	}
 }
