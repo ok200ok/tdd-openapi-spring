@@ -1,4 +1,4 @@
-package com.github.ok200ok.api_todo;
+package com.github.ok200ok.api_todo.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -16,11 +16,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.github.ok200ok.api_todo.TestcontainersConfiguration;
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
 import com.github.ok200ok.api_todo.entity.User;
-import com.github.ok200ok.api_todo.repository.TodoRepository;
-import com.github.ok200ok.api_todo.repository.UserRepository;
 
 @DataJpaTest(showSql = false, properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

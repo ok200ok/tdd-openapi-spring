@@ -1,4 +1,4 @@
-package com.github.ok200ok.api_todo;
+package com.github.ok200ok.api_todo.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.github.ok200ok.api_todo.TestcontainersConfiguration;
 import com.github.ok200ok.api_todo.entity.User;
-import com.github.ok200ok.api_todo.repository.UserRepository;
 
 /**
  * UserのJPAマッピングとUserRepositoryの永続化操作を、テスト用データベースで確認する
