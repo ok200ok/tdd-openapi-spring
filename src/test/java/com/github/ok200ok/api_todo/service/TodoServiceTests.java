@@ -31,9 +31,17 @@ import com.github.ok200ok.api_todo.repository.UserRepository;
 @ExtendWith(MockitoExtension.class)
 class TodoServiceTests {
 
+	/**
+	 * UserRepositoryのMockitoモック
+	 * 実DBへ接続せず、各テストで設定した検索結果をServiceへ返す依存先の代役として使う。各テストで検索結果や保存結果を制御し、ServiceからRepositoryへ渡す引数と呼び出しを検証する
+	 */
 	@Mock
 	private UserRepository userRepository;
 
+	/**
+	 * TodoRepositoryのMockitoモック
+	 *
+	 */
 	@Mock
 	private TodoRepository todoRepository;
 
@@ -195,5 +203,42 @@ class TodoServiceTests {
 				.isInstanceOf(TodoNotFoundException.class);
 
 		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+	}
+
+	/**
+	 * 所有者条件付きで取得したTodoだけをRepositoryへ削除依頼し、Serviceが正常終了することを確認する
+	 * 検索結果をモックし、下の{@code verify}でServiceがTodo IDと所有者IDをRepositoryへ渡したことを確認する
+	 * この単体テストはDBクエリ自体が所有者条件を適用するかまでは検証せず、その責務は既存のRepository実DBテストが担う
+	 * ここでは検索成功後に取得したTodoを削除Repositoryメソッドへ渡すServiceの流れを検証する
+	 */
+	@Test
+	void deletesTodoForOwner() {
+		Long todoId = 42L;
+		UUID ownerId = UUID.randomUUID();
+		Todo todo = new Todo(new User("alice", "hashed-password", null, "ROLE_USER"),
+				"Delete me", null, TodoStatusEnum.PENDING);
+		when(todoRepository.findByIdAndUser_Id(todoId, ownerId)).thenReturn(Optional.of(todo));
+
+		todoService.deleteTodoForOwner(todoId, ownerId);
+
+		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+		verify(todoRepository).delete(todo);
+	}
+
+	/**
+	 * 指定所有者に属するTodoが見つからない場合、例外となりTodoRepositoryへ削除依頼しないことを確認する
+	 * 所有者条件付き検索が空なら削除操作へ進まない契約をMockitoの呼び出し検証で確認する
+	 */
+	@Test
+	void throwsTodoNotFoundExceptionWhenDeletingTodoNotOwnedByUser() {
+		Long todoId = 42L;
+		UUID ownerId = UUID.randomUUID();
+		when(todoRepository.findByIdAndUser_Id(todoId, ownerId)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> todoService.deleteTodoForOwner(todoId, ownerId))
+				.isInstanceOf(TodoNotFoundException.class);
+
+		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+		verify(todoRepository, never()).delete(any(Todo.class));
 	}
 }
