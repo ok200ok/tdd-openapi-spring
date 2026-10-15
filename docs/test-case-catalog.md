@@ -158,7 +158,7 @@ Repositoryは所有者条件・ページ分割・`updatedAt`降順、同時刻�
 
 ### タスク4: DTO・Validationの詳細設計
 
-DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-validation.md)のとおり合意済み。Controller境界のテストは後続の`@WebMvcTest`タスクで作成するため、現時点では合意済みケースとして記録する。入力DTO単体で確認する項目とHTTPのProblem Details応答を区別する。
+DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-validation.md)のとおり合意済み。以下はタスク4で合意したケースで、タスク5の`@WebMvcTest`で一度だけ検証する。タスク5側では同じDTO制約や応答フィールドを重複ケースとして登録せず、HTTP操作・Service連携・エラー変換を追加で確認する。
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
@@ -169,12 +169,26 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | Controllerテスト作成後にリンクを追加 | 🤝 |
 | 応答DTOの契約 | Todo応答に合意済み各フィールドとUTCの`Z`日時を含める。一覧応答は`items`、1始まりの`page`、`size`、`totalElements`、`totalPages`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
 
+### タスク5: TodoControllerのTDD
+
+`@WebMvcTest`と`MockMvc`でHTTP境界を検証し、`TodoService`と所有者ID解決境界はモックする。DBの検索・永続化は対象外とし、RepositoryおよびServiceテストの既存責務と重ねない。DTOの入力検証、Problem Detailsの入力エラー、応答DTOの形はタスク4のケースをこのControllerテストで実装し、ここでは再掲しない。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 一覧の既定ページとService連携 | クエリ省略時は公開ページ1・サイズ5を使い、0始まりの`Pageable`と解決済み所有者IDをServiceへ渡す。ページ指定時は1始まりを適切に変換し、Serviceの結果を一覧応答にする | Controllerテスト作成後にリンクを追加 | 🤝 |
+| ページクエリの境界 | `page < 1`、`size < 1`、`size > 100`、数値でない値は`400 Bad Request`とし、Serviceを呼ばない。データ範囲を超える有効なページは空の内容と実際のページ情報を持つ`200 OK`とする | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Todo作成のHTTP契約とService連携 | 有効な要求で`201 Created`と作成Todoへの`Location`を返し、解決済み所有者IDおよびDTOの入力値をServiceへ渡す | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Todo取得のHTTP契約とService連携 | 成功時に`200 OK`を返し、解決済み所有者IDとTodo IDでServiceを呼び出す | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Todo更新のHTTP契約とService連携 | 有効な要求で`200 OK`を返し、解決済み所有者ID、Todo ID、タイトル・説明・状態をServiceへ渡す | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Todo削除のHTTP契約とService連携 | 成功時にServiceへ削除を委譲し、本文なしの`204 No Content`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Todo未検出のHTTPエラー変換 | 取得・更新・削除でServiceが`TodoNotFoundException`を送出した場合、`errors`拡張を付けずProblem Details形式の`404 Not Found`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
 | Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | ✅ |
-| Section 4: DTO・Validation | record DTOの入出力契約、Validation、未知JSON項目の拒否、Problem Details拡張、UTC日時とページ応答を合意する | 🤝 |
-| Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
+| Section 4: DTO・Validation | DTOの入力制約、未知JSON項目の拒否、入力エラーProblem Details、応答DTOのフィールドと日時・ページ表現をタスク5のControllerテストで一度だけ確認する | 🤝 |
+| Section 4: TodoController | `@WebMvcTest`でCRUDのHTTP契約、Service連携、ページクエリ境界、未検出例外の404変換を確認する。DTO・Validationのケースは上記タスク4の記録を参照する | 🤝 |
 | Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
 | Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
