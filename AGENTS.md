@@ -53,7 +53,7 @@
 ### Entity: `User` (`users` テーブル)
 - データモデリングの詳細は `docs/contexts/section2-data-modeling.md` を参照
 - Javaプロパティ`userName`はDBカラム`user_name`へ対応し、小文字英数字のみを小文字で保存する（必須・一意・最大50文字）
-- `id` (`UUID`, PK)、`password`（ハッシュ化済み文字列、必須）、`role`（必須）、`createdAt` / `updatedAt`（`LocalDateTime`, 必須）
+- `id` (`UUID`, PK)、`password`（ハッシュ化済み文字列、必須）、`role`（必須）、`createdAt` / `updatedAt`（`Instant`, 必須。PostgreSQLでは`timestamptz`）
 - `displayName`（任意・最大50文字）は表示専用であり、重複可能
 
 ### Entity: `Todo` (`todos` テーブル)
@@ -62,7 +62,7 @@
 - `title` (`String`, 必須, 最大100文字)
 - `description` (`String`)
 - `status` (`TodoStatusEnum`, 必須: `PENDING`, `IN_PROGRESS`, `COMPLETED`)
-- `createdAt` / `updatedAt` (`LocalDateTime`, 必須)
+- `createdAt` / `updatedAt` (`Instant`, 必須。PostgreSQLでは`timestamptz`)
 - Todoは必ずUserに属し、所有者本人のみが読み書きできる。認可はEntityではなくService/API層で実施する
 - 現スコープではUser削除機能とTodoの削除カスケードを設けない
 

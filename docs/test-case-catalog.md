@@ -156,11 +156,24 @@ Repositoryは所有者条件・ページ分割・`updatedAt`降順、同時刻�
 | Repositoryの範囲外ページ | 最終ページより後のページは内容が空になるが、総件数と総ページ数は実データに基づく値を返す | [`returnsEmptyPageBeyondLastOwnerTodoPageWithActualTotals`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L180) | ✅ |
 | Serviceのページ検索委譲 | Serviceが指定所有者IDと`Pageable`をRepositoryへ渡し、Repositoryから返された`Page<Todo>`を返す | [`findsTodosForOwnerPage`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L176) | ✅ |
 
+### タスク4: DTO・Validationの詳細設計
+
+DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-validation.md)のとおり合意済み。Controller境界のテストは後続の`@WebMvcTest`タスクで作成するため、現時点では合意済みケースとして記録する。入力DTO単体で確認する項目とHTTPのProblem Details応答を区別する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 作成・更新DTOの正常入力 | 作成DTOはタイトルと任意説明を受け付け、状態・ユーザーIDを持たない。更新DTOはタイトル・説明・状態を受け付ける。タイトル前後の空白は除去される | Controllerテスト作成後にリンクを追加 | 🤝 |
+| タイトルの検証 | 欠落・`null`・空白のみを拒否し、trim後101文字を拒否する。trim後100文字は受け入れる | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 説明の省略・null | 作成時は説明省略を許容する。PUTでは説明の省略または`null`を既存説明の削除として扱う。説明長はこのAPIでは制限しない | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 状態と未知JSONフィールド | 更新時の状態欠落・不正値を拒否する。作成時の`status`、ユーザーID、その他未知のJSONフィールドも`400 Bad Request`として拒否する | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 応答DTOの契約 | Todo応答に合意済み各フィールドとUTCの`Z`日時を含める。一覧応答は`items`、1始まりの`page`、`size`、`totalElements`、`totalPages`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
 | Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | ✅ |
-| Section 4: DTO・Validation | 入出力項目、入力制約、Problem Details拡張項目を合意後にケースを記録する | 🚧 |
+| Section 4: DTO・Validation | record DTOの入出力契約、Validation、未知JSON項目の拒否、Problem Details拡張、UTC日時とページ応答を合意する | 🤝 |
 | Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
 | Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
 | Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |

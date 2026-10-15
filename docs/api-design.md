@@ -1,12 +1,15 @@
-# Section 4: API設計
+# API設計仕様
 
 個々のテストケース、期待結果、テストリンク、実行状態は[テストケース一覧](test-case-catalog.md)で管理する。
 
-## 目的と範囲
+## 備考
 
-Section 3で実装したTodoServiceをHTTP APIとして公開し、DTO、入力検証、HTTPエラー、ページネーション、OpenAPIの役割と連携を学ぶ。APIはリソース指向で設計し、HTTPメソッドの意味を保ち、Entityを外部へ公開しない。Section 4では認証機構を実装せず、ローカル動作確認用の所有者境界を設ける。認証・認可への接続はSection 6で扱う。
+- Section 3で実装したTodoServiceをHTTP APIとして公開し、DTO、入力検証、HTTPエラー、ページネーション、OpenAPIの役割と連携を学ぶ。
+- 「Web API: The Good Parts」に通じるリソース指向・一貫性・利用者に明確な契約という一般的な設計思想を判断基準とする。
+- HTTPメソッドの意味を保ち、Entityを外部へ公開しない。
+- Section 4では認証機構を実装せず、ローカル動作確認用の所有者境界を設ける。認証・認可への接続はSection 6で扱う。
 
-## API設計
+## 仕様
 
 | 操作 | HTTP契約 | 成功応答 |
 | --- | --- | --- |
@@ -26,4 +29,4 @@ Section 3で実装したTodoServiceをHTTP APIとして公開し、DTO、入力�
 | 作成時の状態 | リクエストでは受け取らず、Serviceが`PENDING`に設定する |
 | ローカル確認データ | ローカル専用のユーザー1人とTodo約15件を用意する |
 
-「Web API: The Good Parts」に通じるリソース指向・一貫性・利用者に明確な契約という一般的な設計思想を判断基準とする。
+DTOの具体的なrecord項目、Validation、未知JSON項目の扱い、Problem Details拡張は[DTO・Validation設計仕様](dto-validation.md)を参照する。
