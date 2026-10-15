@@ -88,4 +88,19 @@ public class TodoService {
 		todo.changeStatus(status);
 		return todo;
 	}
+
+	/**
+	 * 指定された所有者のTodoを削除する
+	 * 所有者条件付き検索で取得したEntityだけを削除し、未検出時は削除を行わない
+	 *
+	 * @param todoId 削除するTodoのID
+	 * @param ownerId Todo所有者のID
+	 * @throws TodoNotFoundException Todoが存在しないか、指定所有者に属さない場合
+	 */
+	// 検索と削除を一つのDBトランザクションにまとめ、正常終了時に削除をコミットする
+	@Transactional
+	public void deleteTodoForOwner(Long todoId, UUID ownerId) {
+		Todo todo = findTodoByIdForOwner(todoId, ownerId);
+		todoRepository.delete(todo);
+	}
 }
