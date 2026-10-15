@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
@@ -66,5 +67,25 @@ public class TodoService {
 	 */
 	public List<Todo> findTodosForOwner(UUID ownerId) {
 		return todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
+	}
+
+	/**
+	 * 指定された所有者のTodoについて、タイトル・説明・状態を一括更新する
+	 * @Transactional 検索とEntity変更を同じトランザクション内で行い、JPAのdirty checkingで変更を永続化する。正常終了時にコミットされ、例外終了時は変更がロールバックされる
+	 *
+	 * @param todoId 更新するTodoのID
+	 * @param ownerId Todo所有者のID
+	 * @param title 更新後のタイトル
+	 * @param description 更新後の説明
+	 * @param status 更新後の状態
+	 * @return 更新後のTodo
+	 * @throws TodoNotFoundException Todoが存在しないか、指定所有者に属さない場合
+	 */
+	@Transactional
+	public Todo updateTodoForOwner(Long todoId, UUID ownerId, String title, String description, TodoStatusEnum status) {
+		Todo todo = findTodoByIdForOwner(todoId, ownerId);
+		todo.changeDetails(title, description);
+		todo.changeStatus(status);
+		return todo;
 	}
 }
