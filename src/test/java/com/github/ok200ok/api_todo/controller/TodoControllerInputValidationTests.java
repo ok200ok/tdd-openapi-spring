@@ -42,6 +42,9 @@ class TodoControllerInputValidationTests {
 	@MockitoBean
 	private TodoService todoService;
 
+	@MockitoBean
+	private OwnerIdResolver ownerIdResolver;
+
 	/**
 	 * タイトルの欠落、null、空白のみ、trim後の最大長超過をProblem Detailsで拒否し、
 	 * trim後100文字は受け付けてServiceへ正規化済みの値を渡す
@@ -74,6 +77,8 @@ class TodoControllerInputValidationTests {
 				null,
 				TodoStatusEnum.PENDING);
 		ReflectionTestUtils.setField(createdTodo, "id", 42L);
+		UUID ownerId = UUID.randomUUID();
+		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.createTodo(any(UUID.class), eq(title), isNull())).thenReturn(createdTodo);
 
 		mockMvc.perform(post("/api/v1/todos")
@@ -81,7 +86,7 @@ class TodoControllerInputValidationTests {
 				.content("{\"title\":\"   " + title + "   \"}"))
 				.andExpect(status().isCreated());
 
-		verify(todoService).createTodo(any(UUID.class), eq(title), isNull());
+		verify(todoService).createTodo(eq(ownerId), eq(title), isNull());
 	}
 
 	/**

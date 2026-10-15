@@ -163,10 +163,10 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
 | 作成・更新DTOの正常入力 | 作成DTOはタイトルと任意説明を受け付け、状態・ユーザーIDを持たない。更新DTOはタイトル・説明・状態を受け付ける。タイトル前後の空白は除去される | Controllerテスト作成後にリンクを追加 | 🤝 |
-| タイトルの検証 | 欠落・`null`・空白のみを拒否し、trim後101文字を拒否する。trim後100文字は受け入れる | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L50) | 🤝 |
+| タイトルの検証 | 欠落・`null`・空白のみを拒否し、trim後101文字を拒否する。trim後100文字は受け入れる | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L53) | 🤝 |
 | 説明の省略・null | 作成時は説明省略を許容する。PUTでは説明の省略または`null`を既存説明の削除として扱う。説明長はこのAPIでは制限しない | Controllerテスト作成後にリンクを追加 | 🤝 |
-| 状態と未知JSONフィールド | 更新時の状態欠落・不正値を拒否する。作成時の`status`、ユーザーID、その他未知のJSONフィールドも`400 Bad Request`として拒否する | [`rejectsUnknownCreateFields`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L91)（作成時のみ。更新時は後続ケースで追加） | 🤝 |
-| Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L50)、[`returnsProblemDetailsWithoutFieldErrorsForMalformedJson`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L111) | 🤝 |
+| 状態と未知JSONフィールド | 更新時の状態欠落・不正値を拒否する。作成時の`status`、ユーザーID、その他未知のJSONフィールドも`400 Bad Request`として拒否する | [`rejectsUnknownCreateFields`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L96)（作成時のみ。更新時は後続ケースで追加） | 🤝 |
+| Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L53)、[`returnsProblemDetailsWithoutFieldErrorsForMalformedJson`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L116) | 🤝 |
 | 応答DTOの契約 | Todo応答に合意済み各フィールドとUTCの`Z`日時を含める。一覧応答は`items`、1始まりの`page`、`size`、`totalElements`、`totalPages`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
 
 ### タスク5: TodoControllerのTDD
