@@ -111,17 +111,26 @@ Serviceは所有者IDをRepositoryへ渡して一覧取得を委譲する。0件
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | [`findsTodosForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L132) | 🤝 |
-| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | [`returnsEmptyListWhenOwnerHasNoTodos`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L152) | 🤝 |
-| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | [`findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L89) | 🤝 |
+| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | [`findsTodosForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L132) | ✅ |
+| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | [`returnsEmptyListWhenOwnerHasNoTodos`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L152) | ✅ |
+| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | [`findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L89) | ✅ |
+
+### タスク: Todo更新
+
+Serviceは所有者条件付きでTodoを取得し、タイトル・説明・状態をひとまとまりで変更して更新後のTodoを返す。Repositoryの所有者条件は前タスクの実DBテストで確認済みのため重複せず、トランザクションによるdirty checkingの実動作はSection 5の結合テストで扱う。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 所有者本人のTodo更新 | タイトル・説明・状態のすべてが変更され、更新後のTodoが返る | `updatesTodoForOwner`（作成予定） | 🤝 |
+| 不存在・別所有者のTodo更新 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Entityの変更操作は行われない | `throwsTodoNotFoundExceptionWhenUpdatingTodoNotOwnedByUser`（作成予定） | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換と検証境界を理解する | ✅ |
 | Section 3: TodoService作成 | 合意した所有者付き作成ケースをService単体テストで確認する | ✅ |
 | Section 3: TodoService ID指定取得 | 合意した所有者条件付き検索と不存在のケースをService単体・Repository実DBテストで確認する | ✅ |
-| Section 3: TodoService所有者別一覧 | 合意した所有者境界、空リスト、更新日時・ID順をService単体・Repository実DBテストで確認する | 🤝 |
-| Section 3: TodoService更新 | 所有者条件を含む更新と対象なしの扱いを合意後にケースを記録する | 🚧 |
+| Section 3: TodoService所有者別一覧 | 合意した所有者境界、空リスト、更新日時・ID順をService単体・Repository実DBテストで確認する | ✅ |
+| Section 3: TodoService更新 | 合意した所有者本人の一括更新と不存在時のケースをService単体テストで確認する | 🤝 |
 | Section 3: TodoService削除 | 所有者条件を含む削除と対象なしの扱いを合意後にケースを記録する | 🚧 |
 | Section 4: Todo API契約・DTO・Validation | URL、HTTP、入出力、エラー、入力制約を合意後にケースを記録する。ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする | 🚧 |
 | Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
