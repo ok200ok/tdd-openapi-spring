@@ -95,11 +95,21 @@ MockitoでRepositoryを置き換え、TodoServiceの作成処理を検証する�
 | 所有者・内容・初期状態を指定したTodo作成 | `ownerId`から取得したUser、指定したタイトルと説明、初期状態`PENDING`を持つTodoがTodoRepositoryへ保存され、保存結果がServiceから返る | [`createsTodoForOwnerWithPendingStatus`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L54) | ✅ |
 | 存在しない所有者での作成 | UserRepositoryに所有者が見つからない場合、`UserNotFoundException`で失敗し、TodoRepositoryへ保存要求を行わない | [`throwsUserNotFoundExceptionWhenCreatingTodoForUnknownOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L79) | ✅ |
 
+### タスク: 所有者を指定したTodoのID検索
+
+ServiceはTodo IDと所有者IDを受け取り、所有者条件付きのRepository検索結果を返す。存在しないTodoと他の所有者のTodoは同じ`TodoNotFoundException`として扱い、Service単体テストとRepositoryの実DBテストでそれぞれの責務を検証する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 所有者に属するTodoの検索 | 指定したTodo IDと所有者IDに一致するTodoが返る | [`findsTodoByIdForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L95) | ✅ |
+| 不存在・別所有者のTodo検索 | Repository検索が空なら`TodoNotFoundException`となる。対象が存在しない場合と別所有者の場合を同一の結果として扱う | [`throwsTodoNotFoundExceptionWhenTodoIsNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L114) | ✅ |
+| Repositoryの所有者条件 | PostgreSQL上で所有者本人のTodoはIDと所有者IDの組み合わせで検索でき、同じTodo IDを別所有者IDで検索すると結果が空になる | [`findsTodoByIdOnlyForItsOwner`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L68) | ✅ |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換と検証境界を理解する | ✅ |
 | Section 3: TodoService作成 | 合意した所有者付き作成ケースをService単体テストで確認する | ✅ |
-| Section 3: TodoService ID指定取得 | 所有者条件を含む取得と対象なしの扱いを合意後にケースを記録する | 🚧 |
+| Section 3: TodoService ID指定取得 | 合意した所有者条件付き検索と不存在のケースをService単体・Repository実DBテストで確認する | ✅ |
 | Section 3: TodoService所有者別一覧 | 対象所有者のTodoだけを返す仕様を合意後にケースを記録する | 🚧 |
 | Section 3: TodoService更新 | 所有者条件を含む更新と対象なしの扱いを合意後にケースを記録する | 🚧 |
 | Section 3: TodoService削除 | 所有者条件を含む削除と対象なしの扱いを合意後にケースを記録する | 🚧 |

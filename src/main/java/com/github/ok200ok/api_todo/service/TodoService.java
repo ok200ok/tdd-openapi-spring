@@ -41,4 +41,18 @@ public class TodoService {
 		Todo todo = new Todo(owner, title, description, TodoStatusEnum.PENDING);
 		return todoRepository.save(todo);
 	}
+
+	/**
+	 * 指定された所有者に属するTodoをIDで検索する
+	 * RepositoryへIDと所有者IDの両方を渡し、他人のTodoを結果として取得しない
+	 *
+	 * @param todoId 検索するTodoのID
+	 * @param ownerId Todo所有者のID
+	 * @return 所有者に属するTodo
+	 * @throws TodoNotFoundException Todoが存在しないか、指定所有者に属さない場合
+	 */
+	public Todo findTodoByIdForOwner(Long todoId, UUID ownerId) {
+		return todoRepository.findByIdAndUser_Id(todoId, ownerId)
+				.orElseThrow(() -> new TodoNotFoundException(todoId, ownerId));
+	}
 }

@@ -125,7 +125,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 ### Section3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
 - [x] `Mockito` を用いたモック化（`@Mock`, `@InjectMocks`）と単体テスト手法の理解
 - [x] Todo作成のService単体テスト作成（`RED`）と実装（`GREEN`）
-- [ ] 所有者を指定したTodoのID検索のService単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] 所有者を指定したTodoのID検索のService単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] 所有者別Todo一覧のService単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] Todo更新のService単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] Todo削除のService単体テスト作成（`RED`）と実装（`GREEN`）

@@ -85,4 +85,40 @@ class TodoServiceTests {
 
 		verify(todoRepository, never()).save(any(Todo.class));
 	}
+
+	/**
+	 * Todo IDと所有者IDをRepositoryへ渡し、所有者本人に属するTodoが検索結果として返ることを確認する
+	 * {@code when(...).thenReturn(...)}で所有者条件付き検索の結果を設定し、DB検索ではなくServiceの委譲と戻り値を検証する
+	 * {@code isSameAs}はServiceがRepositoryから得たTodoを別の値へ置き換えず返すことを確認する
+	 */
+	@Test
+	void findsTodoByIdForOwner() {
+		Long todoId = 42L;
+		UUID ownerId = UUID.randomUUID();
+		Todo todo = new Todo(new User("alice", "hashed-password", null, "ROLE_USER"),
+				"Write tests", null, TodoStatusEnum.PENDING);
+		when(todoRepository.findByIdAndUser_Id(todoId, ownerId)).thenReturn(Optional.of(todo));
+
+		Todo result = todoService.findTodoByIdForOwner(todoId, ownerId);
+
+		assertThat(result).isSameAs(todo);
+		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+	}
+
+	/**
+	 * Todoが存在しない場合と指定所有者に属さない場合を、同じ未検出結果として扱うことを確認する
+	 * 所有者条件付きRepository検索が空を返すよう設定し、Serviceが内部事情を区別せずTodoNotFoundExceptionを通知することを検証する
+	 * これにより他の所有者のTodoがあるかどうかを呼び出し元へ漏らさず、APIで404に対応できる契約を保つ
+	 */
+	@Test
+	void throwsTodoNotFoundExceptionWhenTodoIsNotOwnedByUser() {
+		Long todoId = 42L;
+		UUID ownerId = UUID.randomUUID();
+		when(todoRepository.findByIdAndUser_Id(todoId, ownerId)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> todoService.findTodoByIdForOwner(todoId, ownerId))
+				.isInstanceOf(TodoNotFoundException.class);
+
+		verify(todoRepository).findByIdAndUser_Id(todoId, ownerId);
+	}
 }

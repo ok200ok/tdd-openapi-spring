@@ -60,6 +60,26 @@ class TodoRepositoryTests {
 	}
 
 	/**
+	 * TodoのIDと関連UserのIDを条件に検索し、本人のTodoだけが取得されることをPostgreSQLで確認する
+	 * 別のUserも保存して同じTodo IDをそのUser IDと組み合わせ、結果が空になることを検証する
+	 * これはSpring Data JPAの派生クエリが関連プロパティuser.idをSQL条件へ反映することを確かめ、Serviceのモックテストでは検証できないDB問い合わせを担保する
+	 */
+	@Test
+	void findsTodoByIdOnlyForItsOwner() {
+		User owner = userRepository.saveAndFlush(user("alice"));
+		User anotherUser = userRepository.saveAndFlush(user("bob"));
+		Todo savedTodo = todoRepository.saveAndFlush(
+				new Todo(owner, "Write tests", null, TodoStatusEnum.PENDING));
+		entityManager.clear();
+
+		assertThat(todoRepository.findByIdAndUser_Id(savedTodo.getId(), owner.getId()))
+				.map(Todo::getId)
+				.contains(savedTodo.getId());
+		assertThat(todoRepository.findByIdAndUser_Id(savedTodo.getId(), anotherUser.getId()))
+				.isEmpty();
+	}
+
+	/**
 	 * Todoのタイトル、null説明、状態がDB保存後にJPA経由で再取得できることを確認する
 	 * {@code saveAndFlush}後に{@code entityManager.clear()}で現在の永続化コンテキストにあるEntityをすべて切り離し、{@code findById}がDBから読み直すようにする
 	 * {@code orElseThrow()}は検索結果の{@code Optional}が空ならテストを失敗させ、対象Todoが存在しない状態を見逃さない
