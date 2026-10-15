@@ -1,5 +1,6 @@
 package com.github.ok200ok.api_todo.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +20,10 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 	 * {@code Optional.empty()}はTodo不存在と所有者不一致の両方を表し、呼び出し元へTodoの存在を漏らさない
 	 */
 	Optional<Todo> findByIdAndUser_Id(Long id, UUID userId);
+
+	/**
+	 * 指定したUserに属するTodoを更新日時の降順、同時刻ではIDの降順で取得する
+	 * User_Idで所有者条件をDB検索に含め、OrderByで一覧の安定した表示順を定義する
+	 */
+	List<Todo> findAllByUser_IdOrderByUpdatedAtDescIdDesc(UUID userId);
 }

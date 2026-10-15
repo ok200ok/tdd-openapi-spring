@@ -1,5 +1,6 @@
 package com.github.ok200ok.api_todo.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -54,5 +55,16 @@ public class TodoService {
 	public Todo findTodoByIdForOwner(Long todoId, UUID ownerId) {
 		return todoRepository.findByIdAndUser_Id(todoId, ownerId)
 				.orElseThrow(() -> new TodoNotFoundException(todoId, ownerId));
+	}
+
+	/**
+	 * 指定された所有者のTodo一覧を更新日時降順で取得する
+	 * 0件は正常な一覧結果としてRepositoryの空リストをそのまま返す
+	 *
+	 * @param ownerId Todo所有者のID
+	 * @return 所有者のTodo一覧。該当するTodoがない場合は空リスト
+	 */
+	public List<Todo> findTodosForOwner(UUID ownerId) {
+		return todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
 	}
 }
