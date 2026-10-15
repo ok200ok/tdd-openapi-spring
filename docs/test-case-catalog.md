@@ -105,12 +105,22 @@ ServiceはTodo IDと所有者IDを受け取り、所有者条件付きのReposit
 | 不存在・別所有者のTodo検索 | Repository検索が空なら`TodoNotFoundException`となる。対象が存在しない場合と別所有者の場合を同一の結果として扱う | [`throwsTodoNotFoundExceptionWhenTodoIsNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L114) | ✅ |
 | Repositoryの所有者条件 | PostgreSQL上で所有者本人のTodoはIDと所有者IDの組み合わせで検索でき、同じTodo IDを別所有者IDで検索すると結果が空になる | [`findsTodoByIdOnlyForItsOwner`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L68) | ✅ |
 
+### タスク: 所有者別Todo一覧
+
+Serviceは所有者IDをRepositoryへ渡して一覧取得を委譲する。0件は通常の検索結果として空リストを返す。順序は`updated_at`降順、同時刻の場合は`id`降順とする。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | `findsTodosForOwner`（作成予定） | 🤝 |
+| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | `returnsEmptyListWhenOwnerHasNoTodos`（作成予定） | 🤝 |
+| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | `findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`（作成予定） | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 3: Mockitoを用いた単体テスト手法 | Serviceテストの依存置換と検証境界を理解する | ✅ |
 | Section 3: TodoService作成 | 合意した所有者付き作成ケースをService単体テストで確認する | ✅ |
 | Section 3: TodoService ID指定取得 | 合意した所有者条件付き検索と不存在のケースをService単体・Repository実DBテストで確認する | ✅ |
-| Section 3: TodoService所有者別一覧 | 対象所有者のTodoだけを返す仕様を合意後にケースを記録する | 🚧 |
+| Section 3: TodoService所有者別一覧 | 合意した所有者境界、空リスト、更新日時・ID順をService単体・Repository実DBテストで確認する | 🤝 |
 | Section 3: TodoService更新 | 所有者条件を含む更新と対象なしの扱いを合意後にケースを記録する | 🚧 |
 | Section 3: TodoService削除 | 所有者条件を含む削除と対象なしの扱いを合意後にケースを記録する | 🚧 |
 | Section 4: Todo API契約・DTO・Validation | URL、HTTP、入出力、エラー、入力制約を合意後にケースを記録する。ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする | 🚧 |
