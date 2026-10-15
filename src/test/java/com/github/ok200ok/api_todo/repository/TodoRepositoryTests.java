@@ -20,6 +20,8 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import com.github.ok200ok.api_todo.TestcontainersConfiguration;
 import com.github.ok200ok.api_todo.entity.Todo;
@@ -135,6 +137,60 @@ class TodoRepositoryTests {
 		assertThat(todos)
 				.extracting(Todo::getId)
 				.containsExactly(tiedSecond.getId(), tiedFirst.getId(), oldest.getId());
+	}
+
+	/**
+	 * 所有者条件・DBページ分割・更新時刻とIDの順序、およびページ集計情報を一度に確認する
+	 */
+	@Test
+	void findsOwnerTodosAcrossPagesWithStableOrderAndPageTotals() {
+		User owner = userRepository.saveAndFlush(user("alice"));
+		User anotherUser = userRepository.saveAndFlush(user("bob"));
+		Todo oldest = saveTodo(owner, "Oldest");
+		Todo tiedFirst = saveTodo(owner, "Tied first");
+		Todo tiedSecond = saveTodo(owner, "Tied second");
+		Todo newest = saveTodo(owner, "Newest");
+		Todo anotherOwnersTodo = saveTodo(anotherUser, "Another owner's newest");
+		setUpdatedAt(oldest, OffsetDateTime.of(2025, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(tiedFirst, OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(tiedSecond, OffsetDateTime.of(2025, 1, 2, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(newest, OffsetDateTime.of(2025, 1, 3, 10, 0, 0, 0, ZoneOffset.UTC));
+		setUpdatedAt(anotherOwnersTodo, OffsetDateTime.of(2025, 1, 4, 10, 0, 0, 0, ZoneOffset.UTC));
+		entityManager.clear();
+
+		Page<Todo> firstPage = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(
+				owner.getId(), PageRequest.of(0, 2));
+		Page<Todo> secondPage = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(
+				owner.getId(), PageRequest.of(1, 2));
+
+		assertThat(firstPage.getContent()).extracting(Todo::getId)
+				.containsExactly(newest.getId(), tiedSecond.getId());
+		assertThat(secondPage.getContent()).extracting(Todo::getId)
+				.containsExactly(tiedFirst.getId(), oldest.getId());
+		assertThat(firstPage.getTotalElements()).isEqualTo(4);
+		assertThat(firstPage.getTotalPages()).isEqualTo(2);
+		assertThat(secondPage.getTotalElements()).isEqualTo(4);
+		assertThat(secondPage.getTotalPages()).isEqualTo(2);
+	}
+
+	/**
+	 * 最終ページを越えても空の内容と、所有者に属する実データの集計値が返ることを確認する
+	 */
+	@Test
+	void returnsEmptyPageBeyondLastOwnerTodoPageWithActualTotals() {
+		User owner = userRepository.saveAndFlush(user("alice"));
+		saveTodo(owner, "First");
+		saveTodo(owner, "Second");
+		saveTodo(owner, "Third");
+		entityManager.flush();
+		entityManager.clear();
+
+		Page<Todo> page = todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(
+				owner.getId(), PageRequest.of(3, 1));
+
+		assertThat(page.getContent()).isEmpty();
+		assertThat(page.getTotalElements()).isEqualTo(3);
+		assertThat(page.getTotalPages()).isEqualTo(3);
 	}
 
 	/**
@@ -318,6 +374,14 @@ class TodoRepositoryTests {
 
 	private User user(String userName) {
 		return userRepository.saveAndFlush(new User(userName, "{encoded}secret", null, "ROLE_USER"));
+	}
+
+	private Todo saveTodo(User owner, String title) {
+		return todoRepository.saveAndFlush(new Todo(owner, title, null, TodoStatusEnum.PENDING));
+	}
+
+	private void setUpdatedAt(Todo todo, OffsetDateTime updatedAt) {
+		jdbcTemplate.update("UPDATE todos SET updated_at = ? WHERE id = ?", updatedAt, todo.getId());
 	}
 
 	private Instant asInstant(Object value) {

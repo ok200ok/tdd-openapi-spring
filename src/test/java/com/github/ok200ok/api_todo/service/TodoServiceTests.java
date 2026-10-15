@@ -13,6 +13,10 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -163,6 +167,26 @@ class TodoServiceTests {
 
 		assertThat(todoService.findTodosForOwner(ownerId)).isEmpty();
 		verify(todoRepository).findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId);
+	}
+
+	/**
+	 * ページ指定と所有者IDをRepositoryへ渡し、ページ情報を含む結果をそのまま返すことを確認する
+	 */
+	@Test
+	void findsTodosForOwnerPage() {
+		UUID ownerId = UUID.randomUUID();
+		Pageable pageable = PageRequest.of(1, 5);
+		List<Todo> todos = List.of(new Todo(
+				new User("alice", "hashed-password", null, "ROLE_USER"),
+				"Second page item", null, TodoStatusEnum.PENDING));
+		Page<Todo> expectedPage = new PageImpl<>(todos, pageable, 11);
+		when(todoRepository.findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId, pageable))
+				.thenReturn(expectedPage);
+
+		Page<Todo> result = todoService.findTodosForOwner(ownerId, pageable);
+
+		assertThat(result).isSameAs(expectedPage);
+		verify(todoRepository).findAllByUser_IdOrderByUpdatedAtDescIdDesc(ownerId, pageable);
 	}
 
 	/**

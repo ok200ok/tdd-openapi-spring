@@ -146,10 +146,20 @@ UserとTodoの`createdAt`／`updatedAt`を`Instant`で扱い、PostgreSQLの`tim
 | User更新時の日時 | User更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenUserChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L248) | ✅ |
 | Todo更新時の日時 | Todo更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L227) | ✅ |
 
+### タスク3: Todo一覧のDBページネーション
+
+Repositoryは所有者条件・ページ分割・`updatedAt`降順、同時刻ではID降順の順序をPostgreSQL上で適用する。Serviceは所有者IDとページ指定をRepositoryへ委譲し、総件数を含む`Page<Todo>`を返す。RepositoryはTestcontainersのPostgreSQL、ServiceはMockito単体テストで検証する。公開APIの1始まりページ番号や不正なHTTPクエリ値の`400`応答は後続のControllerタスクで扱う。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| Repositoryの所有者別複数ページ取得 | 所有者のTodoを複数ページに分割し、他所有者のTodoを含めない。各ページは`updatedAt`降順、同時刻ではID降順とし、`totalElements`と`totalPages`も正しい | [`findsOwnerTodosAcrossPagesWithStableOrderAndPageTotals`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L146) | 🤝 |
+| Repositoryの範囲外ページ | 最終ページより後のページは内容が空になるが、総件数と総ページ数は実データに基づく値を返す | [`returnsEmptyPageBeyondLastOwnerTodoPageWithActualTotals`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L180) | 🤝 |
+| Serviceのページ検索委譲 | Serviceが指定所有者IDと`Pageable`をRepositoryへ渡し、Repositoryから返された`Page<Todo>`を返す | [`findsTodosForOwnerPage`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L176) | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
-| Section 4: Todo一覧ページネーション | RepositoryのDBページ分割とServiceの委譲を検証するケースを合意後に記録する | 🚧 |
+| Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | 🤝 |
 | Section 4: DTO・Validation | 入出力項目、入力制約、Problem Details拡張項目を合意後にケースを記録する | 🚧 |
 | Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
 | Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
