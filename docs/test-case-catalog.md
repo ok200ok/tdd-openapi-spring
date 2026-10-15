@@ -82,9 +82,9 @@
 | --- | --- | --- | --- |
 | Section 2のRepositoryテストと既存結合テスト | `.\gradlew.bat test`で全27件（UserRepositoryTests 14件、TodoRepositoryTests 11件、ApiTodoApplicationTests 2件）が失敗・エラーなく成功する。Repositoryテストの結果をデータモデル文書と各ケースの期待結果に照らし、カタログ・READMEの記載と一致することを確認する | [UserRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java)、[TodoRepositoryTests](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java)、[ApiTodoApplicationTests](../src/test/java/com/github/ok200ok/api_todo/ApiTodoApplicationTests.java) | ✅ |
 
-## Section 3以降
+## Section 3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
 
-未合意の後続タスクは、仕様とテストケースを開発者と合意した時点で具体的な観点・期待結果・テストリンクを追記する。ケース内容を先回りして固定しない。
+後続タスクのテストケースは、仕様と検証境界を開発者と合意した時点で具体的な観点・期待結果・テストリンクを追記する。ケース内容を先回りして固定しない。
 
 ### タスク: Todo作成のService単体テスト
 
@@ -141,9 +141,11 @@ Serviceは所有者条件付きでTodoを取得してから削除する。不存
 | Section 3: TodoService所有者別一覧 | 合意した所有者境界、空リスト、更新日時・ID順をService単体・Repository実DBテストで確認する | ✅ |
 | Section 3: TodoService更新 | 合意した所有者本人の一括更新と不存在時のケースをService単体テストで確認する | ✅ |
 | Section 3: TodoService削除 | 合意した所有者本人の削除呼び出しと不存在時のケースをService単体テストで確認する | ✅ |
-| Section 4: Todo API契約・DTO・Validation | URL、HTTP、入出力、エラー、入力制約を合意後にケースを記録する。ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする | 🚧 |
+| Section 4: UTC日時への見直し | `Instant`とPostgreSQL `timestamptz`のEntityマッピング・時刻設定をRepositoryテストで確認するケースを合意後に記録する | 🚧 |
+| Section 4: Todo一覧ページネーション | RepositoryのDBページ分割とServiceの委譲を検証するケースを合意後に記録する | 🚧 |
+| Section 4: DTO・Validation | 入出力項目、入力制約、Problem Details拡張項目を合意後にケースを記録する | 🚧 |
 | Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
-| Section 4: ローカル所有者境界 | API動作確認用ユーザーとControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
+| Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
 | Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
 | Section 6: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
