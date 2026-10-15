@@ -13,7 +13,7 @@ import org.testcontainers.utility.DockerImageName;
  * {@code proxyBeanMethods = false}は@Beanメソッド間の直接呼び出しをSpringが代理して同一Beanへ置き換える機能を無効にする。この設定ではBeanメソッド間の呼び出しがないため、代理を省略できる
  */
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
 	/**
 	 * {@code @Bean}は戻り値をSpringコンテナが管理するBeanとして登録し、コンテナの起動・終了をテストコンテキストのライフサイクルに結び付ける

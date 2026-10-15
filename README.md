@@ -111,7 +111,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] Docker Composeによる開発用`PostgreSQL`と永続volumeの構成
 - [x] 開発用DBの起動、アプリ接続、および停止後のデータ永続化確認
 - [x] GitHub ActionsによるCIパイプラインの構築（作業ブランチへのpushと`main`向けPRでGradleテストおよびTestcontainersを実行し、GitHub上で成功・失敗を確認）
-- [ ] `main`ブランチの保護と必須CIチェックの設定（リポジトリをPublicにするまではルール有効かができないため保留）
+- [x] `main`ブランチの保護と必須CIチェックの設定
 
 ### Section2: データ層（`JPA` / `Repository`）の段階的な振り返り
 - [x] `User` / `Todo` のユースケース、所有権、カラム・制約を含むデータモデルを確認・確定する（[`docs/contexts/section2-data-modeling.md`](docs/contexts/section2-data-modeling.md)）
@@ -123,23 +123,31 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] Section 2のRepositoryテストと既存テストを実行し、結果とデータモデル文書・チェック項目を照合する
 
 ### Section3: ドメイン・ビジネスロジック層（`Service`）の `TDD` 実装
-- [ ] `Mockito` を用いたモック化（`@Mock`, `@InjectMocks`）と単体テスト手法の理解
-- [ ] `UserService` の単体テスト作成（`RED`）と実装（`GREEN`）
-- [ ] `TodoService` の `CRUD` 単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] `Mockito` を用いたモック化（`@Mock`, `@InjectMocks`）と単体テスト手法の理解
+- [x] Todo作成のService単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] 所有者を指定したTodoのID検索のService単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] 所有者別Todo一覧のService単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] Todo更新のService単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] Todo削除のService単体テスト作成（`RED`）と実装（`GREEN`）
 
-### Section4: `JWT` 認証・認可基盤の構築
-- [ ] `Spring Security` のフィルターチェーンとステートレス認証（`JWT`）の仕組み理解
-- [ ] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
-- [ ] ログイン `API` および `AuthenticationFilter` の実装と動作検証
-
-### Section5: API層（`Controller`）と `OpenAPI` の `TDD` 実装
-- [ ] URL・HTTPメソッド・DTO・ステータスコード・エラー形式・認証要件を含むAPI契約をControllerテスト作成前に設計
+### Section4: API層（`Controller`）と `OpenAPI` の `TDD` 実装
+- [ ] Todo APIのURL・HTTPメソッド・DTO・ステータスコード・エラー形式をControllerテスト作成前に設計する（ユーザーIDはリクエストに含めず、他ユーザー所有または不存在のTodoは404とする）
 - [ ] `Java 21` の `record`（`DTO`）定義と `Validation`（入力バリデーション）の整理
-- [ ] `@WebMvcTest` と `MockMvc` を用いた `UserController` / `AuthController` のテスト作成（`RED`）と実装（`GREEN`）
-- [ ] 認証保護された `TodoController` のテスト作成（`RED`）と実装（`GREEN`）
+- [ ] `@WebMvcTest` と `MockMvc` を用いた `TodoController` のテスト作成（`RED`）と実装（`GREEN`）
+- [ ] ローカルでのAPI動作確認用ユーザーを用意し、Controller境界から所有者IDをServiceへ渡す
 - [ ] `springdoc-openapi` による `Swagger UI` ドキュメント生成とブラウザでの動作検証
 
-### Section6: 結合テスト（`Integration Test`）と総仕上げ
-- [ ] `@SpringBootTest` + `Testcontainers` による一気通貫エンドツーエンドテストの作成・実行
+### Section5: 認証追加前の結合テスト
+- [ ] `@SpringBootTest` + `Testcontainers` でローカル所有者境界を含むTodo APIの一連の処理を検証する
+
+### Section6: 認証・認可基盤の追加
+- [ ] `Spring Security` のフィルターチェーンとステートレス認証（`JWT`）の仕組みを理解する
+- [ ] ユーザー登録とパスワードハッシュ化の仕様を決め、`UserService` の単体テスト作成（`RED`）と実装（`GREEN`）
+- [ ] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
+- [ ] ログインAPI、`AuthenticationFilter`、認証・認可設定を実装し、Todo APIに認証済みユーザーのIDを渡す
+- [ ] 認証要件・未認証時の応答をAPI契約とOpenAPIへ追加し、認証・認可の動作を検証する
+
+### Section7: 認証接続後の結合テストと総仕上げ
+- [ ] `@SpringBootTest` + `Testcontainers` による認証からTodo操作までの一連の処理を検証する
 - [ ] `./gradlew test` による全テストスイートの一括実行確認
 - [ ] 最終コードレビューとドキュメント整理

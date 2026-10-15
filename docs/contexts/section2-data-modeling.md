@@ -1,6 +1,6 @@
 # Section 2: データモデリングと永続化方針
 
-この文書は、Section 2で実装する`User`と`Todo`のデータモデルを定義する。JavaのEntity、PostgreSQLのテーブル、およびRepositoryテストはこの設計に従う。HTTPのURL・メソッドやDTOの詳細はここでは定義せず、ControllerのTDDを始めるSection 5より前に別途確定する。
+この文書は、Section 2で実装する`User`と`Todo`のデータモデルを定義する。JavaのEntity、PostgreSQLのテーブル、およびRepositoryテストはこの設計に従う。HTTPのURL・メソッドやDTOの詳細はここでは定義せず、ControllerのTDDを始めるSection 4より前に別途確定する。
 
 ## ドメイン上のルール
 
