@@ -9,7 +9,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.springdoc.core.configuration.SpringDocConfiguration;
+import org.springdoc.core.properties.SpringDocConfigProperties;
+import org.springdoc.core.properties.SwaggerUiConfigProperties;
+import org.springdoc.core.properties.SwaggerUiOAuthProperties;
+import org.springdoc.webmvc.core.configuration.MultipleOpenApiSupportConfiguration;
+import org.springdoc.webmvc.core.configuration.SpringDocWebMvcConfiguration;
+import org.springdoc.webmvc.ui.SwaggerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,7 +29,19 @@ import com.github.ok200ok.api_todo.service.TodoService;
  * OpenAPI文書とSwagger UIのHTTP境界を検証するWeb層テスト
  * Todoの業務処理をモックし、仕様生成とUIの公開に検証を絞る
  */
+// Web MVCスライスではライブラリ自動設定が除外されるため、検証対象のspringdoc設定だけを明示的に追加する
 @WebMvcTest
+@EnableConfigurationProperties({
+		SpringDocConfigProperties.class,
+		SwaggerUiConfigProperties.class,
+		SwaggerUiOAuthProperties.class
+})
+@ImportAutoConfiguration({
+		SpringDocConfiguration.class,
+		SpringDocWebMvcConfiguration.class,
+		MultipleOpenApiSupportConfiguration.class,
+		SwaggerConfig.class
+})
 class OpenApiDocumentationTests {
 
 	@Autowired
