@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.github.ok200ok.api_todo.controller.OwnerIdResolver;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -14,6 +17,9 @@ class ApiTodoApplicationTests {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+
+	@MockitoBean
+	private OwnerIdResolver ownerIdResolver;
 
 	@Test
 	void contextLoads() {

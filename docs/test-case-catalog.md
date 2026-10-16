@@ -186,10 +186,6 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
-| Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | ✅ |
-| Section 4: DTO・Validation | DTOの入力制約、未知JSON項目の拒否、入力エラーProblem Details、応答DTOのフィールドと日時・ページ表現をタスク5のControllerテストで一度だけ確認する | ✅ |
-| Section 4: TodoController | `@WebMvcTest`でCRUDのHTTP契約、Service連携、ページクエリ境界、未検出例外の404変換を確認する。DTO・Validationのケースは上記タスク4の記録を参照する | ✅ |
 | Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
 | Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
