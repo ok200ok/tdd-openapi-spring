@@ -3,17 +3,20 @@ package com.github.ok200ok.api_todo.controller;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.github.ok200ok.api_todo.dto.CreateTodoRequest;
+import com.github.ok200ok.api_todo.dto.TodoPageResponse;
 import com.github.ok200ok.api_todo.dto.TodoResponse;
 import com.github.ok200ok.api_todo.dto.UpdateTodoRequest;
 import com.github.ok200ok.api_todo.service.TodoService;
@@ -48,6 +51,22 @@ public class TodoController {
 				.buildAndExpand(todo.getId())
 				.toUri();
 		return ResponseEntity.created(location).body(TodoResponse.from(todo));
+	}
+
+	/**
+	 * 解決済み所有者のTodoをページ単位で取得し、1始まりのページ応答として返す
+	 * @param page 公開APIのページ番号。1始まりで既定値は1
+	 * @param size 1ページあたりの件数。既定値は5
+	 * @return Todo一覧とページ情報を含む200 OK応答
+	 */
+	@GetMapping
+	public ResponseEntity<TodoPageResponse> getTodos(
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "5") int size) {
+		var todos = todoService.findTodosForOwner(
+				ownerIdResolver.resolveOwnerId(),
+				PageRequest.of(page - 1, size));
+		return ResponseEntity.ok(TodoPageResponse.from(todos));
 	}
 
 	/**

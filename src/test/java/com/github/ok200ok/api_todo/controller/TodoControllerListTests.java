@@ -79,13 +79,15 @@ class TodoControllerListTests {
 		UUID ownerId = UUID.randomUUID();
 		PageRequest pageable = PageRequest.of(1, 3);
 		Todo todo = todo(41L, "Second page", null, TodoStatusEnum.IN_PROGRESS);
-		Page<Todo> page = new PageImpl<>(List.of(todo), pageable, 5);
+		Todo anotherTodo = todo(40L, "Another second-page item", null, TodoStatusEnum.PENDING);
+		Page<Todo> page = new PageImpl<>(List.of(todo, anotherTodo), pageable, 5);
 		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.findTodosForOwner(ownerId, pageable)).thenReturn(page);
 
 		mockMvc.perform(get("/api/v1/todos").queryParam("page", "2").queryParam("size", "3"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.items[0].id").value(41))
+				.andExpect(jsonPath("$.items.length()").value(2))
 				.andExpect(jsonPath("$.page").value(2))
 				.andExpect(jsonPath("$.size").value(3))
 				.andExpect(jsonPath("$.totalElements").value(5))
