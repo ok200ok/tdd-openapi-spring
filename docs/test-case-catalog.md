@@ -200,9 +200,9 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、DTOスキーマ、既存契約の400・404応答を記載する | OpenAPI文書を検証する`@WebMvcTest` | 🤝 |
-| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | OpenAPI文書を検証する`@WebMvcTest` | 🤝 |
-| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは`@WebMvcTest`、表示内容はブラウザで手動確認 | 🤝 |
+| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、ページクエリ、既存契約の400・404応答を記載する | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L39) | 🤝 |
+| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L39) | 🤝 |
+| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L80)、表示内容はブラウザで手動確認 | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
