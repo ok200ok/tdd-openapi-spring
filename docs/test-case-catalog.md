@@ -17,8 +17,7 @@
 | 状態 | 意味 |
 | --- | --- |
 | 🚧未検討 | 対象タスクの仕様・ケースをまだ協議していない |
-| 🤝合意済み | 仕様、ケース、期待結果に合意したが、対象テストコードや実装内容の確認・理解は未実施|
-| 👓読解済み・実行待ち | 対象テストコードと実装の意図を確認・理解したが、開発者によるテスト実行は未実施 |
+| 🤝合意済み | 仕様、ケース、期待結果に合意したが、対象テストコードや実装内容の確認は未実施|
 | ✅実行確認済み | 開発者がテストを実行し、その結果と期待結果の一致を確認した |
 
 ## Section 2: JPA / Repository
@@ -200,13 +199,12 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、ページクエリ、既存契約の400・404応答を記載する | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L39) | 🤝 |
-| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L39) | 🤝 |
-| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L80)、表示内容はブラウザで手動確認 | 🤝 |
+| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、ページクエリ、既存契約の400・404応答を記載する | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L60) | ✅ |
+| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L60) | ✅ |
+| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L101)、ブラウザでエンドポイントとスキーマを確認済み | ✅ |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 4: OpenAPI / Swagger UI | 生成文書とSwagger UIを自動・手動で確認する | 🤝 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
 | Section 6: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
 | Section 6: Spring Security / JWT | 認証・認可の責務、トークン仕様、テスト範囲を合意後に記録する | 🚧 |
