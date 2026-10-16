@@ -2,6 +2,7 @@ package com.github.ok200ok.api_todo.controller;
 
 import java.net.URI;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.github.ok200ok.api_todo.dto.CreateTodoRequest;
@@ -63,6 +65,10 @@ public class TodoController {
 	public ResponseEntity<TodoPageResponse> getTodos(
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "5") int size) {
+		if (page < 1 || size < 1 || size > 100) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ページ番号またはページサイズが範囲外です");
+		}
+
 		var todos = todoService.findTodosForOwner(
 				ownerIdResolver.resolveOwnerId(),
 				PageRequest.of(page - 1, size));
