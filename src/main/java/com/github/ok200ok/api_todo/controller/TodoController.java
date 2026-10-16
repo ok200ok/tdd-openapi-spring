@@ -3,6 +3,7 @@ package com.github.ok200ok.api_todo.controller;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +59,17 @@ public class TodoController {
 	public ResponseEntity<TodoResponse> getTodo(@PathVariable Long todoId) {
 		var todo = todoService.findTodoByIdForOwner(todoId, ownerIdResolver.resolveOwnerId());
 		return ResponseEntity.ok(TodoResponse.from(todo));
+	}
+
+	/**
+	 * 所有者条件付きでTodoの削除をServiceへ委譲し、本文なしの成功応答を返す
+	 * @param todoId 削除するTodoのID
+	 * @return 本文を持たない204 No Content応答
+	 */
+	@DeleteMapping("/{todoId}")
+	public ResponseEntity<Void> deleteTodo(@PathVariable Long todoId) {
+		todoService.deleteTodoForOwner(todoId, ownerIdResolver.resolveOwnerId());
+		return ResponseEntity.noContent().build();
 	}
 
 	@PutMapping("/{todoId}")
