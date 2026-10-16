@@ -1,0 +1,4 @@
+app:
+  local-owner:
+    # Todo APIがローカルで使用する専用ユーザー。DB制約に合わせ小文字英数字のみとする
+    username: localdemo

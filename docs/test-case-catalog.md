@@ -17,8 +17,7 @@
 | 状態 | 意味 |
 | --- | --- |
 | 🚧未検討 | 対象タスクの仕様・ケースをまだ協議していない |
-| 🤝合意済み | 仕様、ケース、期待結果に合意したが、対象テストコードや実装内容の確認・理解は未実施|
-| 👓読解済み・実行待ち | 対象テストコードと実装の意図を確認・理解したが、開発者によるテスト実行は未実施 |
+| 🤝合意済み | 仕様、ケース、期待結果に合意したが、対象テストコードや実装内容の確認は未実施|
 | ✅実行確認済み | 開発者がテストを実行し、その結果と期待結果の一致を確認した |
 
 ## Section 2: JPA / Repository
@@ -158,25 +157,54 @@ Repositoryは所有者条件・ページ分割・`updatedAt`降順、同時刻�
 
 ### タスク4: DTO・Validationの詳細設計
 
-DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-validation.md)のとおり合意済み。Controller境界のテストは後続の`@WebMvcTest`タスクで作成するため、現時点では合意済みケースとして記録する。入力DTO単体で確認する項目とHTTPのProblem Details応答を区別する。
+DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-validation.md)のとおり合意済み。以下はタスク4で合意したケースで、タスク5の`@WebMvcTest`で一度だけ検証する。タスク5側では同じDTO制約や応答フィールドを重複ケースとして登録せず、HTTP操作・Service連携・エラー変換を追加で確認する。
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 作成・更新DTOの正常入力 | 作成DTOはタイトルと任意説明を受け付け、状態・ユーザーIDを持たない。更新DTOはタイトル・説明・状態を受け付ける。タイトル前後の空白は除去される | Controllerテスト作成後にリンクを追加 | 🤝 |
-| タイトルの検証 | 欠落・`null`・空白のみを拒否し、trim後101文字を拒否する。trim後100文字は受け入れる | Controllerテスト作成後にリンクを追加 | 🤝 |
-| 説明の省略・null | 作成時は説明省略を許容する。PUTでは説明の省略または`null`を既存説明の削除として扱う。説明長はこのAPIでは制限しない | Controllerテスト作成後にリンクを追加 | 🤝 |
-| 状態と未知JSONフィールド | 更新時の状態欠落・不正値を拒否する。作成時の`status`、ユーザーID、その他未知のJSONフィールドも`400 Bad Request`として拒否する | Controllerテスト作成後にリンクを追加 | 🤝 |
-| Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | Controllerテスト作成後にリンクを追加 | 🤝 |
-| 応答DTOの契約 | Todo応答に合意済み各フィールドとUTCの`Z`日時を含める。一覧応答は`items`、1始まりの`page`、`size`、`totalElements`、`totalPages`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
+| 作成・更新DTOの正常入力 | 作成DTOはタイトルと任意説明を受け付け、状態・ユーザーIDを持たない。更新DTOはタイトル・説明・状態を受け付ける。タイトル前後の空白は除去される | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L54)、[`trimsAndValidatesTitleOnUpdate`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerUpdateValidationTests.java#L67) | ✅ |
+| タイトルの検証 | 欠落・`null`・空白のみを拒否し、trim後101文字を拒否する。trim後100文字は受け入れる | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L54)、[`trimsAndValidatesTitleOnUpdate`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerUpdateValidationTests.java#L67) | ✅ |
+| 説明の省略・null | 作成時は説明省略を許容する。PUTでは説明の省略または`null`を既存説明の削除として扱う。説明長はこのAPIでは制限しない | [`acceptsOptionalNullAndLongDescriptionOnCreate`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L97)、[`treatsOmittedAndNullDescriptionAsRemovalAndAllowsLongDescription`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerUpdateValidationTests.java#L98) | ✅ |
+| 状態と未知JSONフィールド | 更新時の状態欠落・不正値を拒否する。作成時の`status`、ユーザーID、その他未知のJSONフィールドも`400 Bad Request`として拒否する | [`rejectsUnknownCreateFields`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L134)、[`rejectsMissingOrInvalidStatusAndUnknownFields`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerUpdateValidationTests.java#L47) | ✅ |
+| Problem Detailsの入力検証エラー | `application/problem+json`と`status: 400`を返し、検証対象の`field`と日本語`message`を`errors`拡張に含める。項目を特定できないJSON構文エラーでは項目別`errors`を要求しない | [`validatesTitleAndAcceptsTrimmedMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L53)、[`returnsProblemDetailsWithoutFieldErrorsForMalformedJson`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerInputValidationTests.java#L154) | ✅ |
+| Todo単体の応答DTO | Todo応答に合意済み各フィールドとUTCの`Z`日時を含め、Entityの所有者情報を公開しない | 作成は[`createsTodoAndReturnsLocationAndResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerCreateTests.java#L48)、取得・更新は[`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47)、[`updatesTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L70)で確認 | ✅ |
+| 一覧ページ応答DTO | 一覧応答は`items`、1始まりの`page`、`size`、`totalElements`、`totalPages`を返し、itemsはTodo応答の形にする | [`returnsDefaultTodoPageForOwner`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListTests.java#L48)、[`convertsRequestedPageToZeroBasedServicePage`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListTests.java#L78) | ✅ |
+
+### タスク5: TodoControllerのTDD
+
+`@WebMvcTest`と`MockMvc`でHTTP境界を検証し、`TodoService`と所有者ID解決境界はモックする。DBの検索・永続化は対象外とし、RepositoryおよびServiceテストの既存責務と重ねない。DTOの入力検証、Problem Detailsの入力エラー、応答DTOの形はタスク4のケースをこのControllerテストで実装し、ここでは再掲しない。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 一覧の既定ページとService連携 | クエリ省略時は公開ページ1・サイズ5を使い、0始まりの`Pageable`と解決済み所有者IDをServiceへ渡す。ページ指定時は1始まりを適切に変換し、Serviceの結果を一覧応答にする | [`returnsDefaultTodoPageForOwner`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListTests.java#L48)、[`convertsRequestedPageToZeroBasedServicePage`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListTests.java#L78) | ✅ |
+| ページクエリの境界 | `page < 1`、`size < 1`、`size > 100`、数値でない値は`400 Bad Request`とし、Serviceを呼ばない。データ範囲を超える有効なページは空の内容と実際のページ情報を持つ`200 OK`とする | [`rejectsInvalidPageAndSizeParameters`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListBoundaryTests.java#L44)、[`returnsEmptyPageBeyondLastPageWithActualTotals`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListBoundaryTests.java#L63) | ✅ |
+| Todo作成のHTTP契約とService連携 | 有効な要求で`201 Created`と作成Todoへの`Location`を返し、解決済み所有者IDおよびDTOの入力値をServiceへ渡す | [`createsTodoAndReturnsLocationAndResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerCreateTests.java#L48) | ✅ |
+| Todo取得のHTTP契約とService連携 | 成功時に`200 OK`とTodo応答DTOを返し、解決済み所有者IDとTodo IDでServiceを呼び出す | [`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47) | ✅ |
+| Todo更新のHTTP契約とService連携 | 有効な要求で`200 OK`と更新後のTodo応答DTOを返し、解決済み所有者ID、Todo ID、タイトル・説明・状態をServiceへ渡す | [`updatesTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L70) | ✅ |
+| Todo削除のHTTP契約とService連携 | 成功時にServiceへ削除を委譲し、本文なしの`204 No Content`を返す | [`deletesTodoForOwnerAndReturnsNoContent`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerDeleteTests.java#L39) | ✅ |
+| Todo未検出のHTTPエラー変換 | 取得・更新・削除でServiceが`TodoNotFoundException`を送出した場合、`errors`拡張を付けずProblem Details形式の`404 Not Found`を返す | [`returnsProblemDetailsWhenTodoCannotBeFoundOnRead`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L46)、[`returnsProblemDetailsWhenTodoCannotBeFoundOnUpdate`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L59)、[`returnsProblemDetailsWhenTodoCannotBeFoundOnDelete`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L76) | ✅ |
+
+### タスク6: ローカル所有者境界と初期データ
+
+認証追加前の学習用機能として、ローカル専用プロファイルでのみサンプルデータを初期化する。初期化は起動ごとに専用デモユーザーのTodoを15件へ戻すため、同ユーザーに手動で追加したTodoも再起動時に置き換わる。RepositoryやDB起動を伴うテストは避け、初期化の委譲と所有者IDのHTTP境界をモックで確認する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 初回起動時のサンプルデータ | デモユーザーが未登録の場合に作成し、そのユーザーに15件のサンプルTodoを初期化する。初期化処理の所有者条件と作成件数をService単体テストで確認する | [`createsOwnerAndFifteenTodosOnFirstInitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L46) | ✅ |
+| 起動時の再初期化 | 既存デモユーザーのTodoをそのユーザーに限定して置き換え、15件へ戻す。別ユーザーのTodoを対象にしないことをService単体テストで確認する | [`replacesOnlyExistingOwnerTodosOnReinitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L73) | ✅ |
+| 設定ユーザー名から解決した所有者IDの引き渡し | 設定されたユーザー名から検索されたUserのDB上のUUIDを所有者ID解決境界が返し、ControllerがTodoServiceへ渡すことを確認する | Resolverは[`resolvesDatabaseOwnerIdByConfiguredUsername`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverTests.java#L36)、実ResolverからControllerを通したServiceへの引き渡しは[`passesResolvedOwnerIdToService`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverControllerTests.java#L54)で確認 | ✅ |
+
+### タスク7: OpenAPI／Swagger UI
+
+既存のAPI契約を変更せず、springdoc-openapiがControllerとDTOから生成する仕様を確認する。自動テストは`@WebMvcTest`と`MockMvc`でOpenAPI文書とSwagger UIへのHTTPアクセスを検証し、ブラウザではUI上のエンドポイントとスキーマを目視確認する。Service・Repository・DBの振る舞いは対象外とする。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、ページクエリ、既存契約の400・404応答を記載する | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L60) | ✅ |
+| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L60) | ✅ |
+| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L101)、ブラウザでエンドポイントとスキーマを確認済み | ✅ |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
-| Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | ✅ |
-| Section 4: DTO・Validation | record DTOの入出力契約、Validation、未知JSON項目の拒否、Problem Details拡張、UTC日時とページ応答を合意する | 🤝 |
-| Section 4: TodoController | `@WebMvcTest`でHTTP境界とService連携を検証するケースを合意後に記録する | 🚧 |
-| Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
-| Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
 | Section 6: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
 | Section 6: Spring Security / JWT | 認証・認可の責務、トークン仕様、テスト範囲を合意後に記録する | 🚧 |

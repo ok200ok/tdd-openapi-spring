@@ -1,6 +1,10 @@
 spring:
   application:
     name: api-todo
+  jackson:
+    # API契約にないJSON項目を黙って捨てず、クライアントの入力誤りとして400にする
+    deserialization:
+      fail-on-unknown-properties: true
   # 環境変数が設定されていない場合はローカルCompose DBへ接続する
   datasource:
     # 環境ごとの接続先に切り替えられるよう環境変数とローカル既定値を用意する

@@ -27,6 +27,10 @@
 | 所有者 | ユーザーIDをリクエストに含めない。不存在と他ユーザー所有のTodoは同じ`404 Not Found`として扱う |
 | エラー | RFC Problem Details形式を基本とする。項目別入力エラーはAPI固有の拡張フィールドとして定義する |
 | 作成時の状態 | リクエストでは受け取らず、Serviceが`PENDING`に設定する |
-| ローカル確認データ | ローカル専用のユーザー1人とTodo約15件を用意する |
+| ローカル確認データ | `local`プロファイルでのみ専用デモユーザー1人とTodo15件を起動時に初期化する。起動のたびにそのユーザーのTodoを置き換えるため、同ユーザーが追加・編集したTodoもリセットされる。認証前の学習用途に限り、本番や認証用アカウントには使用しない |
 
 DTOの具体的なrecord項目、Validation、未知JSON項目の扱い、Problem Details拡張は[DTO・Validation設計仕様](dto-validation.md)を参照する。
+
+## OpenAPI / Swagger UI
+
+`springdoc-openapi`がControllerのHTTP契約とDTOからOpenAPI仕様を生成する。JSON仕様は`/v3/api-docs`、ブラウザでの確認画面は`/swagger-ui.html`で参照できる。エラー応答など実装から一意に推論できない契約はControllerのOpenAPI注釈で明示する。
