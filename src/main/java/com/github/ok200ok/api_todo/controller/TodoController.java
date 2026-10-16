@@ -3,6 +3,7 @@ package com.github.ok200ok.api_todo.controller;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -46,6 +47,17 @@ public class TodoController {
 				.buildAndExpand(todo.getId())
 				.toUri();
 		return ResponseEntity.created(location).body(TodoResponse.from(todo));
+	}
+
+	/**
+	 * 所有者条件付きでTodoを取得し、Entityを応答DTOへ変換して返す
+	 * @param todoId 取得するTodoのID
+	 * @return 所有者本人のTodoを含む200 OK応答
+	 */
+	@GetMapping("/{todoId}")
+	public ResponseEntity<TodoResponse> getTodo(@PathVariable Long todoId) {
+		var todo = todoService.findTodoByIdForOwner(todoId, ownerIdResolver.resolveOwnerId());
+		return ResponseEntity.ok(TodoResponse.from(todo));
 	}
 
 	@PutMapping("/{todoId}")
