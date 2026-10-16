@@ -177,7 +177,7 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
 | 一覧の既定ページとService連携 | クエリ省略時は公開ページ1・サイズ5を使い、0始まりの`Pageable`と解決済み所有者IDをServiceへ渡す。ページ指定時は1始まりを適切に変換し、Serviceの結果を一覧応答にする | [`returnsDefaultTodoPageForOwner`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListTests.java#L48)、[`convertsRequestedPageToZeroBasedServicePage`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListTests.java#L78) | ✅ |
-| ページクエリの境界 | `page < 1`、`size < 1`、`size > 100`、数値でない値は`400 Bad Request`とし、Serviceを呼ばない。データ範囲を超える有効なページは空の内容と実際のページ情報を持つ`200 OK`とする | [`rejectsInvalidPageAndSizeParameters`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListBoundaryTests.java#L44)、[`returnsEmptyPageBeyondLastPageWithActualTotals`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListBoundaryTests.java#L63) | 🤝 |
+| ページクエリの境界 | `page < 1`、`size < 1`、`size > 100`、数値でない値は`400 Bad Request`とし、Serviceを呼ばない。データ範囲を超える有効なページは空の内容と実際のページ情報を持つ`200 OK`とする | [`rejectsInvalidPageAndSizeParameters`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListBoundaryTests.java#L44)、[`returnsEmptyPageBeyondLastPageWithActualTotals`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerListBoundaryTests.java#L63) | ✅ |
 | Todo作成のHTTP契約とService連携 | 有効な要求で`201 Created`と作成Todoへの`Location`を返し、解決済み所有者IDおよびDTOの入力値をServiceへ渡す | [`createsTodoAndReturnsLocationAndResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerCreateTests.java#L48) | ✅ |
 | Todo取得のHTTP契約とService連携 | 成功時に`200 OK`とTodo応答DTOを返し、解決済み所有者IDとTodo IDでServiceを呼び出す | [`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47) | ✅ |
 | Todo更新のHTTP契約とService連携 | 有効な要求で`200 OK`と更新後のTodo応答DTOを返し、解決済み所有者ID、Todo ID、タイトル・説明・状態をServiceへ渡す | [`updatesTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L70) | ✅ |
@@ -188,8 +188,8 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | --- | --- | --- |
 | Section 4: UTC日時への見直し | UserとTodoの作成・更新日時の`timestamptz`永続化・再読込と更新時刻の振る舞いをRepositoryテストで確認する | ✅ |
 | Section 4: Todo一覧ページネーション | 所有者条件付きDBページ分割、順序・ページ情報・範囲外ページ、およびServiceのRepository委譲を確認する | ✅ |
-| Section 4: DTO・Validation | DTOの入力制約、未知JSON項目の拒否、入力エラーProblem Details、応答DTOのフィールドと日時・ページ表現をタスク5のControllerテストで一度だけ確認する | 🤝 |
-| Section 4: TodoController | `@WebMvcTest`でCRUDのHTTP契約、Service連携、ページクエリ境界、未検出例外の404変換を確認する。DTO・Validationのケースは上記タスク4の記録を参照する | 🤝 |
+| Section 4: DTO・Validation | DTOの入力制約、未知JSON項目の拒否、入力エラーProblem Details、応答DTOのフィールドと日時・ページ表現をタスク5のControllerテストで一度だけ確認する | ✅ |
+| Section 4: TodoController | `@WebMvcTest`でCRUDのHTTP契約、Service連携、ページクエリ境界、未検出例外の404変換を確認する。DTO・Validationのケースは上記タスク4の記録を参照する | ✅ |
 | Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
 | Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
