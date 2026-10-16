@@ -184,6 +184,16 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | Todo削除のHTTP契約とService連携 | 成功時にServiceへ削除を委譲し、本文なしの`204 No Content`を返す | [`deletesTodoForOwnerAndReturnsNoContent`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerDeleteTests.java#L39) | ✅ |
 | Todo未検出のHTTPエラー変換 | 取得・更新・削除でServiceが`TodoNotFoundException`を送出した場合、`errors`拡張を付けずProblem Details形式の`404 Not Found`を返す | [`returnsProblemDetailsWhenTodoCannotBeFoundOnRead`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L46)、[`returnsProblemDetailsWhenTodoCannotBeFoundOnUpdate`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L59)、[`returnsProblemDetailsWhenTodoCannotBeFoundOnDelete`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L76) | ✅ |
 
+### タスク6: ローカル所有者境界と初期データ
+
+認証追加前の学習用機能として、ローカル専用プロファイルでのみサンプルデータを初期化する。初期化は起動ごとに専用デモユーザーのTodoを15件へ戻すため、同ユーザーに手動で追加したTodoも再起動時に置き換わる。RepositoryやDB起動を伴うテストは避け、初期化の委譲と所有者IDのHTTP境界をモックで確認する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 初回起動時のサンプルデータ | デモユーザーが未登録の場合に作成し、そのユーザーに15件のサンプルTodoを初期化する。初期化処理の所有者条件と作成件数をService単体テストで確認する | [`createsOwnerAndFifteenTodosOnFirstInitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L50) | 🤝 |
+| 起動時の再初期化 | 既存デモユーザーのTodoをそのユーザーに限定して置き換え、15件へ戻す。別ユーザーのTodoを対象にしないことをService単体テストで確認する | [`replacesOnlyExistingOwnerTodosOnReinitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L77) | 🤝 |
+| 設定ユーザー名から解決した所有者IDの引き渡し | 設定されたユーザー名から検索されたUserのDB上のUUIDを所有者ID解決境界が返し、ControllerがTodoServiceへ渡すことを確認する | Resolverは[`resolvesDatabaseOwnerIdByConfiguredUsername`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverTests.java#L41)、ControllerからServiceへの引き渡しは[`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47)で確認 | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 4: ローカル所有者境界・シードデータ | ローカル専用ユーザーとTodo約15件の初期データ、ControllerからServiceへ所有者IDを渡す境界を確認する | 🚧 |
