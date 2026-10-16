@@ -14,13 +14,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.ok200ok.api_todo.controller.LocalOwnerIdResolver;
 import com.github.ok200ok.api_todo.entity.User;
 import com.github.ok200ok.api_todo.repository.UserRepository;
 
 /**
  * ローカル所有者ID解決境界が設定ユーザー名からDB上のUUIDを取得することを検証する単体テスト
- * 移行中のResolver実装型をReflectionで参照し、未実装クラスによるテストコンパイル失敗を避ける
+ * UserRepositoryをモックし、設定値を使った検索と返却IDを確認する
  */
 @ExtendWith(MockitoExtension.class)
 class LocalOwnerIdResolverTests {

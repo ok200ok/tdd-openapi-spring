@@ -190,9 +190,9 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 初回起動時のサンプルデータ | デモユーザーが未登録の場合に作成し、そのユーザーに15件のサンプルTodoを初期化する。初期化処理の所有者条件と作成件数をService単体テストで確認する | [`createsOwnerAndFifteenTodosOnFirstInitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L50) | 🤝 |
-| 起動時の再初期化 | 既存デモユーザーのTodoをそのユーザーに限定して置き換え、15件へ戻す。別ユーザーのTodoを対象にしないことをService単体テストで確認する | [`replacesOnlyExistingOwnerTodosOnReinitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L77) | 🤝 |
-| 設定ユーザー名から解決した所有者IDの引き渡し | 設定されたユーザー名から検索されたUserのDB上のUUIDを所有者ID解決境界が返し、ControllerがTodoServiceへ渡すことを確認する | Resolverは[`resolvesDatabaseOwnerIdByConfiguredUsername`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverTests.java#L41)、ControllerからServiceへの引き渡しは[`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47)で確認 | 🤝 |
+| 初回起動時のサンプルデータ | デモユーザーが未登録の場合に作成し、そのユーザーに15件のサンプルTodoを初期化する。初期化処理の所有者条件と作成件数をService単体テストで確認する | [`createsOwnerAndFifteenTodosOnFirstInitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L46) | 🤝 |
+| 起動時の再初期化 | 既存デモユーザーのTodoをそのユーザーに限定して置き換え、15件へ戻す。別ユーザーのTodoを対象にしないことをService単体テストで確認する | [`replacesOnlyExistingOwnerTodosOnReinitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L73) | 🤝 |
+| 設定ユーザー名から解決した所有者IDの引き渡し | 設定されたユーザー名から検索されたUserのDB上のUUIDを所有者ID解決境界が返し、ControllerがTodoServiceへ渡すことを確認する | Resolverは[`resolvesDatabaseOwnerIdByConfiguredUsername`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverTests.java#L36)、ControllerからServiceへの引き渡しは[`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47)で確認 | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |

@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.github.ok200ok.api_todo.config.LocalSampleDataInitializer;
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
 import com.github.ok200ok.api_todo.entity.User;
@@ -27,7 +26,7 @@ import com.github.ok200ok.api_todo.repository.UserRepository;
 
 /**
  * ローカル用サンプルデータ初期化の初回・再実行時の委譲を検証する単体テスト
- * 移行中の実装型をReflectionで参照し、未実装クラスによるテストコンパイル失敗を避ける
+ * MockitoでRepositoryを置き換え、初期化対象の所有者とTodo件数を確認する
  */
 @ExtendWith(MockitoExtension.class)
 class LocalSampleDataInitializerTests {
