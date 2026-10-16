@@ -194,9 +194,19 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | 起動時の再初期化 | 既存デモユーザーのTodoをそのユーザーに限定して置き換え、15件へ戻す。別ユーザーのTodoを対象にしないことをService単体テストで確認する | [`replacesOnlyExistingOwnerTodosOnReinitialization`](../src/test/java/com/github/ok200ok/api_todo/service/LocalSampleDataInitializerTests.java#L73) | ✅ |
 | 設定ユーザー名から解決した所有者IDの引き渡し | 設定されたユーザー名から検索されたUserのDB上のUUIDを所有者ID解決境界が返し、ControllerがTodoServiceへ渡すことを確認する | Resolverは[`resolvesDatabaseOwnerIdByConfiguredUsername`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverTests.java#L36)、実ResolverからControllerを通したServiceへの引き渡しは[`passesResolvedOwnerIdToService`](../src/test/java/com/github/ok200ok/api_todo/controller/LocalOwnerIdResolverControllerTests.java#L54)で確認 | ✅ |
 
+### タスク7: OpenAPI／Swagger UI
+
+既存のAPI契約を変更せず、springdoc-openapiがControllerとDTOから生成する仕様を確認する。自動テストは`@WebMvcTest`と`MockMvc`でOpenAPI文書とSwagger UIへのHTTPアクセスを検証し、ブラウザではUI上のエンドポイントとスキーマを目視確認する。Service・Repository・DBの振る舞いは対象外とする。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、DTOスキーマ、既存契約の400・404応答を記載する | OpenAPI文書を検証する`@WebMvcTest` | 🤝 |
+| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | OpenAPI文書を検証する`@WebMvcTest` | 🤝 |
+| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは`@WebMvcTest`、表示内容はブラウザで手動確認 | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 4: OpenAPI / Swagger UI | 生成文書とブラウザでの確認内容を合意後に記録する | 🚧 |
+| Section 4: OpenAPI / Swagger UI | 生成文書とSwagger UIを自動・手動で確認する | 🤝 |
 | Section 5: 認証追加前の結合テスト | ローカル所有者境界を含むAPIフローとTestcontainersの範囲を合意後に記録する | 🚧 |
 | Section 6: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
 | Section 6: Spring Security / JWT | 認証・認可の責務、トークン仕様、テスト範囲を合意後に記録する | 🚧 |
