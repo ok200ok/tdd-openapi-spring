@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
+import com.github.ok200ok.api_todo.service.TodoNotFoundException;
+
 /**
- * Controller境界で発生する入力エラーをProblem Detailsへ変換する共通処理
+ * Controller境界で発生する入力エラーや未検出例外をProblem Detailsへ変換する共通処理
  * 各Controllerに同じHTTPエラー形式の組み立てを重複させない
  */
 @RestControllerAdvice
@@ -36,5 +38,12 @@ public class ApiExceptionHandler {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
 				HttpStatus.BAD_REQUEST, "リクエスト本文を読み取れません");
 		return ResponseEntity.badRequest().body(problem);
+	}
+
+	@ExceptionHandler(TodoNotFoundException.class)
+	public ResponseEntity<ProblemDetail> handleTodoNotFound(TodoNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.NOT_FOUND, "指定されたTodoが見つかりません");
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
 	}
 }

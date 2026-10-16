@@ -182,7 +182,7 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | Todo取得のHTTP契約とService連携 | 成功時に`200 OK`とTodo応答DTOを返し、解決済み所有者IDとTodo IDでServiceを呼び出す | [`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47) | ✅ |
 | Todo更新のHTTP契約とService連携 | 有効な要求で`200 OK`と更新後のTodo応答DTOを返し、解決済み所有者ID、Todo ID、タイトル・説明・状態をServiceへ渡す | [`updatesTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L70) | ✅ |
 | Todo削除のHTTP契約とService連携 | 成功時にServiceへ削除を委譲し、本文なしの`204 No Content`を返す | [`deletesTodoForOwnerAndReturnsNoContent`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerDeleteTests.java#L39) | ✅ |
-| Todo未検出のHTTPエラー変換 | 取得・更新・削除でServiceが`TodoNotFoundException`を送出した場合、`errors`拡張を付けずProblem Details形式の`404 Not Found`を返す | Controllerテスト作成後にリンクを追加 | 🤝 |
+| Todo未検出のHTTPエラー変換 | 取得・更新・削除でServiceが`TodoNotFoundException`を送出した場合、`errors`拡張を付けずProblem Details形式の`404 Not Found`を返す | [`returnsProblemDetailsWhenTodoCannotBeFoundOnRead`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L46)、[`returnsProblemDetailsWhenTodoCannotBeFoundOnUpdate`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L59)、[`returnsProblemDetailsWhenTodoCannotBeFoundOnDelete`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerNotFoundTests.java#L76) | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
