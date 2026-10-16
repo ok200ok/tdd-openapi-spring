@@ -86,6 +86,21 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 
 いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
 
+
+ローカル専用ユーザーとサンプルTodoを使って起動する場合は、`local`プロファイルを指定します。
+`local`プロファイルでは、起動時に専用デモユーザーのTodoをサンプル15件へリセットします。デモユーザーに追加・編集したTodoも次回起動時に置き換わります。このユーザーはローカル学習専用で、認証用アカウントとして使用しないでください。
+
+↓macOS / Linuxなら
+```sh
+./gradlew bootRun --args="--spring.profiles.active=local"
+```
+
+↓Windowsなら
+```powershell
+.\gradlew.bat bootRun --args="--spring.profiles.active=local"
+```
+
+
 ## 🗺 開発ロードマップ
 
 ### タスクの進め方
@@ -135,7 +150,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] UTC基準の日時型への見直し（Entityの日時型をInstant、PostgreSQL列をtimestamptzとする設計・実装。Repositoryテストで永続化と時点を確認）
 - [x] Todo一覧のDBページネーション（RepositoryでDBページ分割し、Serviceが所有者条件とページ指定を委譲。公開APIは1始まり、既定サイズ5、最大100。Repository実DBテストとService単体テストで確認）
 - [x] DTO・Validationの詳細設計（Java record DTO、入力制約、Problem Detailsの入力エラー拡張を合意し、[DTO仕様](docs/dto-validation.md)と[テストケース一覧](docs/test-case-catalog.md)へ記録）
-- [ ] TodoControllerのTDD（`@WebMvcTest`／`MockMvc`でHTTP境界、Validation、応答とService連携をテストし、RED・GREENを確認。仕様は[DTO仕様](docs/dto-validation.md)、合意ケースは[テストケース一覧](docs/test-case-catalog.md)を参照）
+- [x] TodoControllerのTDD（`@WebMvcTest`／`MockMvc`でHTTP境界、Validation、応答とService連携をテストし、RED・GREENを確認。仕様は[DTO仕様](docs/dto-validation.md)、合意ケースは[テストケース一覧](docs/test-case-catalog.md)を参照）
 - [ ] ローカル所有者境界と初期データ（ローカル専用ユーザー・Todo約15件を用意し、認証前の所有者ID解決からServiceへの受け渡しを確認）
 - [ ] OpenAPI／Swagger UI（`springdoc-openapi`でAPI仕様を生成し、ブラウザでエンドポイントとスキーマを確認）
 
