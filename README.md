@@ -154,17 +154,14 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] ローカル所有者境界と初期データ（ローカル専用ユーザー・Todo約15件を用意し、認証前の所有者ID解決からServiceへの受け渡しを確認）
 - [x] OpenAPI／Swagger UI（`springdoc-openapi`で`/v3/api-docs`のAPI仕様を生成し、`/swagger-ui.html`でエンドポイントとスキーマを確認）
 
-### Section5: 認証追加前の結合テスト
-- [ ] `@SpringBootTest` + `Testcontainers` でローカル所有者境界を含むTodo APIの一連の処理を検証する
-
-### Section6: 認証・認可基盤の追加
-- [ ] `Spring Security` のフィルターチェーンとステートレス認証（`JWT`）の仕組みを理解する
-- [ ] ユーザー登録とパスワードハッシュ化の仕様を決め、`UserService` の単体テスト作成（`RED`）と実装（`GREEN`）
+### Section5: 認証・認可基盤の追加
+- [ ] `Spring Security`のフィルターチェーンとステートレスなJWT認証を理解し、認証方式とAPI契約（登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答）を合意する
+- [ ] ユーザー登録とパスワードハッシュ化を担う`UserService`の単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
-- [ ] ログインAPI、`AuthenticationFilter`、認証・認可設定を実装し、Todo APIに認証済みユーザーのIDを渡す
-- [ ] 認証要件・未認証時の応答をAPI契約とOpenAPIへ追加し、認証・認可の動作を検証する
+- [ ] ステートレスな`Spring Security`設定とBearer認証を実装し、認証済みユーザーのIDをTodo APIへ渡す
+- [ ] 登録・ログインAPIを実装してJWTを発行し、認証・認可の応答とOpenAPI仕様を検証する
 
-### Section7: 認証接続後の結合テストと総仕上げ
+### Section6: 認証接続後の結合テストと総仕上げ
 - [ ] `@SpringBootTest` + `Testcontainers` による認証からTodo操作までの一連の処理を検証する
 - [ ] `./gradlew test` による全テストスイートの一括実行確認
 - [ ] 最終コードレビューとドキュメント整理
