@@ -34,7 +34,9 @@ Section 5で扱う認証・認可の目的、API契約、セキュリティ方�
 5. Todo APIへのBearer tokenはSpring Security OAuth2 Resource Serverの標準機能で検証する。
 6. 認証主体からUserのUUIDを取り出し、TodoServiceへ所有者IDとして渡す。旧LocalOwnerIdResolverは置き換える。
 
-具体的なSpring Security構成とJWT発行部品は依存関係・バージョンを確認して確定する。独自のAuthenticationFilterやJWTパーサーは、標準機能で要件を満たせない理由が確認されない限り導入しない。
+JWT発行にはSpring Securityの`JwtEncoder`（Nimbus実装）、検証には`JwtDecoder`（Nimbus実装）を使う。Resource ServerはHTTPの`Authorization: Bearer`ヘッダーからtokenを取り出し、設定された`JwtDecoder`で署名・有効期間などを検証したうえで認証済み主体をSecurityContextへ設定する。これらを組み合わせることで、独自のBearer token解析フィルターやJWT署名検証コードを避ける。
+
+`JwtEncoder`はJWT claimを署名付きtokenへ変換する役割、`JwtDecoder`は受け取ったtokenを検証してclaimへ戻す役割を持つ。発行専用の薄いクラスが必要なら`JwtEncoder`へclaimを渡す責務だけを持たせ、署名やtoken文字列の解析はSpring Securityへ委譲する。具体的な依存関係・バージョンと設定APIは実装前に公式資料を確認する。
 
 ## 合意済みAPI契約
 
@@ -90,11 +92,17 @@ JWTの`sub`（subject）は、そのtokenが誰についてのものかを表す
 
 1. 認証方式、認証API契約、JWT、パスワード制約、認可応答を合意する。
 2. UserServiceの登録・重複・ハッシュ化をMockito単体テストでTDDする。
-3. JWTの生成・検証を単体テストで確認する。標準部品を包む独自クラスが必要な場合だけ、その責務を限定する。
+3. JWTの生成・検証をSpringコンテキストやDBを起動しないテストで確認する。標準部品を包む独自クラスが必要な場合だけ、その責務を限定する。
 4. Spring SecurityのBearer認証と認証主体からのUser ID解決をテストする。
 5. 登録・ログインControllerを`@WebMvcTest`で検証し、Todo Controllerテストを認証前提へ更新する。
 6. OpenAPIに認証・登録・ログイン契約を反映する。
 7. Section 6でTestcontainersを用いた認証からTodo操作までの結合テスト、全テスト実行、文書整合性確認を行う。
+
+### JWTテストでSpringコンテキストとDBを起動しない理由
+
+Springコンテキストは、SpringがBeanの生成・依存関係の注入・設定の適用を行う実行環境。JWT単体テストの目的は、標準エンコーダーとデコーダーによる署名・claim・有効期間の動作確認なので、テスト内でそれらを直接構成すれば十分である。SpringコンテキストやDBを起動しないことで、起動時間と外部環境への依存を避け、失敗箇所をJWTの振る舞いに絞れる。
+
+このテストだけではSpring SecurityのHTTPフィルターチェーン、Bearer tokenの取り出し、認証済み主体のController連携までは保証しない。それらは次のSecurityテストおよびSection 6の結合テストで確認するため、テスト種別ごとに検証境界を分ける。
 
 テストケースの期待結果・リンク・実行状態は[テストケース一覧](test-case-catalog.md)で管理する。
 

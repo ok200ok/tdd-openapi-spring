@@ -203,15 +203,6 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L60) | ✅ |
 | Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L101)、ブラウザでエンドポイントとスキーマを確認済み | ✅ |
 
-| Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
-| --- | --- | --- |
-| Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
-| Section 5: ユーザー登録とパスワードハッシュ化を担うUserService | 下記ケースをMockitoによるService単体テストで検証する | ✅ |
-| Section 5: JWT発行・検証 | トークン仕様と発行・検証のテスト範囲を合意後にケースを記録する | 🚧 |
-| Section 5: Spring Security・所有者ID連携 | ステートレス認証、認証済みIDの解決、保護対象APIとエラー応答を合意後に記録する | 🚧 |
-| Section 5: 登録・ログインAPIとOpenAPI | 認証APIのHTTP契約と仕様書の検証範囲を合意後に記録する | 🚧 |
-| Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
-
 ### Section 5 タスク: ユーザー登録とパスワードハッシュ化を担うUserService
 
 `UserService`はユーザー名重複をRepositoryで確認し、平文パスワードを`PasswordEncoder`でハッシュ化してから一般ユーザーとして保存する。HTTP入力の形式・長さ検証は後続のControllerテストで確認し、DB一意制約は既存のUserRepositoryテストに委ねる。このタスクではMockitoを使うService単体テストで、Serviceの判断と依存先への委譲を確認する。
@@ -221,3 +212,22 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | 新規ユーザー登録 | 登録前にユーザー名の重複を確認する。重複がなければ入力パスワードをハッシュ化し、ハッシュ値・ユーザー名・表示名・固定role `ROLE_USER`を設定したUserをRepositoryへ保存して、保存結果を返す | [`registersUserWithEncodedPasswordAndUserRole`](../src/test/java/com/github/ok200ok/api_todo/service/UserServiceTests.java#L43) | ✅ |
 | 登録済みユーザー名 | Repositoryの重複確認で既存ユーザーが見つかった場合は登録用例外を送出し、PasswordEncoderによるハッシュ化とUser保存を行わない | [`throwsUserAlreadyExistsExceptionWithoutEncodingOrSaving`](../src/test/java/com/github/ok200ok/api_todo/service/UserServiceTests.java#L68) | ✅ |
 | 表示名なしの登録 | `displayName`が`null`でも登録でき、パスワードをハッシュ化したUserをRepositoryへ保存して保存結果を返す | [`registersUserWithoutDisplayName`](../src/test/java/com/github/ok200ok/api_todo/service/UserServiceTests.java#L83) | ✅ |
+
+### Section 5 タスク: JWT発行・検証
+
+JWTの発行にはSpring Securityの`JwtEncoder`、検証には`JwtDecoder`を使い、独自の署名・token解析処理を実装しない。テストでは実際の標準エンコーダー／デコーダーを直接構成し、Springコンテキスト・DBを起動せずにJWTの暗号学的な振る舞いを確認する。BearerヘッダーのHTTP処理とSecurityContextへの認証設定は後続タスクで扱う。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| JWT発行とclaim | JWTを発行し、標準デコーダーで検証できる。`sub`がUser UUID、`iat`が発行時刻、`exp`が発行時刻から15分後である | [`issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L48) | 🤝 |
+| 不正署名の拒否 | 別の署名鍵で生成されたJWTを標準デコーダーが拒否する | [`rejectsJwtSignedWithDifferentKey`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L63) | 🤝 |
+| 期限切れtokenの拒否 | 有効期限が過去のJWTを標準デコーダーが拒否する | [`rejectsExpiredJwt`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L77) | 🤝 |
+
+| Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
+| --- | --- | --- |
+| Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
+| Section 5: ユーザー登録とパスワードハッシュ化を担うUserService | 下記ケースをMockitoによるService単体テストで検証する | ✅ |
+| Section 5: JWT発行・検証 | `JwtEncoder`と`JwtDecoder`の標準実装を使い、Springコンテキスト・DBなしのテストで署名付きJWTの発行と検証を確認する | 🤝 |
+| Section 5: Spring Security・所有者ID連携 | ステートレス認証、認証済みIDの解決、保護対象APIとエラー応答を合意後に記録する | 🚧 |
+| Section 5: 登録・ログインAPIとOpenAPI | 認証APIのHTTP契約と仕様書の検証範囲を合意後に記録する | 🚧 |
+| Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
