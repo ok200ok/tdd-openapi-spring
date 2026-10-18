@@ -36,35 +36,44 @@ Section 5で扱う認証・認可の目的、API契約、セキュリティ方�
 
 具体的なSpring Security構成とJWT発行部品は依存関係・バージョンを確認して確定する。独自のAuthenticationFilterやJWTパーサーは、標準機能で要件を満たせない理由が確認されない限り導入しない。
 
-## API契約案（要合意）
+## 合意済みAPI契約
 
-| 操作 | URL・メソッド案 | 入力案 | 成功応答案 |
+| 操作 | URL・メソッド | 入力 | 成功応答 |
 | --- | --- | --- | --- |
-| ユーザー登録 | `POST /api/v1/auth/register` | `userName`, `password`, 任意の`displayName` | `201 Created`。ユーザー公開DTOを返し、パスワード・roleを含めない |
+| ユーザー登録 | `POST /api/v1/auth/register` | `userName`, `password`, 任意の`displayName` | `201 Created`。ユーザー公開情報とBearer access tokenを返し、登録完了と同時にログイン状態にする |
 | ログイン | `POST /api/v1/auth/login` | `userName`, `password` | `200 OK`。`accessToken`, `tokenType`, `expiresIn`を返す |
+
+登録・ログインは共通のtoken応答項目（`accessToken`, `tokenType`, `expiresIn`秒）を使う。登録応答にはさらにユーザー公開情報（`userName`、`displayName`）を含め、パスワードとroleは含めない。アカウント保存後、通常のログインと同じ署名・有効期限の規則でtokenを発行する。ユーザーのUUIDはtokenのsubjectと所有者識別に使うが、登録応答で別途返す必要はない。
 
 ### エラー応答案
 
 - 入力制約違反: 既存APIと同じProblem Details形式の`400 Bad Request`。
-- 登録済み`userName`: `409 Conflict`案。ユーザー列挙リスクとの兼ね合いを確認する。
-- ログイン資格情報の不一致: ユーザー不存在とパスワード不一致を区別しない`401 Unauthorized`案。
+- 登録済み`userName`: `409 Conflict`。重複の有無が分かる応答はユーザー列挙につながり得るが、公開登録APIの一般的なUXを優先する。機密性の高い登録では別途見直す。
+- ログイン資格情報の不一致: ユーザー不存在とパスワード不一致を区別しない`401 Unauthorized`。
 - Todo APIへの未認証・不正・期限切れtoken: `401 Unauthorized`。
 - 認証済みだが必要な権限がない場合: `403 Forbidden`。現時点では一般ユーザーのみを想定し、管理者機能は対象外。
 
-認証APIの最終的なJSON項目、Problem Detailsの詳細、HTTPステータスはテストケース合意時に確定する。
+認証APIのProblem Details詳細はテストケース合意時に確定する。
 
-## JWT・パスワード方針案（要合意）
+## 合意済みJWT・パスワード方針
 
-| 項目 | 推奨案 | 決定時に確認すること |
+| 項目 | 合意内容 | 補足 |
 | --- | --- | --- |
 | access token | JWT Bearer tokenのみ。refresh tokenなし | 再ログイン頻度と有効期限 |
-| subject (`sub`) | UserのUUID | Todo所有者IDを安全に一意に解決できること |
-| 有効期限 | 15分を初期案とする | 学習用途の利便性と漏えい時のリスク |
-| 署名方式 | 単一アプリ内で扱いやすいHMAC署名を初期案とする | 複数サービス化・鍵共有の予定があれば非対称署名を再検討 |
+| subject (`sub`) | UserのUUID | tokenの`sub`から認証済みUserを特定する |
+| 有効期限 | 15分 | 漏えいしたtokenを利用できる時間を短くする |
+| 署名方式 | 単一アプリ内で扱いやすいHMAC署名 | 複数サービス化・鍵共有の予定があれば非対称署名を再検討 |
 | 署名鍵 | 環境設定から注入し、ソースに秘密値を置かない | ローカル設定、テスト用鍵、本番のsecret管理を分離する |
-| パスワードハッシュ | Spring Securityの`PasswordEncoder`実装を使用 | BCrypt等の方式、コスト、入力長・最低長 |
+| パスワードハッシュ | Spring Securityの`BCryptPasswordEncoder` | 適切なwork factorを使い、入力を72 UTF-8 bytes以下に制限する |
+| パスワード長 | 8文字以上、UTF-8で72 bytes以下 | BCryptの入力上限による切り詰めを避ける。Unicode文字は複数bytesになり得る |
 
-署名方式や有効期限を確定する前に、利用するSpring Security標準のJWTエンコード・デコード機能と依存関係を確認する。秘密鍵に弱い既定値を設けて本番利用可能に見せる設定は避ける。
+JWTの署名・検証にはSpring Securityの標準機能を用い、具体的なエンコード・デコード部品と依存関係を確認して確定する。秘密鍵に弱い既定値を設けて本番利用可能に見せる設定は避ける。
+
+### Subject (`sub`)にUser UUIDを使う理由
+
+JWTの`sub`（subject）は、そのtokenが誰についてのものかを表す標準claim。User UUIDはユーザー名の変更や表示名と無関係に安定しており、DB上のUserを一意に特定できる。ユーザー名をclaimにすると変更可能な識別子がtokenに固定されるうえ、ログなどにユーザー名が現れる機会も増える。UUIDは秘密情報ではなく、tokenの署名検証と有効期限によってtokenの真正性・有効性を確認する。
+
+登録成功時にtokenを発行すること自体は避ける必要はない。メール確認を導入していない本システムでは、登録後すぐに利用できる一貫したUXになる。一方、後からメール確認を必須にするなら、確認完了前にTodo API用tokenを発行しない方針へ変える。公開登録では自動化された大量登録を防ぐレート制限等が本番運用で必要になるが、これは現スコープ外である。
 
 ## ローカルデモ機能の移行・撤去
 
@@ -89,11 +98,9 @@ Section 5で扱う認証・認可の目的、API契約、セキュリティ方�
 
 テストケースの期待結果・リンク・実行状態は[テストケース一覧](test-case-catalog.md)で管理する。
 
-## 未決事項
+## 実装前に確認する事項
 
-- 登録・ログインのURL、リクエスト/応答DTO、登録直後にtokenも発行するか。
-- `userName`入力で大文字を許容して小文字へ正規化するか、既存API方針どおり小文字英数字に限定するか。
-- パスワードの最小長・最大長・許容文字、およびハッシュ方式。
-- 重複ユーザー名を`409`で明示するか、ユーザー列挙を避ける別の応答にするか。
-- JWT署名アルゴリズム、鍵の設定方式、access token有効期限。
+- JWT署名方式の具体的なアルゴリズム、鍵形式、Spring Securityの標準エンコード・デコード部品。
+- BCryptのwork factorと、テスト・ローカル・本番環境それぞれの署名鍵管理方法。
 - `sub`以外にJWTへ含めるclaimとroleの認可利用範囲。
+- 登録・ログイン応答DTOの具体的なJava型とProblem Detailsの詳細。

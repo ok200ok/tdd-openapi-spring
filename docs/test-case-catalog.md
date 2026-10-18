@@ -205,7 +205,7 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
-| Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | 🚧 |
+| Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
 | Section 5: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
 | Section 5: JWT発行・検証 | トークン仕様と発行・検証のテスト範囲を合意後にケースを記録する | 🚧 |
 | Section 5: Spring Security・所有者ID連携 | ステートレス認証、認証済みIDの解決、保護対象APIとエラー応答を合意後に記録する | 🚧 |
