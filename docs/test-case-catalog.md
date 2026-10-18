@@ -219,15 +219,26 @@ JWTの発行にはSpring Securityの`JwtEncoder`、検証には`JwtDecoder`を�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| JWT発行とclaim | JWTを発行し、標準デコーダーで検証できる。`sub`がUser UUID、`iat`が発行時刻、`exp`が発行時刻から15分後である | [`issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L48) | 🤝 |
-| 不正署名の拒否 | 別の署名鍵で生成されたJWTを標準デコーダーが拒否する | [`rejectsJwtSignedWithDifferentKey`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L63) | 🤝 |
-| 期限切れtokenの拒否 | 有効期限が過去のJWTを標準デコーダーが拒否する | [`rejectsExpiredJwt`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L77) | 🤝 |
+| JWT発行とclaim | JWTを発行し、標準デコーダーで検証できる。`sub`がUser UUID、`iat`が発行時刻、`exp`が発行時刻から15分後である | [`issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L48) | ✅ |
+| 不正署名の拒否 | 別の署名鍵で生成されたJWTを標準デコーダーが拒否する | [`rejectsJwtSignedWithDifferentKey`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L63) | ✅ |
+| 期限切れtokenの拒否 | 有効期限が過去のJWTを標準デコーダーが拒否する | [`rejectsExpiredJwt`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L77) | ✅ |
+
+### Section 5 タスク: Spring Security・所有者ID連携
+
+Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済みJWTの`sub`からUser UUIDを解決する。SecurityFilterChainによるHTTP認証を含むためMVCテストで検証し、JWTの署名・期限検証自体は前タスクの実JWTテストを再利用する。4ケースを2件ずつに分け、各組でテスト作成・RED・最小実装・GREENを行う。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 認証なしのTodo APIアクセス | Bearer tokenなしの保護対象API要求は`401 Unauthorized`となり、TodoServiceを呼び出さない | 1組目: [`rejectsTodoRequestWithoutBearerToken`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L49) | 🤝 |
+| 有効なBearer tokenと所有者ID連携 | 認証済みJWTの`sub`にあるUser UUIDを所有者IDとしてControllerからTodoServiceへ渡す | 1組目: [`passesJwtSubjectAsOwnerIdToTodoService`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L60) | 🤝 |
+| 不正・期限切れJWT | 不正署名または期限切れのBearer tokenは`401 Unauthorized`となり、TodoServiceを呼び出さない | 2組目。1組目完了後に着手 | 🤝 |
+| ステートレスな認証設定 | 認証をHTTP sessionへ保存せず、SecurityContextをリクエスト間でsession経由に保持しない | 2組目。1組目完了後に着手 | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
 | Section 5: ユーザー登録とパスワードハッシュ化を担うUserService | 下記ケースをMockitoによるService単体テストで検証する | ✅ |
-| Section 5: JWT発行・検証 | `JwtEncoder`と`JwtDecoder`の標準実装を使い、Springコンテキスト・DBなしのテストで署名付きJWTの発行と検証を確認する | 🤝 |
-| Section 5: Spring Security・所有者ID連携 | ステートレス認証、認証済みIDの解決、保護対象APIとエラー応答を合意後に記録する | 🚧 |
+| Section 5: JWT発行・検証 | `JwtEncoder`と`JwtDecoder`の標準実装を使い、Springコンテキスト・DBなしのテストで署名付きJWTの発行と検証を確認する | ✅ |
+| Section 5: Spring Security・所有者ID連携 | 下記4ケースでBearer認証、認証主体からの所有者ID解決、ステートレス構成を検証する。2ケースずつTDDで進める | 🤝 |
 | Section 5: 登録・ログインAPIとOpenAPI | 認証APIのHTTP契約と仕様書の検証範囲を合意後に記録する | 🚧 |
 | Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |

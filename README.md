@@ -157,7 +157,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 ### Section5: 認証・認可基盤の追加
 - [x] [`認証・認可設計仕様`](docs/authentication-design.md)を参照し、`Spring Security`の標準機能を使う認証方式とAPI契約（登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答）を合意する
 - [x] ユーザー登録とパスワードハッシュ化を担う`UserService`の単体テスト作成（`RED`）と実装（`GREEN`）
-- [ ] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
+- [x] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
 - [ ] ステートレスな`Spring Security`設定とBearer認証を実装し、認証済みユーザーのIDをTodo APIへ渡す。ローカル所有者Resolver・サンプル初期化機能と専用テストを撤去し、Controllerテストを認証前提へ移行する
 - [ ] 登録・ログインAPIを実装してJWTを発行し、認証・認可の応答とOpenAPI仕様を検証する
 

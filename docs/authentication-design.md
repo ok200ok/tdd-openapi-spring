@@ -93,7 +93,7 @@ JWTの`sub`（subject）は、そのtokenが誰についてのものかを表す
 1. 認証方式、認証API契約、JWT、パスワード制約、認可応答を合意する。
 2. UserServiceの登録・重複・ハッシュ化をMockito単体テストでTDDする。
 3. JWTの生成・検証をSpringコンテキストやDBを起動しないテストで確認する。標準部品を包む独自クラスが必要な場合だけ、その責務を限定する。
-4. Spring SecurityのBearer認証と認証主体からのUser ID解決をテストする。
+4. Spring SecurityのBearer認証と認証主体からのUser ID解決を、MVCテストで2ケースずつに分けてTDDする。認証なし要求の拒否と有効tokenの所有者ID連携を先に確認し、不正token拒否とstateless設定を次に確認する。
 5. 登録・ログインControllerを`@WebMvcTest`で検証し、Todo Controllerテストを認証前提へ更新する。
 6. OpenAPIに認証・登録・ログイン契約を反映する。
 7. Section 6でTestcontainersを用いた認証からTodo操作までの結合テスト、全テスト実行、文書整合性確認を行う。
@@ -103,6 +103,8 @@ JWTの`sub`（subject）は、そのtokenが誰についてのものかを表す
 Springコンテキストは、SpringがBeanの生成・依存関係の注入・設定の適用を行う実行環境。JWT単体テストの目的は、標準エンコーダーとデコーダーによる署名・claim・有効期間の動作確認なので、テスト内でそれらを直接構成すれば十分である。SpringコンテキストやDBを起動しないことで、起動時間と外部環境への依存を避け、失敗箇所をJWTの振る舞いに絞れる。
 
 このテストだけではSpring SecurityのHTTPフィルターチェーン、Bearer tokenの取り出し、認証済み主体のController連携までは保証しない。それらは次のSecurityテストおよびSection 6の結合テストで確認するため、テスト種別ごとに検証境界を分ける。
+
+SecurityのMVCテストではTodoServiceをモックにし、HTTP要求からフィルターチェーン、認証主体、Controllerの所有者ID受け渡しまでを確認する。Bearer filterとControllerの連携を対象にするためHTTPフィルターを有効にした`@WebMvcTest`を使い、DBやJPAの起動は不要とする。有効tokenのテストでは`JwtDecoder`の戻り値をモックし、claimからUUIDを渡す連携を確認する。署名と期限の検証自体は前タスクの標準Nimbus部品を使うJWTテストが担う。
 
 テストケースの期待結果・リンク・実行状態は[テストケース一覧](test-case-catalog.md)で管理する。
 
