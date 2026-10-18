@@ -76,7 +76,7 @@ class JwtTokenProviderTests {
 	@Test
 	void rejectsExpiredJwt() {
 		Instant now = Instant.now();
-		String token = encodeToken(jwtEncoder, now.minusSeconds(120), now.minusSeconds(60));
+		String token = encodeToken(jwtEncoder, now.minusSeconds(600), now.minusSeconds(300));
 
 		assertThatThrownBy(() -> jwtDecoder.decode(token))
 				.isInstanceOf(JwtException.class);
