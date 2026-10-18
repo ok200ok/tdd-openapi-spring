@@ -206,8 +206,18 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
-| Section 5: UserService登録・パスワードハッシュ化 | 登録仕様とハッシュ化の検証範囲を合意後にケースを記録する | 🚧 |
+| Section 5: ユーザー登録とパスワードハッシュ化を担うUserService | 下記ケースをMockitoによるService単体テストで検証する | 🤝 |
 | Section 5: JWT発行・検証 | トークン仕様と発行・検証のテスト範囲を合意後にケースを記録する | 🚧 |
 | Section 5: Spring Security・所有者ID連携 | ステートレス認証、認証済みIDの解決、保護対象APIとエラー応答を合意後に記録する | 🚧 |
 | Section 5: 登録・ログインAPIとOpenAPI | 認証APIのHTTP契約と仕様書の検証範囲を合意後に記録する | 🚧 |
 | Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
+
+### Section 5 タスク: ユーザー登録とパスワードハッシュ化を担うUserService
+
+`UserService`はユーザー名重複をRepositoryで確認し、平文パスワードを`PasswordEncoder`でハッシュ化してから一般ユーザーとして保存する。HTTP入力の形式・長さ検証は後続のControllerテストで確認し、DB一意制約は既存のUserRepositoryテストに委ねる。このタスクではMockitoを使うService単体テストで、Serviceの判断と依存先への委譲を確認する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 新規ユーザー登録 | 登録前にユーザー名の重複を確認する。重複がなければ入力パスワードをハッシュ化し、ハッシュ値・ユーザー名・表示名・固定role `ROLE_USER`を設定したUserをRepositoryへ保存して、保存結果を返す | [`registersUserWithEncodedPasswordAndUserRole`](../src/test/java/com/github/ok200ok/api_todo/service/UserServiceTests.java#L43) | 🤝 |
+| 登録済みユーザー名 | Repositoryの重複確認で既存ユーザーが見つかった場合は登録用例外を送出し、PasswordEncoderによるハッシュ化とUser保存を行わない | [`throwsUserAlreadyExistsExceptionWithoutEncodingOrSaving`](../src/test/java/com/github/ok200ok/api_todo/service/UserServiceTests.java#L68) | 🤝 |
+| 表示名なしの登録 | `displayName`が`null`でも登録でき、パスワードをハッシュ化したUserをRepositoryへ保存して保存結果を返す | [`registersUserWithoutDisplayName`](../src/test/java/com/github/ok200ok/api_todo/service/UserServiceTests.java#L83) | 🤝 |
