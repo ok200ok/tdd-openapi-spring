@@ -104,7 +104,7 @@ Springコンテキストは、SpringがBeanの生成・依存関係の注入・�
 
 このテストだけではSpring SecurityのHTTPフィルターチェーン、Bearer tokenの取り出し、認証済み主体のController連携までは保証しない。それらは次のSecurityテストおよびSection 6の結合テストで確認するため、テスト種別ごとに検証境界を分ける。
 
-SecurityのMVCテストではTodoServiceをモックにし、HTTP要求からフィルターチェーン、認証主体、Controllerの所有者ID受け渡しまでを確認する。Bearer filterとControllerの連携を対象にするためHTTPフィルターを有効にした`@WebMvcTest`を使い、DBやJPAの起動は不要とする。有効tokenのテストでは`JwtDecoder`の戻り値をモックし、claimからUUIDを渡す連携を確認する。署名と期限の検証自体は前タスクの標準Nimbus部品を使うJWTテストが担う。
+SecurityのMVCテストではTodoServiceをモックにし、HTTP要求からフィルターチェーン、認証主体、Controllerの所有者ID受け渡しまでを確認する。Bearer filterとControllerの連携を対象にするためHTTPフィルターを有効にした`@WebMvcTest`を使い、DBやJPAの起動は不要とする。テスト用の鍵を使った実際のNimbus `JwtEncoder`／`JwtDecoder`で有効・不正署名・期限切れtokenを作成・検証し、署名検証結果がHTTP応答へ変換されるところまで確認する。
 
 テストケースの期待結果・リンク・実行状態は[テストケース一覧](test-case-catalog.md)で管理する。
 
