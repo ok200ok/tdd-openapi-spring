@@ -225,14 +225,14 @@ JWTの発行にはSpring Securityの`JwtEncoder`、検証には`JwtDecoder`を�
 
 ### Section 5 タスク: Spring Security・所有者ID連携
 
-Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済みJWTの`sub`からUser UUIDを解決する。SecurityFilterChainによるHTTP認証を含むためMVCテストで検証し、JWTの署名・期限検証自体は前タスクの実JWTテストを再利用する。4ケースを2件ずつに分け、各組でテスト作成・RED・最小実装・GREENを行う。
+Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済みJWTの`sub`からUser UUIDを解決する。SecurityFilterChainによるHTTP認証を含むためMVCテストで検証し、JWTの署名・期限検証自体は前タスクの実JWTテストを再利用する。
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 認証なしのTodo APIアクセス | Bearer tokenなしの保護対象API要求は`401 Unauthorized`となり、TodoServiceを呼び出さない | 1組目: [`rejectsTodoRequestWithoutBearerToken`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L49) | 🤝 |
-| 有効なBearer tokenと所有者ID連携 | 認証済みJWTの`sub`にあるUser UUIDを所有者IDとしてControllerからTodoServiceへ渡す | 1組目: [`passesJwtSubjectAsOwnerIdToTodoService`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L60) | 🤝 |
-| 不正・期限切れJWT | 不正署名または期限切れのBearer tokenは`401 Unauthorized`となり、TodoServiceを呼び出さない | 2組目。1組目完了後に着手 | 🤝 |
-| ステートレスな認証設定 | 認証をHTTP sessionへ保存せず、SecurityContextをリクエスト間でsession経由に保持しない | 2組目。1組目完了後に着手 | 🤝 |
+| 認証なしのTodo APIアクセス | Bearer tokenなしの保護対象API要求は`401 Unauthorized`となり、TodoServiceを呼び出さない | [`rejectsTodoRequestWithoutBearerToken`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L49) | ✅ |
+| 有効なBearer tokenと所有者ID連携 | 認証済みJWTの`sub`にあるUser UUIDを所有者IDとしてControllerからTodoServiceへ渡す | [`passesJwtSubjectAsOwnerIdToTodoService`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L60) | ✅ |
+| 不正・期限切れJWT | 不正署名または期限切れのBearer tokenは`401 Unauthorized`となり、TodoServiceを呼び出さない | [`rejectsInvalidAndExpiredBearerTokens`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L88) | 🤝 |
+| ステートレスな認証設定 | 認証をHTTP sessionへ保存せず、SecurityContextをリクエスト間でsession経由に保持しない | [`doesNotReuseAuthenticationFromHttpSession`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L106) | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
