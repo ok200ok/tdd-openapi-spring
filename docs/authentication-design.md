@@ -93,7 +93,7 @@ JWTの`sub`（subject）は、そのtokenが誰についてのものかを表す
 `SecurityConfiguration`がResource Serverの標準フィルターを組み立てるには`JwtDecoder`が必須だが、現状はテスト内の`@TestConfiguration`にしかない。本番用に次の設定を追加する。
 
 - `app.security.jwt.secret`から`JwtEncoder`／`JwtDecoder`を生成する`security`パッケージの設定クラスを追加し、`@SpringBootTest`とCIを成功させる。
-- 既存Controllerテストの所有者前提を、`@MockitoBean OwnerIdResolver`と未認証要求から、`spring-security-test`の`jwt()`で`sub`に所有者UUIDを設定した認証済み要求へ移行する。
+- 既存Controllerテストの所有者前提を、`@MockitoBean OwnerIdResolver`と未認証要求から、`SecurityConfiguration`と共有テスト設定`TestJwtConfiguration`を取り込み、`JwtTokenProvider`で発行した実Bearer tokenを送る認証済み要求へ移行する。ステートレス構成では`spring-security-test`の`jwt()`が`SecurityContextHolder`へ反映されないため採用しない。
 - この段階ではControllerと`OwnerIdResolver`（`AuthenticatedUserIdResolver`）を維持し、抽象の削除は撤去タスクで行う。
 
 ## ローカルデモ機能の移行・撤去

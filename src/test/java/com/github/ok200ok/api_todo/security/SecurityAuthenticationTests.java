@@ -15,19 +15,15 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,7 +44,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
 		SecurityConfiguration.class,
 		AuthenticatedUserIdResolver.class,
 		JwtTokenProvider.class,
-		SecurityAuthenticationTests.JwtTestConfiguration.class
+		TestJwtConfiguration.class
 })
 class SecurityAuthenticationTests {
 
@@ -151,25 +147,5 @@ class SecurityAuthenticationTests {
 				.build();
 		JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 		return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
-	}
-
-	@TestConfiguration(proxyBeanMethods = false)
-	static class JwtTestConfiguration {
-
-		private static final SecretKey TEST_KEY = new SecretKeySpec(
-				"test-secret-key-for-security-mvc-tests-long".getBytes(StandardCharsets.UTF_8),
-				"HmacSHA256");
-
-		@Bean
-		JwtEncoder jwtEncoder() {
-			return new NimbusJwtEncoder(new ImmutableSecret<>(TEST_KEY));
-		}
-
-		@Bean
-		JwtDecoder jwtDecoder() {
-			return NimbusJwtDecoder.withSecretKey(TEST_KEY)
-					.macAlgorithm(MacAlgorithm.HS256)
-					.build();
-		}
 	}
 }

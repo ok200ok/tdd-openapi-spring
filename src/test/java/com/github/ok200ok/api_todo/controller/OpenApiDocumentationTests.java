@@ -20,9 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.github.ok200ok.api_todo.security.AuthenticatedUserIdResolver;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 /**
@@ -42,6 +44,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
 		MultipleOpenApiSupportConfiguration.class,
 		SwaggerConfig.class
 })
+@Import(AuthenticatedUserIdResolver.class)
 class OpenApiDocumentationTests {
 
 	@Autowired
@@ -49,9 +52,6 @@ class OpenApiDocumentationTests {
 
 	@MockitoBean
 	private TodoService todoService;
-
-	@MockitoBean
-	private OwnerIdResolver ownerIdResolver;
 
 	/**
 	 * OpenAPI文書にTodo APIの操作、DTOスキーマ、エラー応答を含める
