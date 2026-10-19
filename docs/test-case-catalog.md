@@ -267,9 +267,9 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 登録成功 | `201 Created`、`application/json`、`userName`・`displayName`・`accessToken`・`tokenType`（`Bearer`）・`expiresIn`（900）を返す。`Location`、`id`、`password`、`role`は返さない。`AuthService`へ入力を渡す | `registersUserAndReturnsCreatedWithToken` | 🤝 |
-| 表示名なし | `displayName`省略で`201`、応答の`displayName`は`null`。`AuthService`へ`null`を渡す | `registersUserWithoutDisplayName` | 🤝 |
-| 重複ユーザー名 | `409 Conflict`、`application/problem+json`、`status: 409`、日本語`detail`。`errors`拡張は付けない | `returnsConflictWhenUserNameAlreadyExists` | 🤝 |
+| 登録成功 | `201 Created`、`application/json`、`userName`・`displayName`・`accessToken`・`tokenType`（`Bearer`）・`expiresIn`（900）を返す。`Location`、`id`、`password`、`role`は返さない。`AuthService`へ入力を渡す | [`registersUserAndReturnsCreatedWithToken`](../src/test/java/com/github/ok200ok/api_todo/controller/AuthControllerRegisterTests.java#L45) | ✅ |
+| 表示名なし | `displayName`省略で`201`、応答の`displayName`は`null`。`AuthService`へ`null`を渡す | [`registersUserWithoutDisplayName`](../src/test/java/com/github/ok200ok/api_todo/controller/AuthControllerRegisterTests.java#L73) | ✅ |
+| 重複ユーザー名 | `409 Conflict`、`application/problem+json`、`status: 409`、日本語`detail`。`errors`拡張は付けない | [`returnsConflictWhenUserNameAlreadyExists`](../src/test/java/com/github/ok200ok/api_todo/controller/AuthControllerRegisterTests.java#L92) | ✅ |
 | 入力検証 | `userName`の欠落・空白のみ・大文字・記号・51文字、`password`の欠落・7文字・UTF-8で73バイト以上、`displayName`の51文字を`400`のProblem Detailsで拒否し、該当`field`を`errors`に含める。`AuthService`を呼ばない | `rejectsInvalidRegistrationInput` | 🤝 |
 | パスワードの72バイト境界 | `"あ".repeat(24)`（72バイト）を受理して`201`。`AuthService`へ同じ文字列を渡す | `acceptsPasswordAtUtf8ByteLimit` | 🤝 |
 | 未知フィールド・不正JSON | 未知フィールドとJSON構文エラーを`400`のProblem Detailsで拒否する。項目を特定できないため`errors`は付けない。`AuthService`を呼ばない | `rejectsUnknownFieldsAndMalformedJsonOnRegistration` | 🤝 |
