@@ -251,8 +251,8 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 登録済みユーザーの読み込み | `userName`、保存済みパスワードハッシュ、`ROLE_USER`権限を持つ`UserDetails`を返す。`UserRepository.findByUserName`にユーザー名を渡す | `loadsUserDetailsWithStoredPasswordAndRole` | 🤝 |
-| 存在しないユーザー名 | `UsernameNotFoundException`を送出する | `throwsUsernameNotFoundExceptionForUnknownUserName` | 🤝 |
+| 登録済みユーザーの読み込み | `userName`、保存済みパスワードハッシュ、`ROLE_USER`権限を持つ`UserDetails`を返す。`UserRepository.findByUserName`にユーザー名を渡す | [`loadsUserDetailsWithStoredPasswordAndRole`](../src/test/java/com/github/ok200ok/api_todo/security/JpaUserDetailsServiceTests.java#L39) | ✅ |
+| 存在しないユーザー名 | `UsernameNotFoundException`を送出する | [`throwsUsernameNotFoundExceptionForUnknownUserName`](../src/test/java/com/github/ok200ok/api_todo/security/JpaUserDetailsServiceTests.java#L58) | ✅ |
 
 #### `AuthServiceTests`
 
