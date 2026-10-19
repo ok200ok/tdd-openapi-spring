@@ -1,11 +1,13 @@
 package com.github.ok200ok.api_todo.validation;
 
+import java.nio.charset.StandardCharsets;
+
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
  * Utf8ByteLengthの検証実装
- * この段階ではテストをコンパイルして機能上のREDを確認するための骨格
+ * Javaの文字数ではなく、UTF-8へ変換した実際のバイト長を上限と比較する
  */
 public class Utf8ByteLengthValidator implements ConstraintValidator<Utf8ByteLength, CharSequence> {
 
@@ -18,6 +20,10 @@ public class Utf8ByteLengthValidator implements ConstraintValidator<Utf8ByteLeng
 
 	@Override
 	public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-		throw new UnsupportedOperationException("UTF-8バイト長検証は未実装です");
+		// nullは@NotBlankなど必須チェックの責務に委ね、この制約では違反にしない
+		if (value == null) {
+			return true;
+		}
+		return value.toString().getBytes(StandardCharsets.UTF_8).length <= max;
 	}
 }
