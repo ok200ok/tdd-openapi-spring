@@ -1,8 +1,10 @@
 package com.github.ok200ok.api_todo.service;
 
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
 import com.github.ok200ok.api_todo.entity.User;
+import com.github.ok200ok.api_todo.repository.UserRepository;
 import com.github.ok200ok.api_todo.security.JwtTokenProvider;
 
 /**
@@ -14,10 +16,18 @@ import com.github.ok200ok.api_todo.security.JwtTokenProvider;
 public class AuthService {
 
 	private final UserService userService;
+	private final AuthenticationManager authenticationManager;
+	private final UserRepository userRepository;
 	private final JwtTokenProvider jwtTokenProvider;
 
-	public AuthService(UserService userService, JwtTokenProvider jwtTokenProvider) {
+	public AuthService(
+			UserService userService,
+			AuthenticationManager authenticationManager,
+			UserRepository userRepository,
+			JwtTokenProvider jwtTokenProvider) {
 		this.userService = userService;
+		this.authenticationManager = authenticationManager;
+		this.userRepository = userRepository;
 		this.jwtTokenProvider = jwtTokenProvider;
 	}
 
@@ -38,8 +48,25 @@ public class AuthService {
 	}
 
 	/**
+	 * 入力された資格情報をAuthenticationManagerで検証し、認証済みUserのUUIDでaccess tokenを発行する
+	 *
+	 * @param userName ログインに使用するユーザー名
+	 * @param rawPassword 照合する平文パスワード
+	 * @return access tokenと有効期間（秒）
+	 */
+	public LoginResult login(String userName, String rawPassword) {
+		throw new UnsupportedOperationException("loginは未実装です");
+	}
+
+	/**
 	 * 登録結果としてControllerへ返すUserとtokenの組
 	 */
 	public record RegistrationResult(User user, String accessToken, long expiresInSeconds) {
+	}
+
+	/**
+	 * ログイン結果としてControllerへ返すaccess tokenと有効期間
+	 */
+	public record LoginResult(String accessToken, long expiresInSeconds) {
 	}
 }

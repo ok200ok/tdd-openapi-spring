@@ -258,8 +258,8 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 登録とtoken発行 | `UserService.registerUser`へユーザー名・平文パスワード・表示名を渡す。返されたUserのUUIDでtokenを発行し、User・token・`expiresIn`（900）を返す | `registersUserAndIssuesTokenForNewUser` | 🤝 |
-| 重複ユーザー名 | `UserAlreadyExistsException`をそのまま伝播し、tokenを発行しない | `propagatesDuplicateUserNameWithoutIssuingToken` | 🤝 |
+| 登録とtoken発行 | `UserService.registerUser`へユーザー名・平文パスワード・表示名を渡す。返されたUserのUUIDでtokenを発行し、User・token・`expiresIn`（900）を返す | [`registersUserAndIssuesTokenForNewUser`](../src/test/java/com/github/ok200ok/api_todo/service/AuthServiceTests.java#L41) | ✅ |
+| 重複ユーザー名 | `UserAlreadyExistsException`をそのまま伝播し、tokenを発行しない | [`propagatesDuplicateUserNameWithoutIssuingToken`](../src/test/java/com/github/ok200ok/api_todo/service/AuthServiceTests.java#L63) | ✅ |
 | ログイン成功 | `AuthenticationManager`へ未認証の`UsernamePasswordAuthenticationToken`を渡す。認証成功後、`Authentication.getName()`でUserを再検索し、UUIDでtokenを発行する | `authenticatesCredentialsAndIssuesTokenForUserUuid` | 🤝 |
 | ログイン失敗 | `BadCredentialsException`をそのまま伝播し、User再検索とtoken発行を行わない | `propagatesAuthenticationFailureWithoutIssuingToken` | 🤝 |
 
