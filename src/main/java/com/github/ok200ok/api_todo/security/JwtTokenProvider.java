@@ -51,6 +51,6 @@ public class JwtTokenProvider {
 	 * @return access tokenの有効期間（秒）
 	 */
 	public long getExpiresInSeconds() {
-		throw new UnsupportedOperationException("getExpiresInSecondsは未実装です");
+		return ACCESS_TOKEN_LIFETIME_MINUTES * 60;
 	}
 }
