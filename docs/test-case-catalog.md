@@ -243,6 +243,59 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 | 本番JWT Beanと全コンテキスト起動 | 署名鍵設定から`JwtEncoder`／`JwtDecoder`が提供され、`@SpringBootTest`のコンテキストが起動する。CIの全体テストも成功する | [`contextLoads`](../src/test/java/com/github/ok200ok/api_todo/ApiTodoApplicationTests.java#L23) | ✅ |
 | 既存Controllerテストの認証前提化 | 認証済みJWTの`sub`を所有者UUIDとしてServiceへ渡す前提で、既存のHTTP契約・Service連携ケースが引き続き成功する | [`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L59) ほか既存Controllerテスト | ✅ |
 
+### Section 5 タスク: 登録・ログインAPIとOpenAPI
+
+`AuthController`のHTTP境界を`@WebMvcTest(AuthController.class)`で検証し、`AuthService`はMockito単体テスト、`JpaUserDetailsService`は`UserRepository`をモックした単体テストで確認する。認証APIはBearer tokenなしで利用でき、ログイン失敗は`BadCredentialsException`のみをProblem Detailsの`401`へ変換する。ログインにも登録と同じ`userName`・`password`の入力制約を適用する。OpenAPIは生成された`/v3/api-docs`で認証API、スキーマ、`bearerAuth`を確認する。テストコード作成後に各テスト名へソースリンクを追加する。
+
+#### `JpaUserDetailsServiceTests`
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 登録済みユーザーの読み込み | `userName`、保存済みパスワードハッシュ、`ROLE_USER`権限を持つ`UserDetails`を返す。`UserRepository.findByUserName`にユーザー名を渡す | `loadsUserDetailsWithStoredPasswordAndRole` | 🤝 |
+| 存在しないユーザー名 | `UsernameNotFoundException`を送出する | `throwsUsernameNotFoundExceptionForUnknownUserName` | 🤝 |
+
+#### `AuthServiceTests`
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 登録とtoken発行 | `UserService.registerUser`へユーザー名・平文パスワード・表示名を渡す。返されたUserのUUIDでtokenを発行し、User・token・`expiresIn`（900）を返す | `registersUserAndIssuesTokenForNewUser` | 🤝 |
+| 重複ユーザー名 | `UserAlreadyExistsException`をそのまま伝播し、tokenを発行しない | `propagatesDuplicateUserNameWithoutIssuingToken` | 🤝 |
+| ログイン成功 | `AuthenticationManager`へ未認証の`UsernamePasswordAuthenticationToken`を渡す。認証成功後、`Authentication.getName()`でUserを再検索し、UUIDでtokenを発行する | `authenticatesCredentialsAndIssuesTokenForUserUuid` | 🤝 |
+| ログイン失敗 | `BadCredentialsException`をそのまま伝播し、User再検索とtoken発行を行わない | `propagatesAuthenticationFailureWithoutIssuingToken` | 🤝 |
+
+#### `AuthControllerRegisterTests`
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 登録成功 | `201 Created`、`application/json`、`userName`・`displayName`・`accessToken`・`tokenType`（`Bearer`）・`expiresIn`（900）を返す。`Location`、`id`、`password`、`role`は返さない。`AuthService`へ入力を渡す | `registersUserAndReturnsCreatedWithToken` | 🤝 |
+| 表示名なし | `displayName`省略で`201`、応答の`displayName`は`null`。`AuthService`へ`null`を渡す | `registersUserWithoutDisplayName` | 🤝 |
+| 重複ユーザー名 | `409 Conflict`、`application/problem+json`、`status: 409`、日本語`detail`。`errors`拡張は付けない | `returnsConflictWhenUserNameAlreadyExists` | 🤝 |
+| 入力検証 | `userName`の欠落・空白のみ・大文字・記号・51文字、`password`の欠落・7文字・UTF-8で73バイト以上、`displayName`の51文字を`400`のProblem Detailsで拒否し、該当`field`を`errors`に含める。`AuthService`を呼ばない | `rejectsInvalidRegistrationInput` | 🤝 |
+| パスワードの72バイト境界 | `"あ".repeat(24)`（72バイト）を受理して`201`。`AuthService`へ同じ文字列を渡す | `acceptsPasswordAtUtf8ByteLimit` | 🤝 |
+| 未知フィールド・不正JSON | 未知フィールドとJSON構文エラーを`400`のProblem Detailsで拒否する。項目を特定できないため`errors`は付けない。`AuthService`を呼ばない | `rejectsUnknownFieldsAndMalformedJsonOnRegistration` | 🤝 |
+
+#### `AuthControllerLoginTests`
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| ログイン成功 | `200 OK`、`accessToken`・`tokenType`（`Bearer`）・`expiresIn`（900）を返す。ユーザー情報や`password`は返さない。`AuthService`へ入力を渡す | `logsInAndReturnsToken` | 🤝 |
+| 資格情報不一致 | `401 Unauthorized`、`application/problem+json`、`status: 401`、日本語`detail`。`errors`拡張は付けない | `returnsUnauthorizedWhenCredentialsAreInvalid` | 🤝 |
+| 入力検証 | 登録と同じ`userName`・`password`制約で`400`とし、該当`field`を`errors`に含める。`AuthService`を呼ばない | `rejectsInvalidLoginInput` | 🤝 |
+
+#### `OpenApiDocumentationTests`
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 認証APIとBearerスキーム | `/api/v1/auth/register`の`post`（`201`・`400`・`409`）と`/api/v1/auth/login`の`post`（`200`・`400`・`401`）が文書化される。`RegisterRequest`・`LoginRequest`・`RegisterResponse`・`TokenResponse`のスキーマが生成され、応答に`password`・`role`・`id`を含まない。`components.securitySchemes.bearerAuth`が`type: http`、`scheme: bearer`、`bearerFormat: JWT`を持つ。Todo操作には`bearerAuth`の`security`が付き、認証APIには付かない | `publishesAuthApiOperationsSchemasAndBearerSecurityScheme` | 🤝 |
+
+#### `JwtTokenProviderTests`
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| `expiresIn`の契約 | 既存のJWT発行テストに、`getExpiresInSeconds()`が`900`を返す確認を追加する | `issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`に追加 | 🤝 |
+
+既存のTodo系`@WebMvcTest`は`AuthController`追加の影響を避けるため、最後に`@WebMvcTest(TodoController.class)`へ限定する。`OpenApiDocumentationTests`は`@MockitoBean AuthService`と`@Import(OpenApiConfiguration.class)`を追加する。いずれも振る舞いは変えない。
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
@@ -250,6 +303,6 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 | Section 5: JWT発行・検証 | `JwtEncoder`と`JwtDecoder`の標準実装を使い、Springコンテキスト・DBなしのテストで署名付きJWTの発行と検証を確認する | ✅ |
 | Section 5: Spring Security・所有者ID連携 | 下記4ケースでBearer認証、認証主体からの所有者ID解決、ステートレス構成を検証する | ✅ |
 | Section 5: JWT本番設定・Controllerテストの認証前提移行 | 上記2ケースで本番JWT Beanの起動と認証前提のControllerテスト移行を確認する | ✅ |
-| Section 5: 登録・ログインAPIとOpenAPI | 認証APIのHTTP契約と仕様書の検証範囲を合意後に記録する | 🚧 |
+| Section 5: 登録・ログインAPIとOpenAPI | 上記ケースで登録・ログインのHTTP契約、Service・UserDetails連携、OpenAPI、既存Controllerテストのスコープ調整を確認する | 🤝 |
 | Section 5: ローカル機能撤去 | `LocalOwnerIdResolver`・`LocalSampleDataInitializer`・`application-local.yaml`と専用テスト、および不要になった`OwnerIdResolver`抽象を撤去し、Controllerが認証主体から所有者を解決する形へ整理する | 🚧 |
 | Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
