@@ -42,7 +42,7 @@ class JwtTokenProviderTests {
 	private final JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(jwtEncoder);
 
 	/**
-	 * 発行tokenを標準デコーダーで検証し、subjectと15分の有効期間を確認する
+	 * 発行tokenを標準デコーダーで検証し、subjectと15分の有効期間、API応答用の秒数を確認する
 	 */
 	@Test
 	void issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime() {
@@ -54,6 +54,7 @@ class JwtTokenProviderTests {
 		assertThat(jwt.getSubject()).isEqualTo(userId.toString());
 		assertThat(jwt.getIssuedAt()).isNotNull();
 		assertThat(jwt.getExpiresAt()).isEqualTo(jwt.getIssuedAt().plus(Duration.ofMinutes(15)));
+		assertThat(jwtTokenProvider.getExpiresInSeconds()).isEqualTo(900);
 	}
 
 	/**

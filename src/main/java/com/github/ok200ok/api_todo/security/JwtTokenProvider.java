@@ -43,4 +43,14 @@ public class JwtTokenProvider {
 
 		return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
 	}
+
+	/**
+	 * access tokenの有効期間を秒単位で返す
+	 * API応答のexpiresInとJWTのexpに同じ定数を使い、両者のずれを防ぐ
+	 *
+	 * @return access tokenの有効期間（秒）
+	 */
+	public long getExpiresInSeconds() {
+		throw new UnsupportedOperationException("getExpiresInSecondsは未実装です");
+	}
 }
