@@ -71,32 +71,52 @@ JWT発行にはSpring Securityの`JwtEncoder`（Nimbus実装）、検証には`J
 
 JWTの署名・検証にはSpring Securityの標準機能を用い、具体的なエンコード・デコード部品と依存関係を確認して確定する。秘密鍵に弱い既定値を設けて本番利用可能に見せる設定は避ける。
 
+### 署名鍵の設定（合意）
+
+本プロジェクトはデプロイせず、実行環境はローカル開発とCIのみとする。これを踏まえ、署名鍵は次のように扱う。
+
+- アプリ設定`app.security.jwt.secret`に環境変数`JWT_SECRET`で上書きできる既定値を持たせる。既定値は「ローカル学習専用」と分かる十分長い値（HS256要件の256ビット以上）にし、日本語コメントで本番では環境変数で上書きする旨を明記する。
+- 実暗号を扱うテスト（`JwtTokenProviderTests`／`SecurityAuthenticationTests`）はテスト内の独立鍵を使い、アプリ既定値に依存しない。
+- `@SpringBootTest`はアプリ既定鍵で起動し、CIの全体テストを成功させる。
+- 将来デプロイする場合は既定値を外し、環境変数を必須にして本番用secret管理へ分離する。
+
+`JwtEncoder`／`JwtDecoder`は`security`パッケージの設定クラスで、上記秘密鍵から生成する。正確なSpring Security／NimbusのAPIは実装直前に公式資料で確認する。
+
 ### Subject (`sub`)にUser UUIDを使う理由
 
 JWTの`sub`（subject）は、そのtokenが誰についてのものかを表す標準claim。User UUIDはユーザー名の変更や表示名と無関係に安定しており、DB上のUserを一意に特定できる。ユーザー名をclaimにすると変更可能な識別子がtokenに固定されるうえ、ログなどにユーザー名が現れる機会も増える。UUIDは秘密情報ではなく、tokenの署名検証と有効期限によってtokenの真正性・有効性を確認する。
 
 登録成功時にtokenを発行すること自体は避ける必要はない。メール確認を導入していない本システムでは、登録後すぐに利用できる一貫したUXになる。一方、後からメール確認を必須にするなら、確認完了前にTodo API用tokenを発行しない方針へ変える。公開登録では自動化された大量登録を防ぐレート制限等が本番運用で必要になるが、これは現スコープ外である。
 
+## 本番JWT設定とControllerテストの認証前提移行
+
+`SecurityConfiguration`がResource Serverの標準フィルターを組み立てるには`JwtDecoder`が必須だが、現状はテスト内の`@TestConfiguration`にしかない。本番用に次の設定を追加する。
+
+- `app.security.jwt.secret`から`JwtEncoder`／`JwtDecoder`を生成する`security`パッケージの設定クラスを追加し、`@SpringBootTest`とCIを成功させる。
+- 既存Controllerテストの所有者前提を、`@MockitoBean OwnerIdResolver`と未認証要求から、`spring-security-test`の`jwt()`で`sub`に所有者UUIDを設定した認証済み要求へ移行する。
+- この段階ではControllerと`OwnerIdResolver`（`AuthenticatedUserIdResolver`）を維持し、抽象の削除は撤去タスクで行う。
+
 ## ローカルデモ機能の移行・撤去
 
-認証済みユーザー登録でTodo APIを利用できるようになった時点で、認証前の仮ユーザー機能を撤去する。
+認証済みユーザー登録でTodo APIを利用できるようになった時点、すなわち登録・ログインAPI完成後に、認証前の仮ユーザー機能を最後のタスクとして撤去する。`OwnerIdResolver`抽象は、認証用とローカル用の2実装が存在する間は必要であり、ローカル撤去と同時に不要になるため、この撤去タスクでまとめて削除する。
 
-- `LocalOwnerIdResolver`と、`OwnerIdResolver`がローカル固定ユーザーを解決するためだけに存在する場合の抽象化を見直す。
-- `LocalSampleDataInitializer`、`application-local.yaml`の所有者設定、専用デモデータを対象にしたテストを削除する。
+- `LocalOwnerIdResolver`、`LocalSampleDataInitializer`、`application-local.yaml`の所有者設定、専用デモデータを対象にしたテストを削除する。
 - `application-local.yaml`が他用途にも使われていないか確認し、ファイル削除または不要設定だけの削除を選ぶ。
 - ローカル専用ユーザー名`localdemo`が通常登録される可能性、および固定パスワード文字列の扱いを確認する。
-- ControllerのHTTPテストは削除せず、認証済みUserを使うテストへ移行する。
+- 不要になった`OwnerIdResolver`抽象と`AuthenticatedUserIdResolver`を削除し、Controllerが認証主体（`@AuthenticationPrincipal Jwt`）から所有者UUIDを解決する形へ整理する。
+- ControllerのHTTPテストは削除せず、認証済みUserを使うテストのまま維持する。
 - Section 6の結合テストでは、テスト内でユーザーを登録・認証し、そのユーザーのtokenでTodo APIを操作する。
 
 ## 実装・テストの順序案
 
-1. 認証方式、認証API契約、JWT、パスワード制約、認可応答を合意する。
-2. UserServiceの登録・重複・ハッシュ化をMockito単体テストでTDDする。
-3. JWTの生成・検証をSpringコンテキストやDBを起動しないテストで確認する。標準部品を包む独自クラスが必要な場合だけ、その責務を限定する。
-4. Spring SecurityのBearer認証と認証主体からのUser ID解決を、MVCテストで2ケースずつに分けてTDDする。認証なし要求の拒否と有効tokenの所有者ID連携を先に確認し、不正token拒否とstateless設定を次に確認する。
-5. 登録・ログインControllerを`@WebMvcTest`で検証し、Todo Controllerテストを認証前提へ更新する。
-6. OpenAPIに認証・登録・ログイン契約を反映する。
-7. Section 6でTestcontainersを用いた認証からTodo操作までの結合テスト、全テスト実行、文書整合性確認を行う。
+1. 認証方式、認証API契約、JWT、パスワード制約、認可応答を合意する（完了）。
+2. UserServiceの登録・重複・ハッシュ化をMockito単体テストでTDDする（完了）。
+3. JWTの生成・検証をSpringコンテキストやDBを起動しないテストで確認する（完了）。
+4. Spring SecurityのBearer認証と認証主体からのUser ID解決を、MVCテストで2ケースずつに分けてTDDする（完了）。
+5. 本番用`JwtEncoder`／`JwtDecoder` Beanと署名鍵設定を追加し、`@SpringBootTest`とCIを成功させる。既存Controllerテストを認証前提へ移行する。
+6. 登録・ログインControllerを`@WebMvcTest`で検証し、OpenAPIへ認証・登録・ログイン契約を反映する。
+7. ローカルデモ機能と、不要になった`OwnerIdResolver`抽象を撤去する。
+8. Section 6でTestcontainersを用いた認証からTodo操作までの結合テスト、全テスト実行、文書整合性確認を行う。
 
 ### JWTテストでSpringコンテキストとDBを起動しない理由
 

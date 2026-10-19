@@ -231,14 +231,25 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 | --- | --- | --- | --- |
 | 認証なしのTodo APIアクセス | Bearer tokenなしの保護対象API要求は`401 Unauthorized`となり、TodoServiceを呼び出さない | [`rejectsTodoRequestWithoutBearerToken`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L49) | ✅ |
 | 有効なBearer tokenと所有者ID連携 | 認証済みJWTの`sub`にあるUser UUIDを所有者IDとしてControllerからTodoServiceへ渡す | [`passesJwtSubjectAsOwnerIdToTodoService`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L60) | ✅ |
-| 不正・期限切れJWT | 不正署名または期限切れのBearer tokenは`401 Unauthorized`となり、TodoServiceを呼び出さない | [`rejectsInvalidAndExpiredBearerTokens`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L88) | 🤝 |
-| ステートレスな認証設定 | 認証をHTTP sessionへ保存せず、SecurityContextをリクエスト間でsession経由に保持しない | [`doesNotReuseAuthenticationFromHttpSession`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L106) | 🤝 |
+| 不正・期限切れJWT | 不正署名または期限切れのBearer tokenは`401 Unauthorized`となり、TodoServiceを呼び出さない | [`rejectsInvalidAndExpiredBearerTokens`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L88) | ✅ |
+| ステートレスな認証設定 | 認証をHTTP sessionへ保存せず、SecurityContextをリクエスト間でsession経由に保持しない | [`doesNotReuseAuthenticationFromHttpSession`](../src/test/java/com/github/ok200ok/api_todo/security/SecurityAuthenticationTests.java#L106) | ✅ |
+
+### Section 5 タスク: JWT本番設定・Controllerテストの認証前提移行
+
+本番用`JwtEncoder`／`JwtDecoder` Beanと署名鍵設定を追加して`@SpringBootTest`とCIを成功させ、既存Controllerテストの所有者前提を`@MockitoBean OwnerIdResolver`から`spring-security-test`の`jwt()`による認証済み前提へ移行する。Controllerと`OwnerIdResolver`（`AuthenticatedUserIdResolver`）はこの段階では維持し、抽象の削除は撤去タスクで行う。振る舞いを変えない移行のため新規の振る舞いケースは追加せず、既存のControllerケースを引き続き検証する。テスト名・行番号が変わった場合は本一覧のリンクを同期する。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 本番JWT Beanと全コンテキスト起動 | 署名鍵設定から`JwtEncoder`／`JwtDecoder`が提供され、`@SpringBootTest`のコンテキストが起動する。CIの全体テストも成功する | [`contextLoads`](../src/test/java/com/github/ok200ok/api_todo/ApiTodoApplicationTests.java#L29) | 🚧 |
+| 既存Controllerテストの認証前提化 | 認証済みJWTの`sub`を所有者UUIDとしてServiceへ渡す前提で、既存のHTTP契約・Service連携ケースが引き続き成功する | [`getsTodoForOwnerAndReturnsResponseDto`](../src/test/java/com/github/ok200ok/api_todo/controller/TodoControllerReadUpdateTests.java#L47) ほか既存Controllerテスト | 🚧 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 5: 認証方式とAPI契約 | [認証・認可設計仕様](authentication-design.md)で登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答を合意する | ✅ |
 | Section 5: ユーザー登録とパスワードハッシュ化を担うUserService | 下記ケースをMockitoによるService単体テストで検証する | ✅ |
 | Section 5: JWT発行・検証 | `JwtEncoder`と`JwtDecoder`の標準実装を使い、Springコンテキスト・DBなしのテストで署名付きJWTの発行と検証を確認する | ✅ |
-| Section 5: Spring Security・所有者ID連携 | 下記4ケースでBearer認証、認証主体からの所有者ID解決、ステートレス構成を検証する。2ケースずつTDDで進める | 🤝 |
+| Section 5: Spring Security・所有者ID連携 | 下記4ケースでBearer認証、認証主体からの所有者ID解決、ステートレス構成を検証する | ✅ |
+| Section 5: JWT本番設定・Controllerテストの認証前提移行 | 上記2ケースで本番JWT Beanの起動と認証前提のControllerテスト移行を確認する | 🚧 |
 | Section 5: 登録・ログインAPIとOpenAPI | 認証APIのHTTP契約と仕様書の検証範囲を合意後に記録する | 🚧 |
+| Section 5: ローカル機能撤去 | `LocalOwnerIdResolver`・`LocalSampleDataInitializer`・`application-local.yaml`と専用テスト、および不要になった`OwnerIdResolver`抽象を撤去し、Controllerが認証主体から所有者を解決する形へ整理する | 🚧 |
 | Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
