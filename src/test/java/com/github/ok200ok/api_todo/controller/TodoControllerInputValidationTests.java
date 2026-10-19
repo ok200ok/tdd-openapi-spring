@@ -40,7 +40,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
  * {@code @MockitoBean}でServiceを置き換えることでDBや業務ロジックから分離する
  * 認証済みBearer tokenを送り、入力検証の前に未認証で拒否されない状態で検証する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
 @Import({
 		SecurityConfiguration.class,
 		AuthenticatedUserIdResolver.class,

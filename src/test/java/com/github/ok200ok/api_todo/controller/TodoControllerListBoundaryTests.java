@@ -31,7 +31,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
  * Todo一覧APIのページ指定境界を検証するWeb層テスト
  * 認証済み要求のうえで不正なクエリをServiceへ渡さず、範囲外の有効ページは空ページとして返すことを確認する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
 @Import({
 		SecurityConfiguration.class,
 		AuthenticatedUserIdResolver.class,

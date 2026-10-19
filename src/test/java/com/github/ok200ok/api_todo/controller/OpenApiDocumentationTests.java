@@ -25,6 +25,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.github.ok200ok.api_todo.security.AuthenticatedUserIdResolver;
+import com.github.ok200ok.api_todo.service.AuthService;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 /**
@@ -52,6 +53,10 @@ class OpenApiDocumentationTests {
 
 	@MockitoBean
 	private TodoService todoService;
+
+	// 全Controllerを読み込むため、認証Controllerの依存をモックしてOpenAPI生成対象だけに検証を絞る
+	@MockitoBean
+	private AuthService authService;
 
 	/**
 	 * OpenAPI文書にTodo APIの操作、DTOスキーマ、エラー応答を含める

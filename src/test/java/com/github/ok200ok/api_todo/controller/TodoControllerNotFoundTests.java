@@ -33,7 +33,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
  * Todoが見つからない場合のHTTPエラー契約を検証するWeb層テスト
  * 認証済み要求でServiceからの例外が共通のProblem Details応答へ変換されることを確認する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
 @Import({
 		SecurityConfiguration.class,
 		AuthenticatedUserIdResolver.class,

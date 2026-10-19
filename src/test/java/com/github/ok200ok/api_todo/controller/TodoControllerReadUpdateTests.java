@@ -34,7 +34,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
  * Todo取得・更新成功時のHTTP契約とService連携を検証するWeb層テスト
  * Serviceをモックし、認証済みBearer tokenのsubjectを所有者として解決する前提で応答DTOを確認する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
 @Import({
 		SecurityConfiguration.class,
 		AuthenticatedUserIdResolver.class,

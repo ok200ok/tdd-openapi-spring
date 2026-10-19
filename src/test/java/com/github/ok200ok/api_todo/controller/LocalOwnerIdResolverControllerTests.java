@@ -29,7 +29,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
  * 実際のローカル所有者ResolverからControllerを通り、ServiceへUUIDが渡る境界を検証する
  * Web MVCだけを起動し、ユーザー検索と業務処理はRepository・Serviceモックに置き換える
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
 @ActiveProfiles("local")
 @TestPropertySource(properties = "app.local-owner.username=localdemo")
 @Import(LocalOwnerIdResolver.class)
