@@ -1,6 +1,8 @@
 package com.github.ok200ok.api_todo.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.github.ok200ok.api_todo.entity.User;
@@ -9,7 +11,8 @@ import com.github.ok200ok.api_todo.security.JwtTokenProvider;
 
 /**
  * ユーザー登録・ログインのユースケースを調整し、JWT access tokenの発行をJwtTokenProviderへ委譲するService
- * 登録ではUserServiceの重複確認・ハッシュ化・保存を再利用し、保存済みUserのUUIDからtokenを発行する
+ * 登録ではUserServiceの重複確認・ハッシュ化・保存を再利用し、ログインではAuthenticationManagerへ資格情報の検証を委譲する
+ * どちらも保存済みUserのUUIDをtokenのsubjectに使い、認証方式の詳細をControllerへ持ち込まない
  */
 // 認証ユースケースをSpringのBeanとして登録し、Controllerから注入できるようにする
 @Service
@@ -55,7 +58,17 @@ public class AuthService {
 	 * @return access tokenと有効期間（秒）
 	 */
 	public LoginResult login(String userName, String rawPassword) {
-		throw new UnsupportedOperationException("loginは未実装です");
+		// パスワード照合・ユーザー不在の隠蔽などの認証手順はAuthenticationManagerの標準実装へ委ねる
+		Authentication authentication = authenticationManager.authenticate(
+				UsernamePasswordAuthenticationToken.unauthenticated(userName, rawPassword));
+
+		// 認証に成功した主体の名前でUserを再取得し、JWT subjectに使うDB上のUUIDを得る
+		User user = userRepository.findByUserName(authentication.getName())
+				.orElseThrow(() -> new IllegalStateException(
+						"認証済みユーザーが見つかりません: " + authentication.getName()));
+
+		String accessToken = jwtTokenProvider.createToken(user.getId());
+		return new LoginResult(accessToken, jwtTokenProvider.getExpiresInSeconds());
 	}
 
 	/**
