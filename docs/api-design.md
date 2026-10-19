@@ -7,7 +7,7 @@
 - Section 3で実装したTodoServiceをHTTP APIとして公開し、DTO、入力検証、HTTPエラー、ページネーション、OpenAPIの役割と連携を学ぶ。
 - 「Web API: The Good Parts」に通じるリソース指向・一貫性・利用者に明確な契約という一般的な設計思想を判断基準とする。
 - HTTPメソッドの意味を保ち、Entityを外部へ公開しない。
-- Section 4では認証機構を実装せず、ローカル動作確認用の所有者境界を設ける。認証・認可への接続はSection 5で扱う。
+- Section 4では認証機構を実装せず、ローカル動作確認用の所有者境界を設けた。Section 5で認証・認可へ接続する。
 - Section 5では[認証・認可設計仕様](authentication-design.md)に従って認証済みユーザーからTodo所有者を解決し、認証前のローカルデモユーザー機能を置き換える。
 
 ## 仕様
@@ -32,6 +32,24 @@
 
 DTOの具体的なrecord項目、Validation、未知JSON項目の扱い、Problem Details拡張は[DTO・Validation設計仕様](dto-validation.md)を参照する。
 
+## 認証API
+
+認証APIは次の2操作で、契約・JWT・エラー応答の詳細は[認証・認可設計仕様](authentication-design.md)を正とする。
+
+| 操作 | HTTP契約 | 成功応答 |
+| --- | --- | --- |
+| ユーザー登録 | `POST /api/v1/auth/register` | `201 Created`。ユーザー公開情報とBearer access token |
+| ログイン | `POST /api/v1/auth/login` | `200 OK`。Bearer access tokenと有効期間 |
+
+Todo APIはBearer JWTを要求し、認証APIはBearer tokenなしで利用できる。
+
 ## OpenAPI / Swagger UI
 
 `springdoc-openapi`がControllerのHTTP契約とDTOからOpenAPI仕様を生成する。JSON仕様は`/v3/api-docs`、ブラウザでの確認画面は`/swagger-ui.html`で参照できる。エラー応答など実装から一意に推論できない契約はControllerのOpenAPI注釈で明示する。
+
+認証・認可のOpenAPI契約:
+
+- `OpenApiConfiguration`で`bearerAuth`（`type: http`、`scheme: bearer`、`bearerFormat: JWT`）を定義する
+- `TodoController`に`@SecurityRequirement(name = "bearerAuth")`を付け、Todo操作の認証要件を明示する
+- `AuthController`の登録・ログインには`@SecurityRequirement`を付けない
+- AuthControllerには登録`201`・`400`・`409`、ログイン`200`・`400`・`401`の応答を注釈で明示する
