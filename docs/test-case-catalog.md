@@ -292,7 +292,7 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| `expiresIn`の契約 | 既存のJWT発行テストに、`getExpiresInSeconds()`が`900`を返す確認を追加する | `issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`に追加 | 🤝 |
+| `expiresIn`の契約 | 既存のJWT発行テストに、`getExpiresInSeconds()`が`900`を返す確認を追加する | [`issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L57)に追加 | ✅ |
 
 既存のTodo系`@WebMvcTest`は`AuthController`追加の影響を避けるため、最後に`@WebMvcTest(TodoController.class)`へ限定する。`OpenApiDocumentationTests`は`@MockitoBean AuthService`と`@Import(OpenApiConfiguration.class)`を追加する。いずれも振る舞いは変えない。
 
