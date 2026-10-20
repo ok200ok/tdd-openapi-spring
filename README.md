@@ -115,7 +115,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] `main`ブランチの保護と必須CIチェックの設定
 
 ### Section2: データ層（`JPA` / `Repository`）の段階的な振り返り
-- [x] `User` / `Todo` のユースケース、所有権、カラム・制約を含むデータモデルを確認・確定する（[`docs/contexts/section2-data-modeling.md`](docs/contexts/section2-data-modeling.md)）
+- [x] `User` / `Todo` のユースケース、所有権、カラム・制約を含むデータモデルを確認・確定する（[`データモデル設計仕様`](docs/data-modeling.md)）
 - [x] JPA EntityとSpring Data Repositoryの役割、および`@DataJpaTest`がPostgreSQL Testcontainersを使う仕組みを理解する
 - [x] Userの基本マッピング（UUID、必須・任意カラム、長さ、作成・更新時刻）をRepositoryテストで確認する
 - [x] `userName`の正規化・形式・一意性と検索をテストし、UserRepositoryの役割を確認する

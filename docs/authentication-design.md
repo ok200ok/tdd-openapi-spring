@@ -1,6 +1,6 @@
 # 認証・認可設計仕様
 
-認証・認可の仕組み、コンポーネント責務、セキュリティ上の判断をまとめる。HTTP契約とエラー応答は[API設計仕様](api-design.md)、DTOと入力検証は[DTO・Validation設計仕様](dto-validation.md)、User/Todoのデータ制約は[Section 2データモデリング](contexts/section2-data-modeling.md)、テストケースと実行状態は[テストケース一覧](test-case-catalog.md)を正とする。
+認証・認可の仕組み、コンポーネント責務、セキュリティ上の判断をまとめる。HTTP契約とエラー応答は[API設計仕様](api-design.md)、DTOと入力検証は[DTO・Validation設計仕様](dto-validation.md)、User/Todoのデータ制約は[データモデル設計仕様](data-modeling.md)、テストケースと実行状態は[テストケース一覧](test-case-catalog.md)を正とする。
 
 ## 目的と範囲
 
