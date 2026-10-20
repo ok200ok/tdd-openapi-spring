@@ -20,12 +20,19 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 	 * Todo IDと関連するUserのIDが一致するTodoを検索する
 	 * {@code User_Id}のアンダースコアは関連プロパティuserからidへたどる境界を明示し、他ユーザーのTodoを検索結果に含めない
 	 * {@code Optional.empty()}はTodo不存在と所有者不一致の両方を表し、呼び出し元へTodoの存在を漏らさない
+	 *
+	 * @param id 検索するTodoのID
+	 * @param userId Todo所有者のUser ID
+	 * @return 条件に一致するTodo。存在しないか所有者が異なる場合はOptional.empty
 	 */
 	Optional<Todo> findByIdAndUser_Id(Long id, UUID userId);
 
 	/**
 	 * 指定したUserに属するTodoを更新日時の降順、同時刻ではIDの降順で取得する
 	 * User_Idで所有者条件をDB検索に含め、OrderByで一覧の安定した表示順を定義する
+	 *
+	 * @param userId Todo所有者のUser ID
+	 * @return 所有者に属するTodoの一覧。該当しない場合は空リスト
 	 */
 	List<Todo> findAllByUser_IdOrderByUpdatedAtDescIdDesc(UUID userId);
 
@@ -33,6 +40,10 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 	 * 指定したUserに属するTodoを更新日時降順、同時刻ではID降順でDBページ分割して取得する
 	 * {@code Pageable}がページ位置と件数をSpring Data JPAへ渡し、全件をアプリケーションへ読み込まずに取得する
 	 * {@code Page}は現在ページの内容に加えて総件数・総ページ数を提供するため、必要に応じて件数確認クエリも実行される
+	 *
+	 * @param userId Todo所有者のUser ID
+	 * @param pageable ページ位置・件数・並び順の指定
+	 * @return 所有者に属するTodoのページ
 	 */
 	Page<Todo> findAllByUser_IdOrderByUpdatedAtDescIdDesc(UUID userId, Pageable pageable);
 }

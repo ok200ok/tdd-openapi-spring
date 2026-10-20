@@ -86,6 +86,17 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 
 いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
 
+### 📚 Javadoc（公開APIドキュメント）
+
+ソース内のJavadocから、公開クラス・メソッドの契約文書をローカル生成できます。出力先は `build/docs/javadoc` で、`private` は含みません。
+
+```sh
+./gradlew javadoc
+open build/docs/javadoc/index.html
+```
+
+Windowsの場合は `.\gradlew.bat javadoc` を実行し、生成された `build/docs/javadoc/index.html` をブラウザで開きます。
+
 
 ## 🗺 開発ロードマップ
 

@@ -9,6 +9,12 @@ import com.github.ok200ok.api_todo.entity.Todo;
 /**
  * Todo一覧APIの出力契約
  * Spring DataのPageや永続化Entityを直接公開せず、公開ページ番号とTodo応答DTOへ変換する
+ *
+ * @param items 現在ページに含まれるTodo応答の一覧
+ * @param page 1始まりの公開ページ番号
+ * @param size 1ページあたりの件数
+ * @param totalElements 所有者に属するTodoの総件数
+ * @param totalPages 総ページ数
  */
 public record TodoPageResponse(
 		List<TodoResponse> items,
