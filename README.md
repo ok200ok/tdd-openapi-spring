@@ -1,119 +1,63 @@
-# `OpenAPI` 実装 ＆ テスト駆動開発
+# テスト駆動開発による `OpenAPI` 実装
 
 ## 🎯 学習目標
 
-このプロジェクトを通して以下のスキルと知識の習得を目指す
+**プロジェクトの目的**：実践を通して以下のスキルや知識を習得する
 
-- **自動テストとテスト駆動開発**: `JUnit 5`, `Mockito`の使用、 `Testcontainers` によるテスト専用分離環境の構築
-- **AI駆動開発**: `AGENTS.md`によるエージェント制御、各`/`コマンド使い分けの実践（今回は `GitHub Copilot` Freeプランを使用）
-- **迅速な環境構築**: `Mise`による言語バージョン統一（`Java 21`）、`Docker Compose`による開発用DBとテスト用DBの立ち上げ
-- **CIとリポジトリ安全性**: リモートリポジトリに対して`Github Actions`によるCI、`main`ブランチ保護ルールセット策定などで安全性を確保
-- **`Spring Framework` / `Spring Boot 4.x`**: ベストプラクティスに沿ったレイヤードアーキテクチャ、ディレクトリ設計、各種アノテーション
-- **`Spring Data JPA`仕様 と `Hibernate`**: `Spring` においてよりデファクトであるらしい `Hibernate`を用いたデータベース操作（MyBatisORMは学習済みのため）
-- **`OpenAPI` / `Swagger`**: コードファースト（`springdoc-openapi`）による `API` 仕様ドキュメントサイトの自動生成と、の `record`（`DTO`）を用いた適切なデータ隠蔽
-- **認証・認可**: `Spring Security` モジュールで `JWT`（`JSON Web Token`）ベースのステートレスな認証機構の構築
+1. **テスト駆動開発**: 仕様検討→テストケース策定→RED→GREEN→Refactor[サイクルの徹底](#タスクの進め方)
+2. **分離環境での単体・結合テスト（全110件）**: `Testcontainers`を用いてテスト実行ごとに使い捨て分離コンテナ環境の自動生成と検証
+3. **レイヤードアーキテクチャ**: Controller/Service/Repository/Entity/DTOはじめ主要コンポーネントの責務と依存方向、主要アノテーションなど
+4. **基本的なREST API設計**: リソースパス、HTTPメソッド・ステータス、エラー定義、ページネーションなど各種設計
+5. **コードファーストOpenAPI**: アノテーション付与によるAPI仕様ドキュメントサイト`SwaggerUI`の自動生成方法
+6. **データモデリングとJPA**: データ型、制約、JPA仕様のEntityマッピングなど
+7. **JWT認証・認可**: 認証フロー、JWTとパスワード仕様、Todo所有者認可、認証未実装でも後続機能を実装するためのモックなど
+8. **DevOps**: プッシュ時とPR作成時にテスト実行するCI、マージ時にJavadocをビルド・公開するCD、`Mise`による開発環境再現、`main`ブランチ保護ルールなど
+9. **AI駆動開発**: エージェント制御仕様の随時改善、学習目的の対話的進行など
 
 ## 🛠 技術スタック
 
-- **言語**: `Java 21`
-- **フレームワーク**: `Spring Boot 4.x`
-- **ビルドツール**: `Gradle` (`Groovy`)
-- **DB**: `Docker Compose`, `PostgreSQL` (開発環境とテスト環境)
-- **ORM**: `Spring Data JPA` (`Hibernate`)
-- **APIドキュメント**: `springdoc-openapi` (`Swagger UI`)
+- **言語・ビルドツール**: `Java21`, `Gradle`
+- **フレームワーク**: `Spring Framework(Boot)`
+- **テスト**: `JUnit5`, `Mockito`, `Testcontainers`
+- **DB**: `PostgreSQL` (開発用とテスト用), `Docker Compose`
+- **ORM**: `SpringDataJPA` (`Hibernate`)
+- **ドキュメント**: `SwaggerUI` (`springdoc-openapi`), `Javadoc`, `Github Pages`
 - **認証**: `Spring Security` (`JWT`)
-- **テスト**: `JUnit 5`, `Mockito`, `Testcontainers`
-- **CI**: `Github Actions`
-- **その他**: `Lombok`, `Spring Boot DevTools`, `Validation`
-- **コーディングエージェント**: `GitHub Copilot`
+- **DevOps**: `Github Actions`, `Mise`
+- **AIエージェント**: `OpenCode`, `Github Copilot`
+- **その他**: Springモジュール（`Lombok`, `SpringBootDevTools`, `Validation`）
 
-## 📋 前提条件 (Prerequisites)
+## 📚 Javadocドキュメント
 
-このプロジェクトは学習目的のため、ローカル環境での実行・テスト検証を中心としています。
+ソース内のJavadocからクラスやメソッドの仕様文書を生成
 
-- **`mise` CLI**（Java 21の導入とバージョン管理に使用）
-- **Dockerクライアント** の起動（`Docker Desktop`や`OrbStack`など。開発用PostgreSQLおよび`Testcontainers`による分離テスト環境に必須）
+### 🌐 公開サイト（GitHub Pages）
 
-## ☕ MiseによるJava環境の準備
+`main` ブランチへマージするたびに `.github/workflows/javadoc-pages.yaml` がJavadocをビルドしてGitHub Pagesへ自動デプロイします。
 
-このプロジェクトでは `mise.toml` でJava 21（Temurin）を指定しています。初回は次の手順でmiseとプロジェクト指定のJavaを準備してください。
+- **公開URL**: https://ok200ok.github.io/tdd-openapi-spring/
 
-1. [mise公式ドキュメント](https://mise.jdx.dev/getting-started.html)に従ってmise CLIをインストールします
-2. リポジトリをクローンし、プロジェクトのルートディレクトリへ移動します
-3. `mise.toml` の内容を確認してから、下記コマンドで特定バージョンの言語やツールをインストールします
-
-```sh
-mise install
-```
-> ”既にmise.tomlファイルが存在するプロジェクトに参加する場合、まずmiseをインストールし、プロジェクトのmise.tomlファイルを読み、次にプロジェクトディレクトリでmise installを実行します。”
-
-4. その後、[シェルでmiseを有効化](https://mise.jdx.dev/getting-started.html#activate-mise)します。
-
-## 🚀 起動方法
-
-### 🐋 開発用DB
-
-開発時のPostgreSQLはDocker Composeで起動し、名前付きvolumeにデータを保持します。アプリケーション自体はローカルで実行します。テスト時は開発用DBを共有せず、Testcontainersが独立したPostgreSQLコンテナを起動します。
-
-ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。**本番環境の認証情報として使用しないでください**
-
-```
-docker compose up -d --wait
-docker compose ps
-```
-
-コンテナ終了は
-
-```
-docker compose down
-```
-
-`down` はコンテナを停止・削除しますが、DBデータはvolumeに残ります。データも削除する場合に限り `docker compose down -v` を実行してください。
-
-### 🐘 開発用Springサーバー
-
-miseをシェルで有効化済みなら、`mise exec --`を省略できるので、
-
-↓macOS / Linuxなら
-```sh
-./gradlew bootRun
-```
-
-↓Windowsなら
-```powershell
-.\gradlew.bat bootRun
-```
-
-いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
-
-### 📚 Javadoc（公開APIドキュメント）
-
-ソース内のJavadocから、公開クラス・メソッドの契約文書をローカル生成できます。出力先は `build/docs/javadoc` で、`private` は含みません。`src/javadoc/dark-theme.css` を標準スタイルシートへ追加し、ダークテーマを適用しています。
+### 🖥 ローカル生成
 
 ```sh
 ./gradlew javadoc
 open build/docs/javadoc/index.html
 ```
 
-Windowsの場合は `.\gradlew.bat javadoc` を実行し、生成された `build/docs/javadoc/index.html` をブラウザで開きます。
-
+Windowsの場合は `.\gradlew.bat javadoc` 
 
 ## 🗺 開発ロードマップ
 
 ### タスクの進め方
 
-ロードマップのチェックボックス一つを一つの学習タスクとして扱い、後続タスクを先回りせず一つずつ進める。各段階で説明後に停止し、質問と明確な合意を待つ（`LGTM`などの明示的な承認は合意として扱うが、応答がないことを承認とみなさない）。Entity、Repository、Service、Controllerなどの役割単位は「レイヤーコンポーネント」と呼び、各自の責務だけでなく相互の依存・協調関係と全体の開発フロー上の位置づけも学ぶ。
+下記ロードマップ各Section内のチェックボックス1つを「タスク」とし、以下のワークフローを毎回適用する
 
-1. **目的・仕様**: 範囲、仕様、選択肢と理由、受け入れ条件を合意する。曖昧な点は質問し、推測で確定しない
-2. **テストケース**: 期待結果、対象レイヤー、検証境界・テスト種別を合意し、[テストケース一覧](docs/test-case-catalog.md)を更新する
-3. **テストコード・RED**: 新規機能ではテストコードだけを作成し、実行コマンドと期待する機能上のREDを提示して停止する。開発者が実行結果を共有するまで本番コードへ進まない
-4. **分析・最小実装**: REDの理由を確認後、最小限の本番コードを実装して設計理由を解説し、学習上重要な説明を日本語コメント/Javadocにも残す。GREENの実行コマンドと期待結果を示して停止する
-5. **GREEN・Refactor**: 開発者の実行結果を確認する。必要な場合に限り振る舞いを保つRefactorを行い、再実行結果を待つ
-6. **追加確認・完了**: 必要な検証・文書更新を行う。合意ケース、テスト名、期待結果、リンク、状態を一覧と照合し、開発者と結果を確認してからタスクを完了扱いにする
-
-機能上のREDとDocker・依存関係・ビルドなど環境上の失敗を区別し、環境問題を機能上のREDとして扱わない。RED/GREENの確認は開発者が実行結果を共有した場合に限る。Refactorは必要な場合のみ行う。TDDを適用できない既存実装の読解では、実施していないRED/GREENを演出せず、目的に合った確認手順に置き換える。
-
-学習対象のコードでは、初学者が別途調べないと意味や影響を理解しにくいクラス・メソッド・アノテーションとその設定属性について、役割・採用理由・動作への影響を段階的に解説し、日本語コメント/Javadocにも残す。タスクに合意したテストケースは一覧に記録し、テストコードや解説の変更時にも内容・リンク・状態を同期する。
+1. **目的・仕様**: 範囲、仕様、選択肢と理由、受け入れ条件を合意する。
+2. **テストケース**: 期待結果、対象レイヤー、検証境界・テスト種別などを合意し、[テストケース一覧](docs/test-case-catalog.md)を更新する
+3. **テストコード追加**: まずテストコードだけを作成する。開発者が自らテストを実行するまで実装コードへ進まない。
+4. **RED確認・最小実装**: REDの理由を確認後、最小限の本番コードを実装して設計理由などをJavadocコメントアウト解説として残す。
+5. **GREEN確認・Refactor**: 開発者のテスト実行結果を確認後、必要な場合に限り振る舞いを保つRefactorを行う。
+6. **ドキュメント更新・タスク完了**: 必要な検証・文書更新を行う。合意仕様やテストケース、期待結果、リンクなどを照合し、開発者と共に結果を確認してからタスクを完了扱いにする
 
 ### Section1: 環境構築とテスト基盤の準備
 - [x] `Git` リポジトリ初期化・`.github/copilot-instructions.md` および `README.md` の作成
@@ -163,4 +107,54 @@ Windowsの場合は `.\gradlew.bat javadoc` を実行し、生成された `buil
 ### Section6: 認証接続後の結合テストと総仕上げ
 - [x] `@SpringBootTest` + `Testcontainers` による認証からTodo操作までの一連の処理を検証する
 - [x] `./gradlew test` による全テストスイートの一括実行確認
-- [x] 最終コードレビューとドキュメント整理
+- [x] ドキュメント再構成・整理
+- [x] JavadocをGitHub ActionsでビルドしGitHub Pagesへ自動デプロイする（公開URLは https://ok200ok.github.io/tdd-openapi-spring/ ）
+
+## 🚀 起動方法
+
+### ☕ MiseによるJava環境の準備
+
+本リポジトリと完全に同一のJava環境を再現する場合、以下手順を実行してください。
+
+1. [mise公式ドキュメント](https://mise.jdx.dev/getting-started.html)に従ってmise CLIをインストールします
+2. リポジトリをクローンし、プロジェクトのルートディレクトリへ移動します
+3. `mise.toml` の内容を確認してから、下記コマンドで特定バージョンの言語やツールをインストールします
+  ```sh
+  mise install
+  ```
+4. その後、[シェルでmiseを有効化](https://mise.jdx.dev/getting-started.html#activate-mise)します。
+
+### 🐋 開発用DB
+
+開発時のPostgreSQLはDocker Composeで起動し、名前付きvolumeにデータを保持します。アプリケーション自体はローカルで実行します。テスト時は開発用DBを共有せず、Testcontainersが独立したPostgreSQLコンテナを起動します。
+
+ローカル開発専用の接続情報は `compose.yaml` と `application.yaml` に定義しています。**本番環境の認証情報として使用しないでください**
+
+```
+docker compose up -d --wait
+docker compose ps
+```
+
+コンテナ終了は
+
+```
+docker compose down
+```
+
+`down` はコンテナを停止・削除しますが、DBデータはvolumeに残ります。データも削除する場合に限り `docker compose down -v` を実行してください。
+
+### 🐘 開発用Springサーバー
+
+miseをシェルで有効化済みなら、`mise exec --`を省略できるので、
+
+↓macOS / Linuxなら
+```sh
+./gradlew bootRun
+```
+
+↓Windowsなら
+```powershell
+.\gradlew.bat bootRun
+```
+
+いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
