@@ -8,7 +8,7 @@
 - 「Web API: The Good Parts」に通じるリソース指向・一貫性・利用者に明確な契約という一般的な設計思想を判断基準とする。
 - HTTPメソッドの意味を保ち、Entityを外部へ公開しない。
 - Section 4では認証機構を実装せず、ローカル動作確認用の所有者境界を設けた。Section 5で認証・認可へ接続する。
-- Section 5では[認証・認可設計仕様](authentication-design.md)に従って認証済みユーザーからTodo所有者を解決し、認証前のローカルデモユーザー機能を置き換える。
+- Section 5では[認証・認可設計仕様](authentication-design.md)に従って認証済みユーザーからTodo所有者を解決し、認証前のローカルデモユーザー機能を撤去した。
 
 ## 仕様
 
@@ -28,7 +28,6 @@
 | 所有者 | ユーザーIDをリクエストに含めない。不存在と他ユーザー所有のTodoは同じ`404 Not Found`として扱う |
 | エラー | RFC Problem Details形式を基本とする。項目別入力エラーはAPI固有の拡張フィールドとして定義する |
 | 作成時の状態 | リクエストでは受け取らず、Serviceが`PENDING`に設定する |
-| ローカル確認データ | `local`プロファイルでのみ専用デモユーザー1人とTodo15件を起動時に初期化する。起動のたびにそのユーザーのTodoを置き換えるため、同ユーザーが追加・編集したTodoもリセットされる。認証前の学習用途に限り、本番や認証用アカウントには使用しない |
 
 DTOの具体的なrecord項目、Validation、未知JSON項目の扱い、Problem Details拡張は[DTO・Validation設計仕様](dto-validation.md)を参照する。
 

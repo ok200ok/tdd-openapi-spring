@@ -87,20 +87,6 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
 
 
-ローカル専用ユーザーとサンプルTodoを使って起動する場合は、`local`プロファイルを指定します。
-`local`プロファイルでは、起動時に専用デモユーザーのTodoをサンプル15件へリセットします。デモユーザーに追加・編集したTodoも次回起動時に置き換わります。このユーザーはローカル学習専用で、認証用アカウントとして使用しないでください。
-
-↓macOS / Linuxなら
-```sh
-./gradlew bootRun --args="--spring.profiles.active=local"
-```
-
-↓Windowsなら
-```powershell
-.\gradlew.bat bootRun --args="--spring.profiles.active=local"
-```
-
-
 ## 🗺 開発ロードマップ
 
 ### タスクの進め方
@@ -158,10 +144,10 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] [`認証・認可設計仕様`](docs/authentication-design.md)を参照し、`Spring Security`の標準機能を使う認証方式とAPI契約（登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答）を合意する
 - [x] ユーザー登録とパスワードハッシュ化を担う`UserService`の単体テスト作成（`RED`）と実装（`GREEN`）
 - [x] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
-- [x] ステートレスな`Spring Security`設定とBearer認証を実装し、認証済みユーザーのIDをTodo APIへ渡す（`OwnerIdResolver`を認証主体から解決する実装へ置き換え、MVCテストで確認）
+- [x] ステートレスな`Spring Security`設定とBearer認証を実装し、認証済みユーザーのIDをTodo APIへ渡す（MVCテストで確認）
 - [x] 本番用`JwtEncoder`／`JwtDecoder` Beanと署名鍵設定を追加して`@SpringBootTest`とCIを成功させ、既存Controllerテストを共通テスト設定の実Bearer tokenによる認証前提へ移行する
 - [x] 登録・ログインAPIを実装してJWTを発行し、認証・認可の応答とOpenAPI仕様を検証する
-- [ ] 認証前のローカル所有者Resolver・サンプル初期化機能と専用テスト、`application-local.yaml`を撤去する。併せて不要になった`OwnerIdResolver`抽象を削除し、Controllerが認証主体（`@AuthenticationPrincipal Jwt`）を直接扱うよう整理する
+- [x] 認証前のローカル所有者Resolver・サンプル初期化機能と専用テスト、`application-local.yaml`を撤去する。併せて不要になった`OwnerIdResolver`抽象を削除し、Controllerが認証主体（`@AuthenticationPrincipal Jwt`）を直接扱うよう整理する
 
 ### Section6: 認証接続後の結合テストと総仕上げ
 - [ ] `@SpringBootTest` + `Testcontainers` による認証からTodo操作までの一連の処理を検証する

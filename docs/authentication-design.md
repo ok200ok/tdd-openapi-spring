@@ -46,7 +46,7 @@ Section 5の認証・認可について、確定した目的、API契約、実�
 4. `DaoAuthenticationProvider`が`JpaUserDetailsService`でUserを取得し、`PasswordEncoder`で保存済みハッシュと平文パスワードを照合する
 5. 認証成功後、認証済みユーザー名でUserを再取得し、UUIDを`sub`にしたJWTを発行する
 6. Todo APIへのBearer tokenはSpring Security OAuth2 Resource Serverの標準機能で検証する
-7. 認証済み主体のUUIDを`OwnerIdResolver`経由でTodoServiceへ所有者IDとして渡す
+7. 認証済みJWTのsubjectからUser UUIDを解決し、TodoServiceへ所有者IDとして渡す
 
 ユーザー不存在とパスワード不一致は区別せず、`BadCredentialsException`として扱う。`DaoAuthenticationProvider`の`hideUserNotFoundExceptions`を有効にし、アカウントの存在を推測させない。
 
@@ -147,13 +147,13 @@ JWTの`sub`は、そのtokenが誰についてのものかを表す標準claim�
 - `ApiTodoApplicationTests`: `@SpringBootTest`とTestcontainersで全コンテキストとPostgreSQL接続を確認する
 - 実際の`DaoAuthenticationProvider`を通したログインHTTPフローはSection 6の結合テストで確認する
 
-## ローカルデモ機能の移行・撤去
+## ローカルデモ機能の撤去（完了）
 
-登録・ログインAPI完成後、認証前の仮ユーザー機能を撤去する。`OwnerIdResolver`抽象は、認証用とローカル用の2実装が存在する間は必要であり、ローカル撤去と同時に不要になるため、この撤去タスクでまとめて削除する。
+登録・ログインAPI完成後、認証前の仮ユーザー機能を撤去した。
 
-- `LocalOwnerIdResolver`、`LocalSampleDataInitializer`、`application-local.yaml`の所有者設定、専用デモデータを対象にしたテストを削除する
-- `application-local.yaml`が他用途にも使われていないか確認し、ファイル削除または不要設定だけの削除を選ぶ
-- ローカル専用ユーザー名`localdemo`が通常登録される可能性、および固定パスワード文字列の扱いを確認する
-- 不要になった`OwnerIdResolver`抽象と`AuthenticatedUserIdResolver`を削除し、Controllerが`@AuthenticationPrincipal Jwt`から所有者UUIDを解決する形へ整理する
-- ControllerのHTTPテストは削除せず、認証済みUserを使うテストのまま維持する
+- `LocalOwnerIdResolver`、`LocalSampleDataInitializer`、`application-local.yaml`、専用テストを削除した
+- 不要になった`OwnerIdResolver`抽象と`AuthenticatedUserIdResolver`を削除し、Controllerが`@AuthenticationPrincipal Jwt`のsubjectから所有者UUIDを解決する形へ整理した
+- ControllerのHTTPテストは削除せず、認証済みUserを使うテストのまま維持した
+- `localdemo`は予約せず通常のユーザー名として登録できる。開発DBに残っていた`localdemo`とそのTodoは、一意制約による登録失敗を避けるため削除した
+- 固定パスワード文字列は初期化コードとテストの削除に伴って消滅した。保存済みでもBCrypt形式ではないためログインには使えない
 - Section 6の結合テストでは、テスト内でユーザーを登録・認証し、そのユーザーのtokenでTodo APIを操作する

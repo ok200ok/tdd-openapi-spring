@@ -25,7 +25,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.github.ok200ok.api_todo.config.OpenApiConfiguration;
-import com.github.ok200ok.api_todo.security.AuthenticatedUserIdResolver;
 import com.github.ok200ok.api_todo.service.AuthService;
 import com.github.ok200ok.api_todo.service.TodoService;
 
@@ -46,7 +45,7 @@ import com.github.ok200ok.api_todo.service.TodoService;
 		MultipleOpenApiSupportConfiguration.class,
 		SwaggerConfig.class
 })
-@Import({ AuthenticatedUserIdResolver.class, OpenApiConfiguration.class })
+@Import(OpenApiConfiguration.class)
 class OpenApiDocumentationTests {
 
 	@Autowired
@@ -73,6 +72,8 @@ class OpenApiDocumentationTests {
 				.andExpect(jsonPath("$.paths['/api/v1/todos/{todoId}'].put").exists())
 				.andExpect(jsonPath("$.paths['/api/v1/todos/{todoId}'].delete").exists())
 				.andExpect(jsonPath("$.paths['/api/v1/todos'].get.parameters[*].name").value(hasItems("page", "size")))
+				.andExpect(jsonPath("$.paths['/api/v1/todos'].get.parameters.length()").value(2))
+				.andExpect(jsonPath("$.paths['/api/v1/todos/{todoId}'].get.parameters.length()").value(1))
 				.andExpect(jsonPath("$.paths['/api/v1/todos'].post.responses['201']").exists())
 				.andExpect(jsonPath("$.paths['/api/v1/todos'].post.responses['400']").exists())
 				.andExpect(jsonPath("$.paths['/api/v1/todos/{todoId}'].get.responses['404']").exists())

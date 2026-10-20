@@ -42,7 +42,6 @@ import com.github.ok200ok.api_todo.service.TodoService;
 @WebMvcTest(TodoController.class)
 @Import({
 		SecurityConfiguration.class,
-		AuthenticatedUserIdResolver.class,
 		JwtTokenProvider.class,
 		TestJwtConfiguration.class
 })

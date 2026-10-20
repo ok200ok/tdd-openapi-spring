@@ -21,7 +21,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.github.ok200ok.api_todo.entity.Todo;
-import com.github.ok200ok.api_todo.security.AuthenticatedUserIdResolver;
 import com.github.ok200ok.api_todo.security.JwtTokenProvider;
 import com.github.ok200ok.api_todo.security.SecurityConfiguration;
 import com.github.ok200ok.api_todo.security.TestJwtConfiguration;
@@ -34,7 +33,6 @@ import com.github.ok200ok.api_todo.service.TodoService;
 @WebMvcTest(TodoController.class)
 @Import({
 		SecurityConfiguration.class,
-		AuthenticatedUserIdResolver.class,
 		JwtTokenProvider.class,
 		TestJwtConfiguration.class
 })
