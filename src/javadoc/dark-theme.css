@@ -1,0 +1,748 @@
+/*
+ * api_todo Javadocダークテーマ
+ * JDK 21の標準スタイルシートへ --add-stylesheet で追加し、色・余白・角丸だけを上書きする
+ * 標準スタイルシートのクラス構造を維持するため、Javadoc更新時も大きな崩れを起こしにくい
+ */
+
+:root {
+	/* ダークテーマではフォーム部品やスクロールバーも暗色で描画させる */
+	color-scheme: dark;
+
+	/* OS標準フォントを優先し、外部フォントの読み込みなしで表示を安定させる */
+	--body-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+	--block-font-family: var(--body-font-family);
+	--code-font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	--body-font-size: 15px;
+	--code-font-size: 0.88em;
+
+	/* 背景はほぼ黒に近い青灰色、本文はコントラストを確保した明灰色にする */
+	--body-text-color: #d7dee9;
+	--block-text-color: #c7d0dd;
+	--body-background-color: #0b0f17;
+	--section-background-color: #121824;
+	--detail-background-color: #0f141d;
+	--navbar-background-color: rgba(11, 15, 23, 0.92);
+	--navbar-text-color: #e8eef7;
+	--subnav-background-color: #151c28;
+	--selected-background-color: #8ab4f8;
+	--selected-text-color: #0b0f17;
+	--selected-link-color: #0b0f17;
+	--even-row-color: #101722;
+	--odd-row-color: #0d131c;
+	--title-color: #f4f7fb;
+	--link-color: #8ab4f8;
+	--link-color-active: #c4b5fd;
+	--snippet-background-color: #0d1117;
+	--snippet-text-color: #c9d1d9;
+	--snippet-highlight-color: #3b2f1a;
+	--border-color: #232c3b;
+	--table-border-color: #2b3546;
+	--search-input-background-color: #0b0f17;
+	--search-input-text-color: #e8eef7;
+	--search-input-placeholder-color: #6b7788;
+	--search-tag-highlight-color: #3b2f1a;
+	--copy-icon-brightness: 220%;
+	--copy-button-background-color-active: rgba(138, 180, 248, 0.18);
+	--invalid-tag-background-color: #4a1f24;
+	--invalid-tag-text-color: #ffd7d7;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	background:
+		radial-gradient(1100px 560px at 85% -12%, rgba(138, 180, 248, 0.08), transparent 62%),
+		radial-gradient(820px 480px at -10% 0%, rgba(196, 181, 253, 0.05), transparent 58%),
+		var(--body-background-color);
+	background-attachment: fixed;
+	line-height: 1.65;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+::selection {
+	background: rgba(138, 180, 248, 0.32);
+	color: #ffffff;
+}
+
+/* 本文を読みやすい幅に制限し、左右の余白を広めに取る */
+main {
+	max-width: 1180px;
+	margin: 0 auto;
+	padding: 32px 32px 72px;
+}
+
+/* ナビゲーション */
+.top-nav {
+	background: var(--navbar-background-color);
+	-webkit-backdrop-filter: blur(14px);
+	backdrop-filter: blur(14px);
+	border-bottom: 1px solid var(--border-color);
+	min-height: 56px;
+	padding: 0;
+}
+
+ul.nav-list {
+	margin: 0;
+	padding: 0 16px;
+}
+
+ul.nav-list li {
+	padding: 16px 10px;
+	text-transform: none;
+	letter-spacing: 0.01em;
+}
+
+.top-nav a:link,
+.top-nav a:active,
+.top-nav a:visited {
+	color: var(--navbar-text-color);
+	text-decoration: none;
+	text-transform: none;
+	font-weight: 500;
+	opacity: 0.78;
+	transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.top-nav a:hover {
+	color: var(--navbar-text-color);
+	opacity: 1;
+	text-decoration: none;
+}
+
+/* ul.nav-list liの上下パディングを打ち消し、現在ページだけを横長のピルにする */
+ul.nav-list li.nav-bar-cell1-rev {
+	background: var(--selected-background-color);
+	color: var(--selected-text-color);
+	border-radius: 999px;
+	font-weight: 600;
+	line-height: 1.2;
+	margin: 12px 4px;
+	padding: 7px 14px;
+}
+
+.sub-nav {
+	background: #0e141d;
+	border-bottom: 1px solid var(--border-color);
+	font-size: 0.82rem;
+}
+
+.sub-nav div {
+	padding: 8px 12px;
+	text-transform: none;
+	letter-spacing: 0.01em;
+}
+
+.sub-nav a:link,
+.sub-nav a:visited {
+	color: #94a3b8;
+}
+
+.sub-nav a:hover {
+	color: var(--link-color);
+	text-decoration: none;
+}
+
+/* 検索欄 */
+.sub-nav .nav-list-search {
+	padding: 8px 20px;
+}
+
+#search-input,
+#page-search-input {
+	box-sizing: border-box;
+	width: 240px;
+	height: 36px;
+	padding: 0 34px;
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	background-color: var(--search-input-background-color);
+	background-position: 12px center;
+	background-size: 14px;
+	color: var(--search-input-text-color);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+#search-input:focus,
+#page-search-input:focus {
+	outline: none;
+	border-color: var(--link-color);
+	box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.18);
+	background-color: #0f1520;
+}
+
+/* 入力欄の高さ36pxに対してXアイコン12pxを上下中央に置く */
+#reset-button {
+	top: 20px;
+	right: 26px;
+}
+
+/* 検索ページのリセットボタンはブラウザ既定の灰色をやめ、テーマの面と枠に合わせる */
+#page-search-reset {
+	background: #1a2230;
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	color: #c7d0dd;
+	cursor: pointer;
+	font-size: 0.82rem;
+	padding: 8px 16px;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+#page-search-reset:hover {
+	background: #222c3d;
+	border-color: var(--link-color);
+	color: var(--link-color);
+}
+
+.page-search-details summary {
+	color: #94a3b8;
+	cursor: pointer;
+}
+
+.page-search-details summary:hover {
+	color: var(--link-color);
+}
+
+/* ページ見出し */
+.header {
+	margin-bottom: 22px;
+}
+
+.title {
+	color: var(--title-color);
+	font-size: 2rem;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	margin: 8px 0 4px;
+}
+
+.sub-title {
+	color: #94a3b8;
+	font-size: 0.9rem;
+	margin: 0 0 6px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	color: var(--title-color);
+	line-height: 1.3;
+}
+
+.inheritance {
+	color: #8b98aa;
+	font-family: var(--code-font-family);
+	font-size: 0.82rem;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid var(--border-color);
+	margin: 20px 0;
+}
+
+/* 型・メンバーのシグネチャをコードカードとして見せる */
+.type-signature,
+.member-signature {
+	background: #0f141d;
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	padding: 14px 16px;
+	margin: 14px 0;
+	color: #dfe7f3;
+	font-size: 0.9rem;
+	line-height: 1.6;
+	overflow-x: auto;
+}
+
+.type-signature {
+	padding: 12px 16px;
+}
+
+.member-signature .annotations,
+.type-signature .annotations {
+	color: #c4b5fd;
+}
+
+.member-signature .modifiers,
+.type-signature .modifiers {
+	color: #7dd3fc;
+}
+
+.member-signature .return-type {
+	color: #c4b5fd;
+}
+
+.member-signature .element-name,
+.type-signature .element-name {
+	color: #f4f7fb;
+	font-weight: 600;
+}
+
+/* 説明文 */
+div.block {
+	color: var(--block-text-color);
+	font-family: var(--body-font-family);
+	line-height: 1.75;
+	margin: 0 0 12px;
+}
+
+section.class-description {
+	margin-bottom: 24px;
+}
+
+/* 概要・詳細のセクションをカードとして区切る */
+.summary section[class$="-summary"],
+.details section[class$="-details"],
+.class-uses .detail,
+.serialized-class-details {
+	background: var(--section-background-color);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	padding: 20px;
+	margin: 18px 0;
+}
+
+body.class-declaration-page .summary h2,
+body.class-declaration-page .details h2,
+body.class-use-page h2,
+body.module-declaration-page .block-list h2 {
+	color: var(--title-color);
+	font-style: normal;
+	font-size: 1.3rem;
+	font-weight: 600;
+	margin: 4px 0 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+body.class-declaration-page .summary h3,
+body.class-declaration-page .details h3,
+body.class-declaration-page .summary .inherited-list h2 {
+	background: transparent;
+	border: 0;
+	border-left: 3px solid var(--link-color);
+	border-radius: 0;
+	color: var(--title-color);
+	font-size: 1.05rem;
+	font-weight: 600;
+	margin: 0 0 10px;
+	padding: 2px 0 2px 10px;
+}
+
+/* 詳細内の各メンバーを区切る */
+.details .detail {
+	background: transparent;
+	padding: 18px 0 6px;
+}
+
+.member-list > li + li .detail {
+	border-top: 1px solid var(--border-color);
+}
+
+/* 表の見出し・タブ */
+.caption {
+	padding: 0;
+	margin: 0;
+}
+
+.caption span {
+	background: var(--selected-background-color);
+	color: var(--selected-text-color);
+	border-radius: 8px 8px 0 0;
+	font-size: 0.82rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	line-height: 1.2;
+	height: auto;
+	padding: 8px 14px;
+}
+
+div.table-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 0;
+	margin: 0 0 14px;
+}
+
+div.table-tabs > button {
+	background: transparent;
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	color: #9aa8ba;
+	cursor: pointer;
+	font-size: 0.82rem;
+	font-weight: 500;
+	margin: 0;
+	padding: 6px 14px;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+div.table-tabs > button:hover {
+	border-color: var(--link-color);
+	color: var(--link-color);
+}
+
+div.table-tabs > button.table-tab {
+	background: transparent;
+	color: #9aa8ba;
+}
+
+div.table-tabs > .active-table-tab {
+	background: var(--selected-background-color);
+	border-color: var(--selected-background-color);
+	color: var(--selected-text-color);
+}
+
+/* 概要表 */
+.summary-table,
+.details-table {
+	background: #0d131c;
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	overflow: hidden;
+	margin: 10px 0 0;
+}
+
+.summary-table > div,
+.details-table > div {
+	border-top: 1px solid rgba(35, 44, 59, 0.65);
+	padding: 10px 12px;
+}
+
+.summary-table > div:first-child,
+.details-table > div:first-child {
+	border-top: 0;
+}
+
+.table-header {
+	background: #161d2a;
+	color: #94a3b8;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.even-row-color {
+	background-color: var(--even-row-color);
+}
+
+.odd-row-color {
+	background-color: var(--odd-row-color);
+}
+
+.even-row-color:hover,
+.odd-row-color:hover {
+	background-color: #16202e;
+}
+
+.col-first,
+.col-second,
+.col-last,
+.col-constructor-name,
+.col-summary-item-name {
+	font-size: 0.88rem;
+}
+
+/* パラメータ・戻り値・例外の説明 */
+dl.notes {
+	margin: 14px 0 0;
+}
+
+dl.notes > dt {
+	color: #8b98aa;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	margin: 12px 0 4px;
+	text-transform: uppercase;
+}
+
+dl.notes > dd {
+	color: var(--block-text-color);
+	margin: 0 0 6px 12px;
+}
+
+/* インラインコードとコードブロック */
+code,
+tt {
+	font-family: var(--code-font-family);
+}
+
+div.block code,
+dl.notes code,
+.col-last code,
+p code,
+li code {
+	background: #1a2230;
+	border: 1px solid #273246;
+	border-radius: 5px;
+	color: #d8e2f0;
+	padding: 0.1em 0.35em;
+}
+
+.member-signature code,
+.type-signature code {
+	background: none;
+	border: 0;
+	padding: 0;
+}
+
+pre {
+	background: var(--snippet-background-color);
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	color: var(--snippet-text-color);
+	line-height: 1.55;
+	overflow: auto;
+	padding: 14px 16px;
+}
+
+/* リンク */
+a:link,
+a:visited {
+	color: var(--link-color);
+	text-decoration: none;
+	transition: color 0.15s ease;
+}
+
+a[href]:hover,
+a[href]:focus {
+	color: var(--link-color-active);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.top-nav a:hover,
+.sub-nav a:hover,
+a.anchor-link:hover {
+	text-decoration: none;
+}
+
+/* 外部リンクのアイコン色をテーマのリンク色へ合わせる */
+main a[href*="://"]::after {
+	background-image: url("data:image/svg+xml; utf8, <svg xmlns='http://www.w3.org/2000/svg' width='768' height='768'><path d='M584 664H104V184h216V80H0v688h688V448H584zM384 0l132 132-240 240 120 120 240-240 132 132V0z' fill='%238ab4f8'/></svg>");
+	opacity: 0.7;
+}
+
+main a[href*="://"]:hover::after,
+main a[href*="://"]:focus::after {
+	background-image: url("data:image/svg+xml; utf8, <svg xmlns='http://www.w3.org/2000/svg' width='768' height='768'><path d='M584 664H104V184h216V80H0v688h688V448H584zM384 0l132 132-240 240 120 120 240-240 132 132V0z' fill='%23c4b5fd'/></svg>");
+	opacity: 1;
+}
+
+/* 検索候補 */
+ul.ui-autocomplete {
+	background: #111824;
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+	overflow: hidden;
+}
+
+.ui-autocomplete-category {
+	background: #151d2a;
+	color: #94a3b8;
+	font-size: 0.72rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.ui-state-active {
+	background: rgba(138, 180, 248, 0.16);
+	border-color: var(--link-color);
+	color: var(--title-color);
+}
+
+/* 非推奨・プレビュー・検索結果などの補助要素 */
+.deprecation-block,
+.preview-block {
+	background: #171d28;
+	border-color: var(--border-color);
+	border-radius: 10px;
+	color: var(--block-text-color);
+}
+
+.page-search-info {
+	background: var(--subnav-background-color);
+	border-radius: 8px;
+}
+
+.page-search-header {
+	background: var(--navbar-background-color);
+	border-radius: 8px;
+	color: var(--navbar-text-color);
+}
+
+.legal-copy,
+.about-language {
+	color: #7d8a9c;
+	font-size: 0.8rem;
+}
+
+/* スクロールバー */
+* {
+	scrollbar-color: #2b3546 #0b0f17;
+	scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: #0b0f17;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #2b3546;
+	border: 2px solid #0b0f17;
+	border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #3b4a63;
+}
+
+:focus-visible {
+	outline: 2px solid var(--link-color);
+	outline-offset: 2px;
+}
+
+/* ユーザー定義表 */
+table.plain,
+table.striped {
+	border-color: var(--table-border-color);
+}
+
+table.striped > thead {
+	background: var(--subnav-background-color);
+}
+
+table.striped > tbody > tr:nth-child(even) {
+	background: var(--odd-row-color);
+}
+
+table.striped > tbody > tr:nth-child(odd) {
+	background: var(--even-row-color);
+}
+
+/* 狭い画面では標準スタイルシートの折りたたみナビゲーションを維持しつつ余白だけ調整する */
+@media screen and (max-width: 920px) {
+	/* デスクトップ用の最小高さを解除し、折りたたみ時の高さを標準の2.8emに戻す
+	   最小高さが残るとナビ項目の先頭がヘッダー下に覗いてしまう */
+	.top-nav {
+		min-height: 0;
+	}
+
+	ul.nav-list {
+		margin: 10px 0 0;
+		padding: 0;
+	}
+
+	ul.nav-list li {
+		padding: 6px;
+		margin-left: 10px;
+	}
+
+	/* 折りたたみ時は現在ページのピル背景を消す
+	   標準CSSは親のoverflowでナビ本体を隠すため、ピルが上端にだけ覗いて不自然になる */
+	ul.nav-list li.nav-bar-cell1-rev {
+		background: transparent;
+		color: inherit;
+		border-radius: 0;
+		font-weight: 500;
+		line-height: inherit;
+		margin: 0;
+		padding: 6px;
+	}
+
+	/* ハンバーガーで展開したときだけ現在ページをピル表示する
+	   :has()はトグルボタンのexpandedクラスを親側で判定するために使う */
+	#navbar-top:has(#navbar-toggle-button.expanded) ul.nav-list li.nav-bar-cell1-rev {
+		background: var(--selected-background-color);
+		color: var(--selected-text-color);
+		border-radius: 999px;
+		font-weight: 600;
+		margin: 6px 4px;
+		padding: 7px 14px;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	main {
+		padding: 20px 16px 48px;
+	}
+
+	.title {
+		font-size: 1.65rem;
+	}
+
+	.summary section[class$="-summary"],
+	.details section[class$="-details"],
+	.class-uses .detail,
+	.serialized-class-details {
+		border-radius: 10px;
+		padding: 16px;
+	}
+
+	#search-input,
+	#page-search-input {
+		width: 180px;
+	}
+
+	/* 長いパッケージ名や型名でページ全体が横にはみ出さないようにする */
+	.sub-title,
+	.inheritance,
+	.type-signature,
+	.member-signature,
+	.block,
+	.col-first,
+	.col-second,
+	.col-last {
+		overflow-wrap: anywhere;
+	}
+}
+
+@media screen and (max-width: 680px) {
+	/* 概要表を1列に積み、狭い画面でも型・メソッド・説明を読めるようにする */
+	.two-column-summary,
+	.three-column-summary,
+	.three-column-release-summary,
+	.four-column-summary,
+	.two-column-search-results {
+		display: block;
+	}
+
+	.summary-table > div,
+	.details-table > div {
+		min-width: 0;
+		overflow-x: visible;
+		padding: 10px 12px;
+	}
+
+	.table-header {
+		display: none;
+	}
+
+	.col-first,
+	.col-second,
+	.col-constructor-name {
+		overflow: visible;
+		white-space: normal;
+	}
+
+	.col-first {
+		color: #7dd3fc;
+		font-family: var(--code-font-family);
+		font-size: 0.8rem;
+	}
+
+	.col-second {
+		padding-top: 2px;
+	}
+}

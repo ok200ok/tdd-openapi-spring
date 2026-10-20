@@ -63,4 +63,8 @@ tasks.named('javadoc') {
 	options.addBooleanOption('notimestamp', true)
 	// 構文・参照・HTMLなどは検査し、getter等への定型コメント不足のみ除外して警告ノイズを抑える
 	options.addStringOption('Xdoclint:all,-missing', '-quiet')
+	// 標準スタイルシートを置き換えず追加し、ダークテーマの差分だけを適用する
+	options.addFileOption('-add-stylesheet', file('src/javadoc/dark-theme.css'))
+	// テーマ編集時にもjavadocタスクを再実行させるため、CSSを入力として宣言する
+	inputs.file('src/javadoc/dark-theme.css')
 }

@@ -88,7 +88,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 
 ### 📚 Javadoc（公開APIドキュメント）
 
-ソース内のJavadocから、公開クラス・メソッドの契約文書をローカル生成できます。出力先は `build/docs/javadoc` で、`private` は含みません。
+ソース内のJavadocから、公開クラス・メソッドの契約文書をローカル生成できます。出力先は `build/docs/javadoc` で、`private` は含みません。`src/javadoc/dark-theme.css` を標準スタイルシートへ追加し、ダークテーマを適用しています。
 
 ```sh
 ./gradlew javadoc
