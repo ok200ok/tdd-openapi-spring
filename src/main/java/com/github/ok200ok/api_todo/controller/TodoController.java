@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.github.ok200ok.api_todo.dto.CreateTodoRequest;
@@ -47,6 +48,8 @@ import jakarta.validation.Valid;
 		version = "1.0.0",
 		description = "所有者ごとのTodoを作成・参照・更新・削除するAPI"))
 @Tag(name = "Todos", description = "Todoの一覧取得と個別操作")
+// クラス内の全操作がOpenApiConfigurationで定義したBearer JWT認証を要求することを文書化する
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/todos")
 public class TodoController {
