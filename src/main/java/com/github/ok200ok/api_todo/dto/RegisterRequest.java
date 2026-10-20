@@ -9,6 +9,10 @@ import jakarta.validation.constraints.Size;
 /**
  * ユーザー登録APIの入力契約
  * HTTP入力をEntityから分離し、Controllerで受け取る項目と検証制約を定義する
+ *
+ * @param userName ログインに使用する小文字英数字のみのユーザー名
+ * @param password 8文字以上かつUTF-8で72バイト以内のパスワード
+ * @param displayName 任意の表示名。重複可能で認証には使用しない
  */
 public record RegisterRequest(
 		@NotBlank(message = "ユーザー名は必須です")

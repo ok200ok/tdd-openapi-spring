@@ -48,3 +48,23 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// 日本語のJavadocをUTF-8で生成し、チームがローカルで参照できる公開API文書として整える
+tasks.named('javadoc') {
+	// ソースの読み込み・HTML出力の双方をUTF-8に固定し、環境依存の文字化けを防ぐ
+	options.encoding = 'UTF-8'
+	options.docEncoding = 'UTF-8'
+	options.charSet = 'UTF-8'
+	// 目次や「前へ/次へ」などの標準文言を日本語で生成する
+	options.locale = 'ja_JP'
+	options.windowTitle = 'api_todo API'
+	options.docTitle = 'api_todo API ドキュメント'
+	// 生成時刻を埋め込まず、再生成時の差分を内容の変更だけに抑える
+	options.addBooleanOption('notimestamp', true)
+	// 構文・参照・HTMLなどは検査し、getter等への定型コメント不足のみ除外して警告ノイズを抑える
+	options.addStringOption('Xdoclint:all,-missing', '-quiet')
+	// 標準スタイルシートを置き換えず追加し、ダークテーマの差分だけを適用する
+	options.addFileOption('-add-stylesheet', file('src/javadoc/dark-theme.css'))
+	// テーマ編集時にもjavadocタスクを再実行させるため、CSSを入力として宣言する
+	inputs.file('src/javadoc/dark-theme.css')
+}

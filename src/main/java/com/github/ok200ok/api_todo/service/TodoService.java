@@ -85,7 +85,7 @@ public class TodoService {
 
 	/**
 	 * 指定された所有者のTodoについて、タイトル・説明・状態を一括更新する
-	 * @Transactional 検索とEntity変更を同じトランザクション内で行い、JPAのdirty checkingで変更を永続化する。正常終了時にコミットされ、例外終了時は変更がロールバックされる
+	 * {@code @Transactional}により検索とEntity変更を同じトランザクション内で行い、JPAのdirty checkingで変更を永続化する。正常終了時にコミットされ、例外終了時は変更がロールバックされる
 	 *
 	 * @param todoId 更新するTodoのID
 	 * @param ownerId Todo所有者のID

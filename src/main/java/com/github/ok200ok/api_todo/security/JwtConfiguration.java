@@ -27,6 +27,7 @@ public class JwtConfiguration {
 	private final String secret;
 
 	/**
+	 * 設定からJWTの署名鍵文字列を受け取り、Bean定義で利用できる状態にする
 	 * @param secret 署名鍵の文字列。app.security.jwt.secret経由で環境変数から上書きできる
 	 */
 	public JwtConfiguration(@Value("${app.security.jwt.secret}") String secret) {

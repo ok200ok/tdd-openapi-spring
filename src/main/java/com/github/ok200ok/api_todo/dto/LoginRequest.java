@@ -9,6 +9,9 @@ import jakarta.validation.constraints.Size;
 /**
  * ログインAPIの入力契約
  * 登録と同じユーザー名・パスワード制約を適用し、表示名など認証に不要な項目は受け取らない
+ *
+ * @param userName ログインに使用するユーザー名
+ * @param password 照合するパスワード
  */
 public record LoginRequest(
 		@NotBlank(message = "ユーザー名は必須です")

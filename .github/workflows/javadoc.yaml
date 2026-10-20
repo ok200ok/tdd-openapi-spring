@@ -1,0 +1,66 @@
+# リポジトリのActionsタブに表示するワークフロー名
+name: Deploy Javadoc to Github Pages
+
+# mainへマージされたJavadocだけを公開対象にし、workflow_dispatchで任意のブランチから手動実行もできるようにする
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# 公開に必要な最小権限だけを与え、PagesへのデプロイはOIDCのid-tokenで委譲する
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開は同時に1つだけとし、進行中のデプロイを新しい実行で打ち切らない
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Javadoc
+    runs-on: ubuntu-latest
+    # 停止したままランナー時間を消費しないよう15分で打ち切る
+    timeout-minutes: 15
+    steps:
+      # 手動実行したブランチの内容からドキュメントを生成するため、その時点のコミットを取得する
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      # ローカル生成と同じJava 21をTemurinディストリビューションで用意する
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Gradle依存関係を実行間でキャッシュし、Gradle本体のバージョンはプロジェクトのWrapperに任せる
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # 公開APIドキュメントをbuild/docs/javadocへ生成し、続くステップの配信対象にする
+      - name: Build Javadoc
+        run: ./gradlew javadoc
+
+      # Pages用のartifactとして生成ディレクトリをアップロードする
+      # 配信するのはbuild/docs/javadocの中身だけなので、リポジトリのソースは公開されない
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/docs/javadoc
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    # 公開先のURLをActionsのサマリへ表示するための環境
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

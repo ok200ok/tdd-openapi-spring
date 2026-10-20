@@ -1,159 +1,93 @@
 # 認証・認可設計仕様
 
-Section 5の認証・認可について、確定した目的、API契約、実装構成、テスト境界をまとめる。個々のテストケース、期待結果、リンク、実行状態は[テストケース一覧](test-case-catalog.md)で管理する。現在地と次の作業は[Section 5タスク6引き継ぎメモ](contexts/section5-task6.md)を参照する。
+認証・認可の仕組み、コンポーネント責務、セキュリティ上の判断をまとめる。HTTP契約とエラー応答は[API設計仕様](api-design.md)、DTOと入力検証は[DTO・Validation設計仕様](dto-validation.md)、User/Todoのデータ制約は[データモデル設計仕様](data-modeling.md)、テストケースと実行状態は[テストケース一覧](test-case-catalog.md)を正とする。
 
 ## 目的と範囲
 
-- ユーザー登録時にパスワードをハッシュ化して保存し、ログイン時に資格情報を検証する
-- JWT Bearer access tokenで認証し、Todo APIでは認証済みユーザーのIDを所有者として使う
-- Todoの所有者境界を維持し、ユーザーIDをクライアント入力から受け取らない
-- Spring Securityの標準認証機能を優先し、独自のJWT検証フィルターなどを作らない
-- Section 6で認証からTodo操作までの結合テスト、全テスト、最終レビューと文書整理を行う
+- 登録時にパスワードをハッシュ化して保存し、ログイン時に資格情報を検証する
+- JWT Bearer access tokenで認証し、Todo APIの所有者を認証済みユーザーIDから解決する
+- ユーザーIDをクライアント入力から受け取らず、所有者本人だけがTodoを操作できるようにする
+- Spring Securityの標準機能を使い、独自のJWT検証フィルターを作らない
 
 ### 対象外
 
-- Refresh token、トークン失効リスト、ログアウトによる発行済みトークンの無効化
-- OAuth 2.0/OIDCの外部IdP連携、多要素認証、メール確認、パスワードリセット
+- Refresh token、トークン失効リスト、ログアウトによる発行済みtokenの無効化
+- 外部IdP連携、多要素認証、メール確認、パスワードリセット
 - ユーザー削除とTodoの連鎖削除
-- 本番運用向けの鍵ローテーション基盤やレート制限。本番導入時には別途設計が必要
+- 本番運用向けの鍵ローテーション、レート制限
 
-## 既存ドメインとの整合
+## コンポーネントと責務
 
-- Userの`userName`は一意で、小文字英数字のみ、最大50文字。認証APIでも既存のデータモデル制約を守る
-- `displayName`は任意・最大50文字で、ログイン識別子には使わない
-- Userの`password`列には平文でなく、PasswordEncoderが生成したハッシュを保存する。パスワードやハッシュを応答・ログへ出さない
-- 新規登録のroleはサーバー側で一般ユーザーに固定し、クライアントに指定させない
-- Todo APIの所有者は認証済み主体から解決する。不存在と他ユーザー所有のTodoは既存契約どおり同じ`404 Not Found`とする
-
-## 実装構成
-
-| コンポーネント | 役割 |
+| コンポーネント | 責務 |
 | --- | --- |
-| `JpaUserDetailsService` | `UserRepository`からUserを取得し、保存済みパスワードハッシュとroleをSpring Securityの`UserDetails`へ変換する |
-| `AuthenticationManagerConfiguration` | `DaoAuthenticationProvider`に`JpaUserDetailsService`と`PasswordEncoder`を設定し、`ProviderManager`を`AuthenticationManager`として公開する |
+| `JpaUserDetailsService` | `UserRepository`のUserを、保存済みハッシュとroleを持つ`UserDetails`へ変換する |
+| `AuthenticationManagerConfiguration` | `DaoAuthenticationProvider`へ`JpaUserDetailsService`と`PasswordEncoder`を設定し、`AuthenticationManager`を公開する |
 | `PasswordEncoderConfiguration` | `BCryptPasswordEncoder`をBeanとして提供する |
 | `JwtConfiguration` | `app.security.jwt.secret`から`JwtEncoder`／`JwtDecoder`を生成する |
-| `JwtTokenProvider` | User UUIDを`sub`にした15分有効のHS256署名JWTを発行し、`expiresIn`を秒で返す |
+| `JwtTokenProvider` | User UUIDを`sub`にした15分有効のHS256署名JWTを発行する |
 | `SecurityConfiguration` | 認証APIを公開し、Todo APIをBearer JWT必須のステートレス構成にする |
-| `AuthService` | 登録・ログインのユースケースを調整し、保存済みUserのUUIDでtokenを発行する |
-| `AuthController` | 登録・ログインのHTTP入力をDTOで受け取り、`AuthService`へ委譲して応答DTOへ変換する |
+| `AuthService` | 登録・ログインを調整し、保存済みUserのUUIDでtokenを発行する |
+| `AuthController` | 認証APIのHTTP入出力をDTOへ変換し、`AuthService`へ委譲する |
 
 ## 認証フロー
 
-1. 登録要求を検証し、`UserService`がユーザー名の重複確認、パスワードのハッシュ化、一般ユーザーとしての保存を行う
-2. 登録成功後、保存済みUserのUUIDを`sub`にしたJWT access tokenを発行する
-3. ログイン要求では`AuthenticationManager`へ資格情報の検証を委譲する
-4. `DaoAuthenticationProvider`が`JpaUserDetailsService`でUserを取得し、`PasswordEncoder`で保存済みハッシュと平文パスワードを照合する
-5. 認証成功後、認証済みユーザー名でUserを再取得し、UUIDを`sub`にしたJWTを発行する
-6. Todo APIへのBearer tokenはSpring Security OAuth2 Resource Serverの標準機能で検証する
-7. 認証済みJWTのsubjectからUser UUIDを解決し、TodoServiceへ所有者IDとして渡す
+### 登録
 
-ユーザー不存在とパスワード不一致は区別せず、`BadCredentialsException`として扱う。`DaoAuthenticationProvider`の`hideUserNotFoundExceptions`を有効にし、アカウントの存在を推測させない。
+1. `AuthController`が入力を検証し、`AuthService`へ渡す
+2. `UserService`がユーザー名の重複確認、パスワードのハッシュ化、一般ユーザーとしての保存を行う
+3. `JwtTokenProvider`が保存済みUserのUUIDを`sub`にしたaccess tokenを発行する
 
-## API契約
+### ログイン
 
-| 操作 | URL・メソッド | 入力 | 成功応答 |
-| --- | --- | --- | --- |
-| ユーザー登録 | `POST /api/v1/auth/register` | `userName`, `password`, 任意の`displayName` | `201 Created` |
-| ログイン | `POST /api/v1/auth/login` | `userName`, `password` | `200 OK` |
+1. `AuthService`が`AuthenticationManager`へ資格情報の検証を委譲する
+2. `DaoAuthenticationProvider`が`JpaUserDetailsService`でUserを取得し、`PasswordEncoder`で保存済みハッシュと照合する
+3. 認証成功後、認証済みユーザー名でUserを再取得し、UUIDを`sub`にしたaccess tokenを発行する
 
-### 登録応答
+### Todo API利用
 
-`201 Created`で`application/json`の`RegisterResponse`を返す。`Location`ヘッダーは付けない。
+1. Resource ServerがBearer tokenの署名と有効期限を検証する
+2. `TodoController`が認証済みJWTの`sub`から所有者UUIDを解決する
+3. `TodoService`が所有者条件付きでTodoを操作する
 
-```json
-{
-  "userName": "alice",
-  "displayName": "Alice",
-  "accessToken": "<jwt>",
-  "tokenType": "Bearer",
-  "expiresIn": 900
-}
-```
+## 認可境界
 
-- `displayName`は未指定なら`null`
-- `id`、`password`、`role`は返さない
-- `tokenType`は固定で`Bearer`、`expiresIn`は900秒
-
-### ログイン応答
-
-`200 OK`で`application/json`の`TokenResponse`を返す。
-
-```json
-{
-  "accessToken": "<jwt>",
-  "tokenType": "Bearer",
-  "expiresIn": 900
-}
-```
-
-- ユーザー名、表示名、`id`、`password`、`role`は返さない
-- `tokenType`は固定で`Bearer`、`expiresIn`は900秒
-
-ログインにも登録と同じ`userName`・`password`の入力制約を適用する。`userName`は必須・小文字英数字のみ・最大50文字、`password`は必須・8文字以上・UTF-8で72バイト以下とする。
-
-## エラー応答
-
-認証APIのエラーはRFC Problem Details形式（`application/problem+json`）で返す。
-
-| 状況 | status | detail | errors拡張 | 補足 |
-| --- | --- | --- | --- | --- |
-| 入力制約違反 | `400 Bad Request` | `入力内容を確認してください` | `field`と日本語`message`を含む | 登録・ログイン共通 |
-| 未知フィールド・JSON構文エラー | `400 Bad Request` | `リクエスト本文を読み取れません` | 付けない | 項目を特定できないため |
-| 登録済み`userName` | `409 Conflict` | `指定されたユーザー名は既に登録されています` | 付けない | `UserAlreadyExistsException` |
-| ログイン資格情報の不一致 | `401 Unauthorized` | `ユーザー名またはパスワードが正しくありません` | 付けない | `BadCredentialsException`のみ変換 |
-
-ログインの`401`には`WWW-Authenticate`ヘッダーを付けない。ログインAPIはBearer tokenで保護されたリソースではなく、クライアントへ認証方式を問い合わせるチャレンジを返す必要がないため、Problem Detailsで理由を伝える。
-
-Todo APIへの未認証・不正・期限切れtokenはResource Serverが`401 Unauthorized`を返す。認証済みだが必要な権限がない場合は`403 Forbidden`とする。現時点では一般ユーザーのみを想定し、管理者機能は対象外とする。
+- `SecurityConfiguration`は認証APIを`permitAll`、Todo APIを`authenticated`とし、Swagger UIなどその他の要求は許可する
+- セッションを使わないステートレス構成とし、要求ごとにBearer tokenを検証する
+- Bearer認証のみを使うためCSRF保護は無効化する
+- Todoの所有者はJWTの`sub`だけから決め、リクエストのユーザーIDは受け取らない
+- 認証済みでも他ユーザーのTodoは存在を明かさず`404 Not Found`とし、所有者不一致に`403`を使わない
+- tokenなし・不正・期限切れはResource Serverが`401 Unauthorized`を返す。`403`は認証済みだが権限が不足する場合に限る（現状の管理者機能は対象外）
 
 ## JWT・パスワード方針
 
-| 項目 | 内容 |
+| 項目 | 方針 |
 | --- | --- |
 | access token | JWT Bearer tokenのみ。refresh tokenなし |
 | subject (`sub`) | UserのUUID |
 | 有効期限 | 15分（`expiresIn`は900秒） |
-| 署名方式 | HS256（HMAC署名） |
-| 署名鍵 | `app.security.jwt.secret`。環境変数`JWT_SECRET`で上書きできる |
+| 署名方式 | HS256 |
+| 署名鍵 | `app.security.jwt.secret`。環境変数`JWT_SECRET`で上書きする |
 | パスワードハッシュ | `BCryptPasswordEncoder` |
-| パスワード長 | 8文字以上、UTF-8で72バイト以下 |
+| パスワード長 | 入力制約は[DTO・Validation設計仕様](dto-validation.md)を参照する |
 
-`JwtConfiguration`は設定文字列からHS256用の鍵を生成し、`JwtEncoder`／`JwtDecoder`を提供する。実暗号を扱うテストはテスト内の独立鍵を使い、アプリ既定値に依存しない。`@SpringBootTest`はアプリ既定鍵で起動する。
+`sub`にUUIDを使うのは、ユーザー名や表示名の変更に影響されずDB上のUserを一意に特定できるため。ユーザー名をclaimへ固定せず、ログに識別子が現れる機会も抑える。
 
-パスワードのUTF-8バイト長は独自制約`@Utf8ByteLength`で検証する。Javaの文字数ではなく実際のバイト長を比較し、BCryptの入力上限による切り詰めを避ける。`null`は`@NotBlank`など必須チェックの責務に委ね、この制約では違反にしない。
+## 失敗時のセキュリティ判断
 
-### Subject (`sub`)にUser UUIDを使う理由
-
-JWTの`sub`は、そのtokenが誰についてのものかを表す標準claim。User UUIDはユーザー名の変更や表示名と無関係に安定しており、DB上のUserを一意に特定できる。ユーザー名をclaimにすると変更可能な識別子がtokenに固定されるうえ、ログなどにユーザー名が現れる機会も増える。UUIDは秘密情報ではなく、tokenの署名検証と有効期限によってtokenの真正性・有効性を確認する。
-
-## OpenAPI
-
-- `OpenApiConfiguration`で`bearerAuth`を定義する
-  - `type: http`
-  - `scheme: bearer`
-  - `bearerFormat: JWT`
-- `TodoController`にクラスレベルの`@SecurityRequirement(name = "bearerAuth")`を付け、Todo操作へBearer認証を要求する
-- `AuthController`の登録・ログインには`@SecurityRequirement`を付けない
-- AuthControllerの操作には、登録`201`・`400`・`409`、ログイン`200`・`400`・`401`の応答を明示する
-- `OpenApiDocumentationTests`は`OpenApiConfiguration`を取り込み、`/v3/api-docs`でauth paths、DTOスキーマ、`bearerAuth`、Todo操作の`security`を確認する
+- ユーザー不存在とパスワード不一致は区別せず`BadCredentialsException`とし、`hideUserNotFoundExceptions`でアカウントの存在を推測させない
+- ログイン失敗は`401 Unauthorized`のProblem Detailsで返し、`WWW-Authenticate`は付けない。ログインAPIはBearerで保護されたリソースではないため
+- 認証APIの入力検証・未知フィールド・重複ユーザー名の応答は[API設計仕様](api-design.md)と[DTO・Validation設計仕様](dto-validation.md)に従う
 
 ## テスト境界
 
-- `JpaUserDetailsServiceTests`: `UserRepository`をMockitoで置き換え、`UserDetails`への変換だけを確認する
-- `AuthServiceTests`: `AuthenticationManager`などをMockitoで置き換え、Serviceの委譲とtoken発行を確認する
-- `AuthControllerRegisterTests`／`AuthControllerLoginTests`: `@WebMvcTest(AuthController.class)`、`SecurityConfiguration`、`TestJwtConfiguration`、`@MockitoBean AuthService`でHTTP境界を確認する
-- `OpenApiDocumentationTests`: 全Controllerを読み込み、`TodoService`と`AuthService`をモックしてOpenAPI文書とSwagger UIを確認する
-- `ApiTodoApplicationTests`: `@SpringBootTest`とTestcontainersで全コンテキストとPostgreSQL接続を確認する
-- 実際の`DaoAuthenticationProvider`を通したログインHTTPフローはSection 6の結合テストで確認する
+| 層 | テスト手段 | 確認範囲 |
+| --- | --- | --- |
+| 認証コンポーネント・Service | Mockito単体テスト | 資格情報の委譲、token発行、`UserDetails`変換 |
+| HTTP境界 | `@WebMvcTest`・`MockMvc` | SecurityFilterChain、Bearer認証、入力検証、Problem Details |
+| 結合 | `@SpringBootTest(RANDOM_PORT)`・Testcontainers | 実HTTPサーバー、PostgreSQL、本番JWTによる登録・ログイン・Todo CRUD・所有者分離 |
 
-## ローカルデモ機能の撤去（完了）
+個別のテストケースと実行状態は[テストケース一覧](test-case-catalog.md)で管理する。
 
-登録・ログインAPI完成後、認証前の仮ユーザー機能を撤去した。
+## ローカルデモ機能の撤去
 
-- `LocalOwnerIdResolver`、`LocalSampleDataInitializer`、`application-local.yaml`、専用テストを削除した
-- 不要になった`OwnerIdResolver`抽象と`AuthenticatedUserIdResolver`を削除し、Controllerが`@AuthenticationPrincipal Jwt`のsubjectから所有者UUIDを解決する形へ整理した
-- ControllerのHTTPテストは削除せず、認証済みUserを使うテストのまま維持した
-- `localdemo`は予約せず通常のユーザー名として登録できる。開発DBに残っていた`localdemo`とそのTodoは、一意制約による登録失敗を避けるため削除した
-- 固定パスワード文字列は初期化コードとテストの削除に伴って消滅した。保存済みでもBCrypt形式ではないためログインには使えない
-- Section 6の結合テストでは、テスト内でユーザーを登録・認証し、そのユーザーのtokenでTodo APIを操作する
+認証導入前の固定所有者・サンプルデータ機能は撤去済み（履歴は[テストケース一覧](test-case-catalog.md)の撤去済みケースを参照）。

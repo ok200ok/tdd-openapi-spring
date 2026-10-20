@@ -1,12 +1,21 @@
-# DTO・Validation設計仕様
+# DTO・バリデーション設計仕様
 
-## 備考
+HTTP入出力のDTOと入力検証の契約を定義する。HTTPステータスとエラー応答は[API設計仕様](api-design.md)、認証・認可方式は[認証・認可設計仕様](authentication-design.md)、永続データの制約は[データモデル設計仕様](data-modeling.md)、テストケースと実行状態は[テストケース一覧](test-case-catalog.md)を正とする。
 
-- DTOはJava 21の`record`で定義し、EntityをHTTP入出力に直接使わない。
-- JSONの未知フィールドは無視せず、`400 Bad Request`として拒否する。これによりクライアントの項目名誤りや、作成時に指定された状態・所有者IDなど契約外の入力を検出する。
-- 入力検証エラーは`application/problem+json`のRFC Problem Details形式とし、API拡張の`errors`配列に項目名`field`と日本語の利用者向け`message`を含める。JSON構文エラーなど入力項目を特定できない場合は、項目別`errors`なしのProblem Detailsを返す。
+## 目的と範囲
 
-## 仕様
+- DTOはJava 21の`record`で定義し、EntityをHTTP入出力へ直接使わない
+- Controller境界で入力形式を検証し、業務ルールはService、永続化制約はDBへ委ねる
+- HTTPメソッド、ステータス、ヘッダー、エラー本文の詳細は対象外とし、[API設計仕様](api-design.md)へ委譲する
+
+## 共通方針
+
+- JSONの未知フィールドは無視せず`400 Bad Request`として拒否する。クライアントの項目名誤りや、契約外の状態・所有者IDを検出するため
+- 入力検証はJakarta Bean Validationのアノテーションで宣言し、DTOのrecordコンポーネントに制約を付ける
+- 入力検証エラーのHTTP応答と`errors`配列は[API設計仕様](api-design.md)に従う
+- 前後空白を除去するDTOは、除去後の値に対して必須・長さ検証が行われるようrecordのコンパクトコンストラクタで正規化する
+
+## Todo APIのDTO
 
 | DTO | フィールド | 制約・挙動 |
 | --- | --- | --- |
@@ -17,8 +26,6 @@
 
 ## 認証APIのDTO
 
-登録・ログインのHTTPステータス、Problem Detailsの`detail`、OpenAPI契約は[認証・認可設計仕様](authentication-design.md)を参照する。
-
 | DTO | フィールド | 制約・挙動 |
 | --- | --- | --- |
 | `RegisterRequest` | `userName`, `password`, `displayName` | `userName`は必須・小文字英数字のみ・最大50文字。`password`は必須・8文字以上・UTF-8で72バイト以下。`displayName`は任意・最大50文字 |
@@ -28,5 +35,7 @@
 
 - `tokenType`は固定で`Bearer`、`expiresIn`は900秒
 - `password`のUTF-8バイト長は`@Utf8ByteLength`で検証する。`null`は`@NotBlank`など必須チェックへ委ね、この制約では違反にしない
-- 認証APIの入力検証エラーはTodo APIと同じ`errors`配列（`field`、`message`）を使う
-- 登録済み`userName`の`409`、ログイン失敗の`401`は`errors`拡張を付けない
+
+## 対象外
+
+認証・認可の仕組み、DBスキーマとEntityマッピング、HTTPのステータス・ヘッダー・エラー本文、テストケースはこの文書では定義しない。

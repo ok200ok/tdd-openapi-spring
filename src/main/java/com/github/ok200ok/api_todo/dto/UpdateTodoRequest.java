@@ -9,6 +9,10 @@ import jakarta.validation.constraints.Size;
 /**
  * Todo更新APIの入力契約
  * PUTで置き換えるタイトル・説明・状態をEntityから分離して受け取り、境界で必須項目を検証する
+ *
+ * @param title 更新後のタイトル。前後の空白は除去される
+ * @param description 更新後の詳細説明。省略時はnull
+ * @param status 更新後のTodo状態
  */
 public record UpdateTodoRequest(
 		@NotBlank(message = "タイトルは必須です")

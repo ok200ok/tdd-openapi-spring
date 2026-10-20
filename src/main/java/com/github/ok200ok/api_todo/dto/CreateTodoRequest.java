@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Size;
 /**
  * Todo作成APIの入力契約
  * HTTP入力をEntityから分離し、タイトルの形式をController境界で検証する
+ *
+ * @param title 作成するTodoのタイトル。前後の空白は除去される
+ * @param description 任意の詳細説明。省略時はnull
  */
 public record CreateTodoRequest(
 		@NotBlank(message = "タイトルは必須です")
