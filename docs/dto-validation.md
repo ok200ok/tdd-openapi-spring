@@ -1,4 +1,4 @@
-# DTO・Validation設計仕様
+# DTO・バリデーション設計仕様
 
 ## 備考
 
@@ -6,7 +6,7 @@
 - JSONの未知フィールドは無視せず、`400 Bad Request`として拒否する。これによりクライアントの項目名誤りや、作成時に指定された状態・所有者IDなど契約外の入力を検出する。
 - 入力検証エラーは`application/problem+json`のRFC Problem Details形式とし、API拡張の`errors`配列に項目名`field`と日本語の利用者向け`message`を含める。JSON構文エラーなど入力項目を特定できない場合は、項目別`errors`なしのProblem Detailsを返す。
 
-## 仕様
+## TodoAPIのDTO
 
 | DTO | フィールド | 制約・挙動 |
 | --- | --- | --- |
@@ -17,7 +17,7 @@
 
 ## 認証APIのDTO
 
-登録・ログインのHTTPステータス、Problem Detailsの`detail`、OpenAPI契約は[認証・認可設計仕様](authentication-design.md)を参照する。
+登録・ログインのHTTPステータスとエラー応答は[API設計仕様](api-design.md)、認証方式とJWTは[認証・認可設計仕様](authentication-design.md)を参照する。
 
 | DTO | フィールド | 制約・挙動 |
 | --- | --- | --- |

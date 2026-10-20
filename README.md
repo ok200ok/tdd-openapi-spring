@@ -141,7 +141,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] OpenAPI／Swagger UI（`springdoc-openapi`で`/v3/api-docs`のAPI仕様を生成し、`/swagger-ui.html`でエンドポイントとスキーマを確認）
 
 ### Section5: 認証・認可基盤の追加
-- [x] [`認証・認可設計仕様`](docs/authentication-design.md)を参照し、`Spring Security`の標準機能を使う認証方式とAPI契約（登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答）を合意する
+- [x] [`認証・認可設計仕様`](docs/authentication-design.md)と[`API設計仕様`](docs/api-design.md)を参照し、`Spring Security`の標準機能を使う認証方式とAPI契約（登録・ログイン、パスワードハッシュ、JWT、認可境界、エラー応答）を合意する
 - [x] ユーザー登録とパスワードハッシュ化を担う`UserService`の単体テスト作成（`RED`）と実装（`GREEN`）
 - [x] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
 - [x] ステートレスな`Spring Security`設定とBearer認証を実装し、認証済みユーザーのIDをTodo APIへ渡す（MVCテストで確認）
@@ -150,6 +150,6 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] 認証前のローカル所有者Resolver・サンプル初期化機能と専用テスト、`application-local.yaml`を撤去する。併せて不要になった`OwnerIdResolver`抽象を削除し、Controllerが認証主体（`@AuthenticationPrincipal Jwt`）を直接扱うよう整理する
 
 ### Section6: 認証接続後の結合テストと総仕上げ
-- [ ] `@SpringBootTest` + `Testcontainers` による認証からTodo操作までの一連の処理を検証する
-- [ ] `./gradlew test` による全テストスイートの一括実行確認
-- [ ] 最終コードレビューとドキュメント整理
+- [x] `@SpringBootTest` + `Testcontainers` による認証からTodo操作までの一連の処理を検証する
+- [x] `./gradlew test` による全テストスイートの一括実行確認
+- [x] 最終コードレビューとドキュメント整理

@@ -10,7 +10,7 @@
 - Section 4では認証機構を実装せず、ローカル動作確認用の所有者境界を設けた。Section 5で認証・認可へ接続する。
 - Section 5では[認証・認可設計仕様](authentication-design.md)に従って認証済みユーザーからTodo所有者を解決し、認証前のローカルデモユーザー機能を撤去した。
 
-## 仕様
+## TodoAPI
 
 | 操作 | HTTP契約 | 成功応答 |
 | --- | --- | --- |
@@ -33,12 +33,21 @@ DTOの具体的なrecord項目、Validation、未知JSON項目の扱い、Proble
 
 ## 認証API
 
-認証APIは次の2操作で、契約・JWT・エラー応答の詳細は[認証・認可設計仕様](authentication-design.md)を正とする。
+認証APIは次の2操作とする。DTOと入力検証は[DTO・Validation設計仕様](dto-validation.md)、認証方式とJWTは[認証・認可設計仕様](authentication-design.md)を参照する。
 
 | 操作 | HTTP契約 | 成功応答 |
 | --- | --- | --- |
 | ユーザー登録 | `POST /api/v1/auth/register` | `201 Created`。ユーザー公開情報とBearer access token |
 | ログイン | `POST /api/v1/auth/login` | `200 OK`。Bearer access tokenと有効期間 |
+
+認証APIのエラーはRFC Problem Details形式（`application/problem+json`）で返す。
+
+| 状況 | status | detail | errors拡張 |
+| --- | --- | --- | --- |
+| 入力制約違反 | `400 Bad Request` | `入力内容を確認してください` | `field`と日本語`message`を含む |
+| 未知フィールド・JSON構文エラー | `400 Bad Request` | `リクエスト本文を読み取れません` | 付けない |
+| 登録済み`userName` | `409 Conflict` | `指定されたユーザー名は既に登録されています` | 付けない |
+| ログイン資格情報の不一致 | `401 Unauthorized` | `ユーザー名またはパスワードが正しくありません` | 付けない。`WWW-Authenticate`も付けない |
 
 Todo APIはBearer JWTを要求し、認証APIはBearer tokenなしで利用できる。
 
