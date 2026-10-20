@@ -300,7 +300,20 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 | 認証APIとスキーマ | `/api/v1/auth/register`の`post`（`201`・`400`・`409`）と`/api/v1/auth/login`の`post`（`200`・`400`・`401`）が文書化される。`RegisterRequest`・`LoginRequest`・`RegisterResponse`・`TokenResponse`のスキーマが生成され、応答に`password`・`role`・`id`を含まない。`OpenApiConfiguration`を`@Import`して検証する | [`publishesAuthApiOperationsAndSchemas`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L108) | ✅ |
 | Bearerスキームと適用範囲 | `components.securitySchemes.bearerAuth`が`type: http`、`scheme: bearer`、`bearerFormat: JWT`を持つ。Todo操作には`bearerAuth`の`security`が付き、認証APIには付かない。`OpenApiConfiguration`を`@Import`して検証する | [`definesBearerSecuritySchemeAndAppliesItToTodoOperations`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L145) | ✅ |
 
+## Section 6: 認証接続後の結合テストと総仕上げ
+
+### タスク1: 認証からTodo操作までの結合テスト
+
+実ポートで起動したHTTPサーバー、Testcontainers上のPostgreSQL、本番設定のJWTを使い、ユーザー登録・ログインからTodoの作成・一覧・取得・更新・削除までを検証する。新規本番コードを伴わない既存機能の検証であり、ControllerテストやServiceテストでは確認できないSecurityFilterChain・Bearer認証・JSON変換・DBトランザクションの結合を対象とする。`MockMvc`、`@MockitoBean`、`TestJwtConfiguration`は使わず、`@SpringBootTest(RANDOM_PORT)`、`@AutoConfigureRestTestClient`、`@Import(TestcontainersConfiguration.class)`を使う。所有者分離は403ではなく404という既存契約を確認する。実行確認はケース1とケース2〜4の2組に分けて行う。
+
+| 観点 | 期待する結果・確認目的 | テスト | 状態 |
+| --- | --- | --- | --- |
+| 登録からTodo削除までの一連フロー | 登録が`201`とaccess tokenを返し、DBに平文でないハッシュが保存される。同じ資格情報のログインが実`DaoAuthenticationProvider`経由で`200`とtokenを返す。そのBearer tokenで作成`201`＋`Location`＋初期`PENDING`、一覧`200`（`page=1`、`size=5`、`totalElements=1`、`totalPages=1`、作成Todoを含む）、取得`200`、更新`200`（タイトル・説明・状態`COMPLETED`へ変更）、削除`204`、削除後の取得がProblem Details形式の`404`になる | [`completesRegisterLoginAndTodoCrudFlow`](../src/test/java/com/github/ok200ok/api_todo/AuthTodoIntegrationTests.java#L57) | 🤝 |
+| 所有者分離 | AのTodoに対し、Bのtokenで取得・更新・削除するとすべて`404`。Bの一覧にAのTodoが含まれず、AのTodoは変更も削除もされない（Aのtokenで再取得して`200`と元の内容を確認） | `separatesTodosBetweenOwners` | 🤝 |
+| 未認証アクセス | Bearer tokenなしの`GET /api/v1/todos`が`401`になる | `rejectsTodoRequestWithoutBearerToken` | 🤝 |
+| ログイン失敗 | 誤ったパスワードと未登録ユーザー名がともに`401`・`application/problem+json`・同一`detail`（`ユーザー名またはパスワードが正しくありません`）となり、ユーザー存在有無を区別しない | `rejectsInvalidCredentialsWithoutRevealingUserExistence` | 🤝 |
+
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
 | Section 5: ローカル機能撤去 | `LocalOwnerIdResolver`・`LocalSampleDataInitializer`・`application-local.yaml`と専用テスト、および不要になった`OwnerIdResolver`抽象を撤去し、Controllerが認証主体から所有者を解決する形へ整理する | ✅ |
-| Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |
+| Section 6: 認証接続後の結合テスト・総仕上げ | 実HTTPサーバー・Testcontainers・本番JWTによる登録／ログインからTodo CRUDまでと所有者分離、未認証・ログイン失敗の4ケースを結合テストで検証する | 🚧 |
