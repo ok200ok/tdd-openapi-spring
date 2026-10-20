@@ -199,9 +199,9 @@ DTO項目と入力検証のHTTP契約は[DTO・Validation設計仕様](dto-valid
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、ページクエリ、既存契約の400・404応答を記載する | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L65) | ✅ |
-| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L65) | ✅ |
-| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L106)、ブラウザでエンドポイントとスキーマを確認済み | ✅ |
+| OpenAPI仕様の生成 | `/v3/api-docs`がJSONを返し、Todoの一覧・作成・取得・更新・削除のパスとHTTPメソッド、ページクエリ、既存契約の400・404応答を記載する | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L66) | ✅ |
+| スキーマとデータ隠蔽 | リクエスト・応答DTOの項目が仕様に反映され、Entityや所有者情報を公開しない | [`publishesTodoApiOperationsSchemasAndErrorResponses`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L66) | ✅ |
+| Swagger UI | UIがHTTPアクセス可能で、生成されたAPI仕様を表示する。ブラウザでTodoのエンドポイントとスキーマを確認する | UIへのHTTPアクセスは[`redirectsSwaggerUiEntryToUiPage`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L164)、ブラウザでエンドポイントとスキーマを確認済み | ✅ |
 
 ### Section 5 タスク: ユーザー登録とパスワードハッシュ化を担うUserService
 
@@ -247,7 +247,7 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 `AuthController`のHTTP境界を`@WebMvcTest(AuthController.class)`で検証し、`AuthService`はMockito単体テスト、`JpaUserDetailsService`は`UserRepository`をモックした単体テストで確認する。認証APIはBearer tokenなしで利用でき、ログイン失敗は`BadCredentialsException`のみをProblem Detailsの`401`へ変換する。ログインにも登録と同じ`userName`・`password`の入力制約を適用する。OpenAPIは生成された`/v3/api-docs`で認証API、スキーマ、`bearerAuth`を確認する。テストコード作成後に各テスト名へソースリンクを追加する。
 
-現在地（2026-10-20）: 登録API 6ケース、`JpaUserDetailsService` 2ケース、`AuthService` 4ケース、`expiresIn` 1ケース、既存Todoテストのスコープ調整、`AuthenticationManagerConfiguration`追加、ログインController 3ケースまで完了。残りはOpenAPI 2ケース。詳細な引き継ぎは[Section 5タスク6引き継ぎメモ](contexts/section5-task6.md)を参照する。
+現在地（2026-10-20）: 登録API 6ケース、`JpaUserDetailsService` 2ケース、`AuthService` 4ケース、`expiresIn` 1ケース、既存Todoテストのスコープ調整、`AuthenticationManagerConfiguration`追加、ログインController 3ケース、OpenAPI 2ケースまで完了。Section 5タスク6は完了。詳細な引き継ぎは[Section 5タスク6引き継ぎメモ](contexts/section5-task6.md)を参照する。
 
 #### `JpaUserDetailsServiceTests`
 
@@ -288,8 +288,8 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 認証APIとスキーマ | `/api/v1/auth/register`の`post`（`201`・`400`・`409`）と`/api/v1/auth/login`の`post`（`200`・`400`・`401`）が文書化される。`RegisterRequest`・`LoginRequest`・`RegisterResponse`・`TokenResponse`のスキーマが生成され、応答に`password`・`role`・`id`を含まない。`OpenApiConfiguration`を`@Import`して検証する | `publishesAuthApiOperationsAndSchemas` | 🤝 |
-| Bearerスキームと適用範囲 | `components.securitySchemes.bearerAuth`が`type: http`、`scheme: bearer`、`bearerFormat: JWT`を持つ。Todo操作には`bearerAuth`の`security`が付き、認証APIには付かない。`OpenApiConfiguration`を`@Import`して検証する | `definesBearerSecuritySchemeAndAppliesItToTodoOperations` | 🤝 |
+| 認証APIとスキーマ | `/api/v1/auth/register`の`post`（`201`・`400`・`409`）と`/api/v1/auth/login`の`post`（`200`・`400`・`401`）が文書化される。`RegisterRequest`・`LoginRequest`・`RegisterResponse`・`TokenResponse`のスキーマが生成され、応答に`password`・`role`・`id`を含まない。`OpenApiConfiguration`を`@Import`して検証する | [`publishesAuthApiOperationsAndSchemas`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L107) | ✅ |
+| Bearerスキームと適用範囲 | `components.securitySchemes.bearerAuth`が`type: http`、`scheme: bearer`、`bearerFormat: JWT`を持つ。Todo操作には`bearerAuth`の`security`が付き、認証APIには付かない。`OpenApiConfiguration`を`@Import`して検証する | [`definesBearerSecuritySchemeAndAppliesItToTodoOperations`](../src/test/java/com/github/ok200ok/api_todo/controller/OpenApiDocumentationTests.java#L144) | ✅ |
 
 #### `JwtTokenProviderTests`
 
@@ -297,7 +297,7 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 | --- | --- | --- | --- |
 | `expiresIn`の契約 | 既存のJWT発行テストに、`getExpiresInSeconds()`が`900`を返す確認を追加する | [`issuesSignedJwtWithUserSubjectAndFifteenMinuteLifetime`](../src/test/java/com/github/ok200ok/api_todo/security/JwtTokenProviderTests.java#L57)に追加 | ✅ |
 
-既存のTodo系・セキュリティ系10クラスは`AuthController`追加の影響を避けるため、`@WebMvcTest(TodoController.class)`へ限定済み。`OpenApiDocumentationTests`は`@MockitoBean AuthService`を追加済みで、OpenAPIタスクで`@Import(OpenApiConfiguration.class)`を追加する。いずれも振る舞いは変えない。
+既存のTodo系・セキュリティ系10クラスは`AuthController`追加の影響を避けるため、`@WebMvcTest(TodoController.class)`へ限定済み。`OpenApiDocumentationTests`は`@MockitoBean AuthService`と`@Import(OpenApiConfiguration.class)`を追加済み。いずれも振る舞いは変えない。
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |
@@ -306,6 +306,6 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 | Section 5: JWT発行・検証 | `JwtEncoder`と`JwtDecoder`の標準実装を使い、Springコンテキスト・DBなしのテストで署名付きJWTの発行と検証を確認する | ✅ |
 | Section 5: Spring Security・所有者ID連携 | 下記4ケースでBearer認証、認証主体からの所有者ID解決、ステートレス構成を検証する | ✅ |
 | Section 5: JWT本番設定・Controllerテストの認証前提移行 | 上記2ケースで本番JWT Beanの起動と認証前提のControllerテスト移行を確認する | ✅ |
-| Section 5: 登録・ログインAPIとOpenAPI | 登録API・ログインAPI・Service/UserDetails連携・既存Controllerテストのスコープ調整は完了。OpenAPI 2ケースが残り | 🤝 |
+| Section 5: 登録・ログインAPIとOpenAPI | 登録API・ログインAPI・Service/UserDetails連携・既存Controllerテストのスコープ調整・OpenAPI 2ケースまで完了 | ✅ |
 | Section 5: ローカル機能撤去 | `LocalOwnerIdResolver`・`LocalSampleDataInitializer`・`application-local.yaml`と専用テスト、および不要になった`OwnerIdResolver`抽象を撤去し、Controllerが認証主体から所有者を解決する形へ整理する | 🚧 |
 | Section 6: 認証接続後の結合テスト・総仕上げ | 認証からTodo操作までのフローと全テスト検証範囲を合意後に記録する | 🚧 |

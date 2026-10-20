@@ -160,7 +160,7 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 - [x] `JWT` 発行・検証ユーティリティ（`JwtTokenProvider` 等）の単体テスト作成（`RED`）と実装（`GREEN`）
 - [x] ステートレスな`Spring Security`設定とBearer認証を実装し、認証済みユーザーのIDをTodo APIへ渡す（`OwnerIdResolver`を認証主体から解決する実装へ置き換え、MVCテストで確認）
 - [x] 本番用`JwtEncoder`／`JwtDecoder` Beanと署名鍵設定を追加して`@SpringBootTest`とCIを成功させ、既存Controllerテストを共通テスト設定の実Bearer tokenによる認証前提へ移行する
-- [ ] 登録・ログインAPIを実装してJWTを発行し、認証・認可の応答とOpenAPI仕様を検証する（進行中: 登録API・認証基盤・既存テスト整備は完了。ログインAPIとOpenAPIが残り。詳細は[引き継ぎメモ](docs/contexts/section5-task6.md)）
+- [x] 登録・ログインAPIを実装してJWTを発行し、認証・認可の応答とOpenAPI仕様を検証する
 - [ ] 認証前のローカル所有者Resolver・サンプル初期化機能と専用テスト、`application-local.yaml`を撤去する。併せて不要になった`OwnerIdResolver`抽象を削除し、Controllerが認証主体（`@AuthenticationPrincipal Jwt`）を直接扱うよう整理する
 
 ### Section6: 認証接続後の結合テストと総仕上げ
