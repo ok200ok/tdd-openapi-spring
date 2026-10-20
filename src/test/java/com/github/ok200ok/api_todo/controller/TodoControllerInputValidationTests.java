@@ -1,6 +1,5 @@
 package com.github.ok200ok.api_todo.controller;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -19,6 +18,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -27,24 +28,33 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
 import com.github.ok200ok.api_todo.entity.User;
+import com.github.ok200ok.api_todo.security.JwtTokenProvider;
+import com.github.ok200ok.api_todo.security.SecurityConfiguration;
+import com.github.ok200ok.api_todo.security.TestJwtConfiguration;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 /**
  * MockMvcでTodo作成APIの入力境界を検証するWeb層テスト
  * {@code @WebMvcTest}はMVC関連の範囲に絞ってHTTP変換とValidationを確認し、
  * {@code @MockitoBean}でServiceを置き換えることでDBや業務ロジックから分離する
+ * 認証済みBearer tokenを送り、入力検証の前に未認証で拒否されない状態で検証する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
+@Import({
+		SecurityConfiguration.class,
+		JwtTokenProvider.class,
+		TestJwtConfiguration.class
+})
 class TodoControllerInputValidationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
-	@MockitoBean
-	private TodoService todoService;
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
 
 	@MockitoBean
-	private OwnerIdResolver ownerIdResolver;
+	private TodoService todoService;
 
 	/**
 	 * タイトルの欠落、null、空白のみ、trim後の最大長超過をProblem Detailsで拒否し、
@@ -52,6 +62,8 @@ class TodoControllerInputValidationTests {
 	 */
 	@Test
 	void validatesTitleAndAcceptsTrimmedMaximumLength() throws Exception {
+		UUID ownerId = UUID.randomUUID();
+		String authorization = "Bearer " + jwtTokenProvider.createToken(ownerId);
 		List<String> invalidRequests = List.of(
 				"{\"description\":\"optional\"}",
 				"{\"title\":null}",
@@ -60,6 +72,7 @@ class TodoControllerInputValidationTests {
 
 		for (String request : invalidRequests) {
 			mockMvc.perform(post("/api/v1/todos")
+					.header(HttpHeaders.AUTHORIZATION, authorization)
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(request))
 					.andExpect(status().isBadRequest())
@@ -78,11 +91,10 @@ class TodoControllerInputValidationTests {
 				null,
 				TodoStatusEnum.PENDING);
 		ReflectionTestUtils.setField(createdTodo, "id", 42L);
-		UUID ownerId = UUID.randomUUID();
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
-		when(todoService.createTodo(any(UUID.class), eq(title), isNull())).thenReturn(createdTodo);
+		when(todoService.createTodo(eq(ownerId), eq(title), isNull())).thenReturn(createdTodo);
 
 		mockMvc.perform(post("/api/v1/todos")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"   " + title + "   \"}"))
 				.andExpect(status().isCreated());
@@ -98,27 +110,30 @@ class TodoControllerInputValidationTests {
 		String title = "Write tests";
 		String longDescription = "x".repeat(5_000);
 		UUID ownerId = UUID.randomUUID();
+		String authorization = "Bearer " + jwtTokenProvider.createToken(ownerId);
 		Todo createdTodo = new Todo(
 				new User("alice", "hashed-password", null, "ROLE_USER"),
 				title,
 				null,
 				TodoStatusEnum.PENDING);
 		ReflectionTestUtils.setField(createdTodo, "id", 42L);
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.createTodo(eq(ownerId), eq(title), isNull())).thenReturn(createdTodo);
 		when(todoService.createTodo(eq(ownerId), eq(title), eq(longDescription))).thenReturn(createdTodo);
 
 		mockMvc.perform(post("/api/v1/todos")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"" + title + "\"}"))
 				.andExpect(status().isCreated());
 
 		mockMvc.perform(post("/api/v1/todos")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"" + title + "\",\"description\":null}"))
 				.andExpect(status().isCreated());
 
 		mockMvc.perform(post("/api/v1/todos")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"" + title + "\",\"description\":\"" + longDescription + "\"}"))
 				.andExpect(status().isCreated());
@@ -132,6 +147,7 @@ class TodoControllerInputValidationTests {
 	 */
 	@Test
 	void rejectsUnknownCreateFields() throws Exception {
+		String authorization = "Bearer " + jwtTokenProvider.createToken(UUID.randomUUID());
 		List<String> invalidRequests = List.of(
 				"{\"title\":\"Write tests\",\"status\":\"COMPLETED\"}",
 				"{\"title\":\"Write tests\",\"userId\":\"" + UUID.randomUUID() + "\"}",
@@ -139,6 +155,7 @@ class TodoControllerInputValidationTests {
 
 		for (String request : invalidRequests) {
 			mockMvc.perform(post("/api/v1/todos")
+					.header(HttpHeaders.AUTHORIZATION, authorization)
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(request))
 					.andExpect(status().isBadRequest());
@@ -153,6 +170,7 @@ class TodoControllerInputValidationTests {
 	@Test
 	void returnsProblemDetailsWithoutFieldErrorsForMalformedJson() throws Exception {
 		mockMvc.perform(post("/api/v1/todos")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtTokenProvider.createToken(UUID.randomUUID()))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":"))
 				.andExpect(status().isBadRequest())

@@ -15,6 +15,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -23,23 +25,31 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
 import com.github.ok200ok.api_todo.entity.User;
+import com.github.ok200ok.api_todo.security.JwtTokenProvider;
+import com.github.ok200ok.api_todo.security.SecurityConfiguration;
+import com.github.ok200ok.api_todo.security.TestJwtConfiguration;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 /**
  * Todo作成APIの成功時HTTP契約、Service連携、出力DTOを検証するWeb層テスト
- * Serviceと所有者ID解決境界をモックし、HTTPからControllerまでの責務に検証を絞る
+ * Serviceをモックし、認証済みBearer tokenのsubjectを所有者として解決する前提でHTTP境界を確認する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
+@Import({
+		SecurityConfiguration.class,
+		JwtTokenProvider.class,
+		TestJwtConfiguration.class
+})
 class TodoControllerCreateTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
-	@MockitoBean
-	private TodoService todoService;
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
 
 	@MockitoBean
-	private OwnerIdResolver ownerIdResolver;
+	private TodoService todoService;
 
 	/**
 	 * 作成成功時に201、正しいLocation、Entityを公開しないDTOを返し、所有者と入力値をServiceへ渡す
@@ -59,10 +69,10 @@ class TodoControllerCreateTests {
 		ReflectionTestUtils.setField(createdTodo, "id", 42L);
 		ReflectionTestUtils.setField(createdTodo, "createdAt", createdAt);
 		ReflectionTestUtils.setField(createdTodo, "updatedAt", updatedAt);
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.createTodo(ownerId, title, description)).thenReturn(createdTodo);
 
 		mockMvc.perform(post("/api/v1/todos")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtTokenProvider.createToken(ownerId))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"" + title + "\",\"description\":\"" + description + "\"}"))
 				.andExpect(status().isCreated())

@@ -14,6 +14,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -22,23 +24,31 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
 import com.github.ok200ok.api_todo.entity.User;
+import com.github.ok200ok.api_todo.security.JwtTokenProvider;
+import com.github.ok200ok.api_todo.security.SecurityConfiguration;
+import com.github.ok200ok.api_todo.security.TestJwtConfiguration;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 /**
  * Todo取得・更新成功時のHTTP契約とService連携を検証するWeb層テスト
- * Serviceと所有者ID解決境界をモックし、応答DTOとHTTP境界の振る舞いを確認する
+ * Serviceをモックし、認証済みBearer tokenのsubjectを所有者として解決する前提で応答DTOを確認する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
+@Import({
+		SecurityConfiguration.class,
+		JwtTokenProvider.class,
+		TestJwtConfiguration.class
+})
 class TodoControllerReadUpdateTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
-	@MockitoBean
-	private TodoService todoService;
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
 
 	@MockitoBean
-	private OwnerIdResolver ownerIdResolver;
+	private TodoService todoService;
 
 	/**
 	 * Todo取得時に所有者IDとTodo IDでServiceを呼び出し、合意済みの応答DTOを返す
@@ -47,10 +57,10 @@ class TodoControllerReadUpdateTests {
 	void getsTodoForOwnerAndReturnsResponseDto() throws Exception {
 		UUID ownerId = UUID.randomUUID();
 		Todo todo = todo(42L, "Read tests", "Check the response", TodoStatusEnum.IN_PROGRESS);
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.findTodoByIdForOwner(42L, ownerId)).thenReturn(todo);
 
-		mockMvc.perform(get("/api/v1/todos/42"))
+		mockMvc.perform(get("/api/v1/todos/42")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtTokenProvider.createToken(ownerId)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(42))
 				.andExpect(jsonPath("$.title").value("Read tests"))
@@ -71,12 +81,12 @@ class TodoControllerReadUpdateTests {
 	void updatesTodoForOwnerAndReturnsResponseDto() throws Exception {
 		UUID ownerId = UUID.randomUUID();
 		Todo updatedTodo = todo(42L, "Updated title", "Updated description", TodoStatusEnum.COMPLETED);
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.updateTodoForOwner(
 				42L, ownerId, "Updated title", "Updated description", TodoStatusEnum.COMPLETED))
 				.thenReturn(updatedTodo);
 
 		mockMvc.perform(put("/api/v1/todos/42")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtTokenProvider.createToken(ownerId))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"Updated title\",\"description\":\"Updated description\","
 						+ "\"status\":\"COMPLETED\"}"))

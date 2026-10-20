@@ -1,12 +1,15 @@
 package com.github.ok200ok.api_todo.controller;
 
 import java.net.URI;
+import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,12 +24,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.github.ok200ok.api_todo.dto.CreateTodoRequest;
@@ -47,16 +52,27 @@ import jakarta.validation.Valid;
 		version = "1.0.0",
 		description = "所有者ごとのTodoを作成・参照・更新・削除するAPI"))
 @Tag(name = "Todos", description = "Todoの一覧取得と個別操作")
+// クラス内の全操作がOpenApiConfigurationで定義したBearer JWT認証を要求することを文書化する
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/todos")
 public class TodoController {
 
 	private final TodoService todoService;
-	private final OwnerIdResolver ownerIdResolver;
 
-	public TodoController(TodoService todoService, OwnerIdResolver ownerIdResolver) {
+	public TodoController(TodoService todoService) {
 		this.todoService = todoService;
-		this.ownerIdResolver = ownerIdResolver;
+	}
+
+	/**
+	 * 認証済みJWTのsubjectをUser UUIDへ変換する
+	 * JWTはResource ServerのBearer認証を通過した要求だけが渡されるため、所有者IDをクライアント入力から受け取らない
+	 *
+	 * @param jwt 認証済みBearer token
+	 * @return tokenのsubjectに格納されたUser UUID
+	 */
+	private UUID ownerId(Jwt jwt) {
+		return UUID.fromString(jwt.getSubject());
 	}
 
 	@Operation(summary = "Todoを作成", description = "Todoを作成し、応答とLocationヘッダーを返す")
@@ -73,10 +89,11 @@ public class TodoController {
 	})
 	@PostMapping
 	public ResponseEntity<TodoResponse> createTodo(
+			@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
 			@Valid @RequestBody CreateTodoRequest request,
 			UriComponentsBuilder uriBuilder) {
 		var todo = todoService.createTodo(
-				ownerIdResolver.resolveOwnerId(),
+				ownerId(jwt),
 				request.title(),
 				request.description());
 		URI location = uriBuilder.path("/api/v1/todos/{todoId}")
@@ -102,6 +119,7 @@ public class TodoController {
 	})
 	@GetMapping
 	public ResponseEntity<TodoPageResponse> getTodos(
+			@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "5") int size) {
 		if (page < 1 || size < 1 || size > 100) {
@@ -109,7 +127,7 @@ public class TodoController {
 		}
 
 		var todos = todoService.findTodosForOwner(
-				ownerIdResolver.resolveOwnerId(),
+				ownerId(jwt),
 				PageRequest.of(page - 1, size));
 		return ResponseEntity.ok(TodoPageResponse.from(todos));
 	}
@@ -129,8 +147,10 @@ public class TodoController {
 							schema = @Schema(implementation = ProblemDetail.class)))
 	})
 	@GetMapping("/{todoId}")
-	public ResponseEntity<TodoResponse> getTodo(@PathVariable Long todoId) {
-		var todo = todoService.findTodoByIdForOwner(todoId, ownerIdResolver.resolveOwnerId());
+	public ResponseEntity<TodoResponse> getTodo(
+			@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+			@PathVariable Long todoId) {
+		var todo = todoService.findTodoByIdForOwner(todoId, ownerId(jwt));
 		return ResponseEntity.ok(TodoResponse.from(todo));
 	}
 
@@ -147,8 +167,10 @@ public class TodoController {
 							schema = @Schema(implementation = ProblemDetail.class)))
 	})
 	@DeleteMapping("/{todoId}")
-	public ResponseEntity<Void> deleteTodo(@PathVariable Long todoId) {
-		todoService.deleteTodoForOwner(todoId, ownerIdResolver.resolveOwnerId());
+	public ResponseEntity<Void> deleteTodo(
+			@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+			@PathVariable Long todoId) {
+		todoService.deleteTodoForOwner(todoId, ownerId(jwt));
 		return ResponseEntity.noContent().build();
 	}
 
@@ -166,11 +188,12 @@ public class TodoController {
 	})
 	@PutMapping("/{todoId}")
 	public ResponseEntity<TodoResponse> updateTodo(
+			@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
 			@PathVariable Long todoId,
 			@Valid @RequestBody UpdateTodoRequest request) {
 		var todo = todoService.updateTodoForOwner(
 				todoId,
-				ownerIdResolver.resolveOwnerId(),
+				ownerId(jwt),
 				request.title(),
 				request.description(),
 				request.status());

@@ -7,19 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import com.github.ok200ok.api_todo.controller.OwnerIdResolver;
-
+/**
+ * Spring BootアプリケーションとTestcontainers上のPostgreSQLを結合して確認するテスト
+ * DB接続やアプリケーションコンテキストの起動など、個別のレイヤーコンポーネントを越えた基盤の動作を検証する
+ */
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 class ApiTodoApplicationTests {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
-	@MockitoBean
-	private OwnerIdResolver ownerIdResolver;
 
 	@Test
 	void contextLoads() {

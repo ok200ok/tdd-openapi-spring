@@ -14,6 +14,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -22,29 +24,38 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.github.ok200ok.api_todo.entity.Todo;
 import com.github.ok200ok.api_todo.entity.TodoStatusEnum;
 import com.github.ok200ok.api_todo.entity.User;
+import com.github.ok200ok.api_todo.security.JwtTokenProvider;
+import com.github.ok200ok.api_todo.security.SecurityConfiguration;
+import com.github.ok200ok.api_todo.security.TestJwtConfiguration;
 import com.github.ok200ok.api_todo.service.TodoService;
 
 /**
  * Todo更新APIのDTO制約とHTTP入力変換を検証するWeb層テスト
- * Serviceと所有者ID解決境界をモックし、DBや所有者解決方式を持ち込まずHTTP境界を確認する
+ * Serviceをモックし、認証済みBearer tokenのsubjectを所有者として解決する前提でHTTP境界を確認する
  */
-@WebMvcTest
+@WebMvcTest(TodoController.class)
+@Import({
+		SecurityConfiguration.class,
+		JwtTokenProvider.class,
+		TestJwtConfiguration.class
+})
 class TodoControllerUpdateValidationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
-	@MockitoBean
-	private TodoService todoService;
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
 
 	@MockitoBean
-	private OwnerIdResolver ownerIdResolver;
+	private TodoService todoService;
 
 	/**
 	 * 更新時に状態の欠落・不正値と未知JSON項目を拒否し、Serviceを呼び出さない
 	 */
 	@Test
 	void rejectsMissingOrInvalidStatusAndUnknownFields() throws Exception {
+		String authorization = "Bearer " + jwtTokenProvider.createToken(UUID.randomUUID());
 		List<String> invalidRequests = List.of(
 				"{\"title\":\"Write tests\"}",
 				"{\"title\":\"Write tests\",\"status\":\"UNKNOWN\"}",
@@ -52,6 +63,7 @@ class TodoControllerUpdateValidationTests {
 
 		for (String request : invalidRequests) {
 			mockMvc.perform(put("/api/v1/todos/42")
+					.header(HttpHeaders.AUTHORIZATION, authorization)
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(request))
 					.andExpect(status().isBadRequest());
@@ -67,12 +79,13 @@ class TodoControllerUpdateValidationTests {
 	void trimsAndValidatesTitleOnUpdate() throws Exception {
 		String title = "a".repeat(100);
 		UUID ownerId = UUID.randomUUID();
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
+		String authorization = "Bearer " + jwtTokenProvider.createToken(ownerId);
 		when(todoService.updateTodoForOwner(
 				eq(42L), eq(ownerId), eq(title), eq("details"), eq(TodoStatusEnum.COMPLETED)))
 				.thenReturn(todo(42L, title, "details", TodoStatusEnum.COMPLETED));
 
 		mockMvc.perform(put("/api/v1/todos/42")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"   " + title + "   \",\"description\":\"details\",\"status\":\"COMPLETED\"}"))
 				.andExpect(status().isOk());
@@ -85,6 +98,7 @@ class TodoControllerUpdateValidationTests {
 			String request = invalidTitle.substring(0, invalidTitle.length() - 1)
 					+ ",\"status\":\"COMPLETED\"}";
 			mockMvc.perform(put("/api/v1/todos/42")
+					.header(HttpHeaders.AUTHORIZATION, authorization)
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(request))
 					.andExpect(status().isBadRequest());
@@ -97,8 +111,8 @@ class TodoControllerUpdateValidationTests {
 	@Test
 	void treatsOmittedAndNullDescriptionAsRemovalAndAllowsLongDescription() throws Exception {
 		UUID ownerId = UUID.randomUUID();
+		String authorization = "Bearer " + jwtTokenProvider.createToken(ownerId);
 		String longDescription = "x".repeat(5_000);
-		when(ownerIdResolver.resolveOwnerId()).thenReturn(ownerId);
 		when(todoService.updateTodoForOwner(
 				eq(42L), eq(ownerId), eq("Write tests"), eq((String) null), eq(TodoStatusEnum.PENDING)))
 				.thenReturn(todo(42L, "Write tests", null, TodoStatusEnum.PENDING));
@@ -107,14 +121,17 @@ class TodoControllerUpdateValidationTests {
 				.thenReturn(todo(42L, "Write tests", longDescription, TodoStatusEnum.PENDING));
 
 		mockMvc.perform(put("/api/v1/todos/42")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"Write tests\",\"status\":\"PENDING\"}"))
 				.andExpect(status().isOk());
 		mockMvc.perform(put("/api/v1/todos/42")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"Write tests\",\"description\":null,\"status\":\"PENDING\"}"))
 				.andExpect(status().isOk());
 		mockMvc.perform(put("/api/v1/todos/42")
+				.header(HttpHeaders.AUTHORIZATION, authorization)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"Write tests\",\"description\":\"" + longDescription
 						+ "\",\"status\":\"PENDING\"}"))

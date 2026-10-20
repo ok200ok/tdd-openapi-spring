@@ -16,3 +16,9 @@ spring:
     # ローカル学習環境でEntityの変更をDBへ反映する。本番環境ではスキーママイグレーションを使う
     hibernate:
       ddl-auto: update
+
+app:
+  security:
+    jwt:
+      # JWTのHS256署名鍵。既定値はローカル学習専用で、本番では必ず環境変数JWT_SECRETで上書きする
+      secret: ${JWT_SECRET:local-only-dev-jwt-secret-please-override-with-env-at-least-32-bytes}
