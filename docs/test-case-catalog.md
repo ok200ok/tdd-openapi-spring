@@ -308,10 +308,10 @@ Spring Security Resource ServerのBearer認証を使い、Todo APIで認証済�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 登録からTodo削除までの一連フロー | 登録が`201`とaccess tokenを返し、DBに平文でないハッシュが保存される。同じ資格情報のログインが実`DaoAuthenticationProvider`経由で`200`とtokenを返す。そのBearer tokenで作成`201`＋`Location`＋初期`PENDING`、一覧`200`（`page=1`、`size=5`、`totalElements=1`、`totalPages=1`、作成Todoを含む）、取得`200`、更新`200`（タイトル・説明・状態`COMPLETED`へ変更）、削除`204`、削除後の取得がProblem Details形式の`404`になる | [`completesRegisterLoginAndTodoCrudFlow`](../src/test/java/com/github/ok200ok/api_todo/AuthTodoIntegrationTests.java#L57) | 🤝 |
-| 所有者分離 | AのTodoに対し、Bのtokenで取得・更新・削除するとすべて`404`。Bの一覧にAのTodoが含まれず、AのTodoは変更も削除もされない（Aのtokenで再取得して`200`と元の内容を確認） | `separatesTodosBetweenOwners` | 🤝 |
-| 未認証アクセス | Bearer tokenなしの`GET /api/v1/todos`が`401`になる | `rejectsTodoRequestWithoutBearerToken` | 🤝 |
-| ログイン失敗 | 誤ったパスワードと未登録ユーザー名がともに`401`・`application/problem+json`・同一`detail`（`ユーザー名またはパスワードが正しくありません`）となり、ユーザー存在有無を区別しない | `rejectsInvalidCredentialsWithoutRevealingUserExistence` | 🤝 |
+| 登録からTodo削除までの一連フロー | 登録が`201`とaccess tokenを返し、DBに平文でないハッシュが保存される。同じ資格情報のログインが実`DaoAuthenticationProvider`経由で`200`とtokenを返す。そのBearer tokenで作成`201`＋`Location`＋初期`PENDING`、一覧`200`（`page=1`、`size=5`、`totalElements=1`、`totalPages=1`、作成Todoを含む）、取得`200`、更新`200`（タイトル・説明・状態`COMPLETED`へ変更）、削除`204`、削除後の取得がProblem Details形式の`404`になる | [`completesRegisterLoginAndTodoCrudFlow`](../src/test/java/com/github/ok200ok/api_todo/AuthTodoIntegrationTests.java#L57) | ✅ |
+| 所有者分離 | AのTodoに対し、Bのtokenで取得・更新・削除するとすべて`404`。Bの一覧にAのTodoが含まれず、AのTodoは変更も削除もされない（Aのtokenで再取得して`200`と元の内容を確認） | [`separatesTodosBetweenOwners`](../src/test/java/com/github/ok200ok/api_todo/AuthTodoIntegrationTests.java#L174) | 🤝 |
+| 未認証アクセス | Bearer tokenなしの`GET /api/v1/todos`が`401`になる | [`rejectsTodoRequestWithoutBearerToken`](../src/test/java/com/github/ok200ok/api_todo/AuthTodoIntegrationTests.java#L222) | 🤝 |
+| ログイン失敗 | 誤ったパスワードと未登録ユーザー名がともに`401`・`application/problem+json`・同一`detail`（`ユーザー名またはパスワードが正しくありません`）となり、ユーザー存在有無を区別しない | [`rejectsInvalidCredentialsWithoutRevealingUserExistence`](../src/test/java/com/github/ok200ok/api_todo/AuthTodoIntegrationTests.java#L234) | 🤝 |
 
 | Section / タスク | 対象レイヤーコンポーネント・テスト範囲 | 状態 |
 | --- | --- | --- |

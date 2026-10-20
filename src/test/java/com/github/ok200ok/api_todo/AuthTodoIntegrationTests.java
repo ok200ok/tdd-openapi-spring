@@ -3,6 +3,7 @@ package com.github.ok200ok.api_todo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -143,7 +144,9 @@ class AuthTodoIntegrationTests {
 		assertThat(updated.title()).isEqualTo("Read documentation thoroughly");
 		assertThat(updated.description()).isEqualTo("Spring Security and JPA");
 		assertThat(updated.status()).isEqualTo(TodoStatusEnum.COMPLETED);
-		assertThat(updated.createdAt()).isEqualTo(created.createdAt());
+		// 作成応答はメモリ上のInstant（ナノ秒）、更新応答はPostgreSQLのtimestamptz（マイクロ秒）由来のため、ミリ秒精度で比較する
+		assertThat(updated.createdAt().truncatedTo(ChronoUnit.MILLIS))
+				.isEqualTo(created.createdAt().truncatedTo(ChronoUnit.MILLIS));
 		assertThat(updated.updatedAt()).isAfterOrEqualTo(created.updatedAt());
 
 		restTestClient.delete()
@@ -161,6 +164,133 @@ class AuthTodoIntegrationTests {
 				.expectBody()
 				.jsonPath("$.status").isEqualTo(404)
 				.jsonPath("$.detail").isEqualTo("指定されたTodoが見つかりません");
+	}
+
+	/**
+	 * ユーザーAのTodoに対し、ユーザーBが取得・更新・削除を試みると所有者条件付き検索が空になり404になることを確認する
+	 * Bの一覧にAのTodoが含まれず、A本人の再取得で内容が変わっていないことも確認し、認可が他ユーザーのデータを保護することを検証する
+	 */
+	@Test
+	void separatesTodosBetweenOwners() {
+		RegisterResponse alice = register(uniqueUserName("alice"), "password123");
+		RegisterResponse bob = register(uniqueUserName("bob"), "password123");
+		TodoResponse aliceTodo = createTodo(alice.accessToken(), "Alice private task", "Only Alice can read");
+
+		restTestClient.get()
+				.uri("/api/v1/todos/{todoId}", aliceTodo.id())
+				.headers(headers -> headers.setBearerAuth(bob.accessToken()))
+				.exchange()
+				.expectStatus().isNotFound()
+				.expectHeader().contentTypeCompatibleWith("application/problem+json")
+				.expectBody()
+				.jsonPath("$.status").isEqualTo(404);
+
+		restTestClient.put()
+				.uri("/api/v1/todos/{todoId}", aliceTodo.id())
+				.headers(headers -> headers.setBearerAuth(bob.accessToken()))
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(new UpdateTodoRequest("Hijacked", null, TodoStatusEnum.COMPLETED))
+				.exchange()
+				.expectStatus().isNotFound()
+				.expectHeader().contentTypeCompatibleWith("application/problem+json")
+				.expectBody()
+				.jsonPath("$.status").isEqualTo(404)
+				.jsonPath("$.detail").isEqualTo("指定されたTodoが見つかりません");
+
+		restTestClient.delete()
+				.uri("/api/v1/todos/{todoId}", aliceTodo.id())
+				.headers(headers -> headers.setBearerAuth(bob.accessToken()))
+				.exchange()
+				.expectStatus().isNotFound()
+				.expectBody()
+				.jsonPath("$.status").isEqualTo(404);
+
+		TodoPageResponse bobPage = listTodos(bob.accessToken());
+		assertThat(bobPage.items()).isEmpty();
+		assertThat(bobPage.totalElements()).isZero();
+
+		TodoResponse aliceFetched = getTodo(alice.accessToken(), aliceTodo.id());
+		assertThat(aliceFetched.title()).isEqualTo("Alice private task");
+		assertThat(aliceFetched.description()).isEqualTo("Only Alice can read");
+		assertThat(aliceFetched.status()).isEqualTo(TodoStatusEnum.PENDING);
+	}
+
+	/**
+	 * Todo APIがBearer tokenを要求することを実サーバーのSecurityFilterChainで確認する
+	 */
+	@Test
+	void rejectsTodoRequestWithoutBearerToken() {
+		restTestClient.get()
+				.uri("/api/v1/todos")
+				.exchange()
+				.expectStatus().isUnauthorized();
+	}
+
+	/**
+	 * 誤ったパスワードと未登録ユーザー名が同じ401 Problem Detailsになり、ユーザー存在有無を推測できないことを確認する
+	 * 実DaoAuthenticationProviderがユーザー不存在をBadCredentialsExceptionへ隠蔽する挙動をHTTP経由で検証する
+	 */
+	@Test
+	void rejectsInvalidCredentialsWithoutRevealingUserExistence() {
+		String registeredUserName = uniqueUserName("alice");
+		register(registeredUserName, "password123");
+
+		expectLoginRejected(registeredUserName, "wrong-password");
+		expectLoginRejected(uniqueUserName("nobody"), "password123");
+	}
+
+	private TodoResponse createTodo(String token, String title, String description) {
+		TodoResponse response = restTestClient.post()
+				.uri("/api/v1/todos")
+				.headers(headers -> headers.setBearerAuth(token))
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(new CreateTodoRequest(title, description))
+				.exchange()
+				.expectStatus().isCreated()
+				.expectBody(TodoResponse.class)
+				.returnResult()
+				.getResponseBody();
+		assertThat(response).isNotNull();
+		return response;
+	}
+
+	private TodoResponse getTodo(String token, Long todoId) {
+		TodoResponse response = restTestClient.get()
+				.uri("/api/v1/todos/{todoId}", todoId)
+				.headers(headers -> headers.setBearerAuth(token))
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody(TodoResponse.class)
+				.returnResult()
+				.getResponseBody();
+		assertThat(response).isNotNull();
+		return response;
+	}
+
+	private TodoPageResponse listTodos(String token) {
+		TodoPageResponse response = restTestClient.get()
+				.uri("/api/v1/todos")
+				.headers(headers -> headers.setBearerAuth(token))
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody(TodoPageResponse.class)
+				.returnResult()
+				.getResponseBody();
+		assertThat(response).isNotNull();
+		return response;
+	}
+
+	private void expectLoginRejected(String userName, String password) {
+		restTestClient.post()
+				.uri("/api/v1/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(new LoginRequest(userName, password))
+				.exchange()
+				.expectStatus().isUnauthorized()
+				.expectHeader().contentTypeCompatibleWith("application/problem+json")
+				.expectBody()
+				.jsonPath("$.status").isEqualTo(401)
+				.jsonPath("$.detail").isEqualTo("ユーザー名またはパスワードが正しくありません");
 	}
 
 	private RegisterResponse register(String userName, String password) {
