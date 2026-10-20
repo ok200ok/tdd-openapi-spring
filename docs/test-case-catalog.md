@@ -29,7 +29,7 @@
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| Repository経由のUser保存とID検索、生成値、DB接続先 | 保存時にID・作成/更新時刻が設定され、指定したUser情報を取得できる。`SELECT version()`でPostgreSQL 17への接続を確認する。検索は同一永続化コンテキスト内で行うためDBからの再読込は保証しない | [`savesAndReloadsUserWithGeneratedUuidAndTimestamps`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L49) | ✅ |
+| Repository経由のUser保存とID検索、生成値、DB接続先 | 保存時にID・作成/更新時刻が設定され、指定したUser情報を取得できる。`SELECT version()`でPostgreSQL 17への接続を確認する。検索は同一永続化コンテキスト内で行うためDBからの再読込は保証しない | [`savesAndReloadsUserWithGeneratedUuidAndTimestamps`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L56) | ✅ |
 
 ### タスク2-3: Userの基本マッピング
 
@@ -37,44 +37,44 @@
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| UUIDと作成時タイムスタンプ | 新規保存時にUUID、`createdAt`、`updatedAt`が設定される | [`savesAndReloadsUserWithGeneratedUuidAndTimestamps`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L49) | ✅ |
-| 必須の`userName` | `userName`がないUserの保存がNOT NULL制約により拒否され、Springのデータアクセス例外として通知される | [`rejectsMissingUsername`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L125) | ✅ |
-| 必須の`password` | `password`がないUserの保存がNOT NULL制約により拒否され、Springのデータアクセス例外として通知される | [`rejectsMissingPassword`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L136) | ✅ |
-| 必須の`role` | `role`がないUserの保存がNOT NULL制約により拒否され、Springのデータアクセス例外として通知される | [`rejectsMissingRole`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L147) | ✅ |
-| 任意の`displayName` | `displayName`がnullでも保存でき、取得後もnullである | [`allowsDisplayNameToBeNull`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L206) | ✅ |
-| `userName`の最大長超過 | 51文字のユーザー名を保存するとDB制約違反になる | [`rejectsUsernameExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L159) | ✅ |
-| `password`の最大長超過 | 256文字のパスワード文字列を保存するとDB制約違反になる | [`rejectsPasswordExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L171) | ✅ |
-| `displayName`の最大長超過 | 51文字の表示名を保存するとDB制約違反になる | [`rejectsDisplayNameExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L183) | ✅ |
-| `role`の最大長超過 | 51文字のRoleを保存するとDB制約違反になる | [`rejectsRoleExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L194) | ✅ |
-| 更新時の`updatedAt` | 表示名変更をflushすると、更新時刻が変更前より後になる | [`updatesUpdatedAtWhenUserChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L220) | ✅ |
+| UUIDと作成時タイムスタンプ | 新規保存時にUUID、`createdAt`、`updatedAt`が設定される | [`savesAndReloadsUserWithGeneratedUuidAndTimestamps`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L56) | ✅ |
+| 必須の`userName` | `userName`がないUserの保存がNOT NULL制約により拒否され、Springのデータアクセス例外として通知される | [`rejectsMissingUsername`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L150) | ✅ |
+| 必須の`password` | `password`がないUserの保存がNOT NULL制約により拒否され、Springのデータアクセス例外として通知される | [`rejectsMissingPassword`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L161) | ✅ |
+| 必須の`role` | `role`がないUserの保存がNOT NULL制約により拒否され、Springのデータアクセス例外として通知される | [`rejectsMissingRole`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L172) | ✅ |
+| 任意の`displayName` | `displayName`がnullでも保存でき、取得後もnullである | [`allowsDisplayNameToBeNull`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L231) | ✅ |
+| `userName`の最大長超過 | 51文字のユーザー名を保存するとDB制約違反になる | [`rejectsUsernameExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L184) | ✅ |
+| `password`の最大長超過 | 256文字のパスワード文字列を保存するとDB制約違反になる | [`rejectsPasswordExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L196) | ✅ |
+| `displayName`の最大長超過 | 51文字の表示名を保存するとDB制約違反になる | [`rejectsDisplayNameExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L208) | ✅ |
+| `role`の最大長超過 | 51文字のRoleを保存するとDB制約違反になる | [`rejectsRoleExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L219) | ✅ |
+| 更新時の`updatedAt` | 表示名変更をflushすると、更新時刻が変更前より後になる | [`updatesUpdatedAtWhenUserChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L248) | ✅ |
 
 ### タスク2-4: `userName`の正規化・形式・一意性・検索
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 小文字への正規化と検索 | 大文字を含むユーザー名を保存するとEntityが小文字へ正規化し、小文字の名前で検索できる | [`canonicalizesUsernameAndFindsItByCanonicalName`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L73) | ✅ |
-| 正規化後の一意性 | 大文字小文字だけが異なる2件目を保存すると正規化後の名前が重複し、DBの一意制約で拒否される | [`rejectsDuplicateCanonicalUsernames`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L100) | ✅ |
-| 許容文字 | 小文字英数字以外を含む名前はEntity正規化だけでは除去されず、DBのCHECK制約で拒否される | [`rejectsUsernamesContainingNonAlphanumericCharacters`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L113) | ✅ |
-| 表示名の重複許可 | 異なるユーザー名のUser 2件に同じ`displayName`を設定しても、両方保存できる | [`allowsDuplicateDisplayNames`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L87) | ✅ |
+| 小文字への正規化と検索 | 大文字を含むユーザー名を保存するとEntityが小文字へ正規化し、小文字の名前で検索できる | [`canonicalizesUsernameAndFindsItByCanonicalName`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L98) | ✅ |
+| 正規化後の一意性 | 大文字小文字だけが異なる2件目を保存すると正規化後の名前が重複し、DBの一意制約で拒否される | [`rejectsDuplicateCanonicalUsernames`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L125) | ✅ |
+| 許容文字 | 小文字英数字以外を含む名前はEntity正規化だけでは除去されず、DBのCHECK制約で拒否される | [`rejectsUsernamesContainingNonAlphanumericCharacters`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L138) | ✅ |
+| 表示名の重複許可 | 異なるユーザー名のUser 2件に同じ`displayName`を設定しても、両方保存できる | [`allowsDuplicateDisplayNames`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L112) | ✅ |
 
 ### タスク2-5: Todoの基本マッピング
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 採番IDと作成時刻 | Todo保存時にDB採番IDと作成/更新時刻が設定される。Ownerの関連ID検証はタスク6で扱う | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L51) | ✅ |
-| 各フィールドとEnum文字列保存 | Todoのタイトル、任意の説明、状態を保存・再取得でき、各Enum名を文字列としてDBに保存する | [`reloadsAllTodoFieldsAndEnumAsItsStringValue`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L70)、[`persistsAllStatusesByTheirEnumNames`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L129) | ✅ |
-| 長い説明文 | `description`に長文を保存できる | [`allowsLongDescriptionText`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L112) | ✅ |
-| 更新時の`updatedAt` | 状態変更をflushすると、更新時刻が変更前より後になる | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L146) | ✅ |
-| 必須のタイトルと状態 | `title`または`status`を欠くTodoの保存がDB制約違反になる | [`rejectsMissingTodoTitle`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L178)、[`rejectsMissingTodoStatus`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L191) | ✅ |
-| タイトルの最大長 | 101文字のタイトルを保存するとDB制約違反になる | [`rejectsTitleExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L205) | ✅ |
+| 採番IDと作成時刻 | Todo保存時にDB採番IDと作成/更新時刻が設定される。Ownerの関連ID検証はタスク6で扱う | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L58) | ✅ |
+| 各フィールドとEnum文字列保存 | Todoのタイトル、任意の説明、状態を保存・再取得でき、各Enum名を文字列としてDBに保存する | [`reloadsAllTodoFieldsAndEnumAsItsStringValue`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L204)、[`persistsAllStatusesByTheirEnumNames`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L263) | ✅ |
+| 長い説明文 | `description`に長文を保存できる | [`allowsLongDescriptionText`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L246) | ✅ |
+| 更新時の`updatedAt` | 状態変更をflushすると、更新時刻が変更前より後になる | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L283) | ✅ |
+| 必須のタイトルと状態 | `title`または`status`を欠くTodoの保存がDB制約違反になる | [`rejectsMissingTodoTitle`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L317)、[`rejectsMissingTodoStatus`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L330) | ✅ |
+| タイトルの最大長 | 101文字のタイトルを保存するとDB制約違反になる | [`rejectsTitleExceedingMaximumLength`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L344) | ✅ |
 
 ### タスク2-6: TodoとUserのリレーション
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 必須Ownerと関連ID | 保存前にUserを永続化し、Todoの関連がそのUser IDを参照することを確認する。OwnerがnullのTodoはDB制約で拒否される。所有者別検索や認可はこのRepositoryテストでは検証しない | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L51)、[`rejectsMissingTodoOwner`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L166) | ✅ |
-| 遅延ロード | DBから再取得した直後はTodoのuser関連が未ロードであり、userNameへのアクセス時に関連を利用できる | [`keepsUserAssociationLazyUntilAccessed`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L92) | ✅ |
-| 外部キーと削除制約 | todos.user_idの外部キーが存在し、参照中Userの削除がDB制約で拒否される。テストはTodo行数の事後確認までは行わない | [`doesNotDeleteTodosWhenTheirUserIsDeleted`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L221) | ✅ |
+| 必須Ownerと関連ID | 保存前にUserを永続化し、Todoの関連がそのUser IDを参照することを確認する。OwnerがnullのTodoはDB制約で拒否される。所有者別検索や認可はこのRepositoryテストでは検証しない | [`savesTodoWithGeneratedIdAndRequiredUser`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L58)、[`rejectsMissingTodoOwner`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L305) | ✅ |
+| 遅延ロード | DBから再取得した直後はTodoのuser関連が未ロードであり、userNameへのアクセス時に関連を利用できる | [`keepsUserAssociationLazyUntilAccessed`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L226) | ✅ |
+| 外部キーと削除制約 | todos.user_idの外部キーが存在し、参照中Userの削除がDB制約で拒否される。テストはTodo行数の事後確認までは行わない | [`doesNotDeleteTodosWhenTheirUserIsDeleted`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L360) | ✅ |
 
 ### タスク2-7: Section 2全体のテストと設計照合
 
@@ -92,8 +92,8 @@ MockitoでRepositoryを置き換え、TodoServiceの作成処理を検証する�
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者・内容・初期状態を指定したTodo作成 | `ownerId`から取得したUser、指定したタイトルと説明、初期状態`PENDING`を持つTodoがTodoRepositoryへ保存され、保存結果がServiceから返る | [`createsTodoForOwnerWithPendingStatus`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L54) | ✅ |
-| 存在しない所有者での作成 | UserRepositoryに所有者が見つからない場合、`UserNotFoundException`で失敗し、TodoRepositoryへ保存要求を行わない | [`throwsUserNotFoundExceptionWhenCreatingTodoForUnknownOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L79) | ✅ |
+| 所有者・内容・初期状態を指定したTodo作成 | `ownerId`から取得したUser、指定したタイトルと説明、初期状態`PENDING`を持つTodoがTodoRepositoryへ保存され、保存結果がServiceから返る | [`createsTodoForOwnerWithPendingStatus`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L67) | ✅ |
+| 存在しない所有者での作成 | UserRepositoryに所有者が見つからない場合、`UserNotFoundException`で失敗し、TodoRepositoryへ保存要求を行わない | [`throwsUserNotFoundExceptionWhenCreatingTodoForUnknownOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L92) | ✅ |
 
 ### タスク3-3: 所有者を指定したTodoのID検索
 
@@ -101,9 +101,9 @@ ServiceはTodo IDと所有者IDを受け取り、所有者条件付きのReposit
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者に属するTodoの検索 | 指定したTodo IDと所有者IDに一致するTodoが返る | [`findsTodoByIdForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L95) | ✅ |
-| 不存在・別所有者のTodo検索 | Repository検索が空なら`TodoNotFoundException`となる。対象が存在しない場合と別所有者の場合を同一の結果として扱う | [`throwsTodoNotFoundExceptionWhenTodoIsNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L114) | ✅ |
-| Repositoryの所有者条件 | PostgreSQL上で所有者本人のTodoはIDと所有者IDの組み合わせで検索でき、同じTodo IDを別所有者IDで検索すると結果が空になる | [`findsTodoByIdOnlyForItsOwner`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L68) | ✅ |
+| 所有者に属するTodoの検索 | 指定したTodo IDと所有者IDに一致するTodoが返る | [`findsTodoByIdForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L108) | ✅ |
+| 不存在・別所有者のTodo検索 | Repository検索が空なら`TodoNotFoundException`となる。対象が存在しない場合と別所有者の場合を同一の結果として扱う | [`throwsTodoNotFoundExceptionWhenTodoIsNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L127) | ✅ |
+| Repositoryの所有者条件 | PostgreSQL上で所有者本人のTodoはIDと所有者IDの組み合わせで検索でき、同じTodo IDを別所有者IDで検索すると結果が空になる | [`findsTodoByIdOnlyForItsOwner`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L95) | ✅ |
 
 ### タスク3-4: 所有者別Todo一覧
 
@@ -111,9 +111,9 @@ Serviceは所有者IDをRepositoryへ渡して一覧取得を委譲する。0件
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | [`findsTodosForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L132) | ✅ |
-| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | [`returnsEmptyListWhenOwnerHasNoTodos`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L152) | ✅ |
-| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | [`findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L89) | ✅ |
+| 所有者別一覧の取得 | Serviceが所有者IDをRepositoryへ渡し、返された一覧を返す | [`findsTodosForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L144) | ✅ |
+| 該当Todoがない一覧 | Repositoryが空の結果を返す場合、Serviceも空リストを返す | [`returnsEmptyListWhenOwnerHasNoTodos`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L164) | ✅ |
+| Repositoryの所有者条件と順序 | PostgreSQL上で指定所有者のTodoのみを返し、`updated_at`降順、同時刻ではID降順になる | [`findsTodosByOwnerOrderedByUpdatedAtAndIdDescending`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L115) | ✅ |
 
 ### タスク3-5: Todo更新
 
@@ -121,8 +121,8 @@ Serviceは所有者条件付きでTodoを取得し、タイトル・説明・状
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者本人のTodo更新 | タイトル・説明・状態のすべてが変更され、更新後のTodoが返る | [`updatesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L166) | ✅ |
-| 不存在・別所有者のTodo更新 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Entityの変更操作は行われない | [`throwsTodoNotFoundExceptionWhenUpdatingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L188) | ✅ |
+| 所有者本人のTodo更新 | タイトル・説明・状態のすべてが変更され、更新後のTodoが返る | [`updatesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L198) | ✅ |
+| 不存在・別所有者のTodo更新 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Entityの変更操作は行われない | [`throwsTodoNotFoundExceptionWhenUpdatingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L220) | ✅ |
 
 ### タスク3-6: Todo削除
 
@@ -130,8 +130,8 @@ Serviceは所有者条件付きでTodoを取得してから削除する。不存
 
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
-| 所有者本人のTodo削除 | 所有者条件付きで取得したTodoがRepositoryへ削除依頼され、Serviceは正常終了する | [`deletesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L215) | ✅ |
-| 不存在・別所有者のTodo削除 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Repositoryへ削除依頼しない | [`throwsTodoNotFoundExceptionWhenDeletingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L233) | ✅ |
+| 所有者本人のTodo削除 | 所有者条件付きで取得したTodoがRepositoryへ削除依頼され、Serviceは正常終了する | [`deletesTodoForOwner`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L239) | ✅ |
+| 不存在・別所有者のTodo削除 | 所有者条件付き検索が空の場合は`TodoNotFoundException`となり、Repositoryへ削除依頼しない | [`throwsTodoNotFoundExceptionWhenDeletingTodoNotOwnedByUser`](../src/test/java/com/github/ok200ok/api_todo/service/TodoServiceTests.java#L257) | ✅ |
 
 ## Section 4: API層（`Controller`）と `OpenAPI`
 
@@ -142,9 +142,9 @@ UserとTodoの`createdAt`／`updatedAt`を`Instant`で扱い、PostgreSQLの`tim
 | 観点 | 期待する結果・確認目的 | テスト | 状態 |
 | --- | --- | --- | --- |
 | Userの作成・更新日時の永続化 | Userの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsUserTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L77) | ✅ |
-| Todoの作成・更新日時の永続化 | Todoの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsTodoTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L71) | ✅ |
+| Todoの作成・更新日時の永続化 | Todoの`createdAt`と`updatedAt`が設定され、DBから再読込した値が保存前の`Instant`と1マイクロ秒以内で一致する。PostgreSQLの両カラムが`timestamptz`であることも確認する | [`persistsTodoTimestampsAsInstantsInPostgres`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L73) | ✅ |
 | User更新時の日時 | User更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenUserChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/UserRepositoryTests.java#L248) | ✅ |
-| Todo更新時の日時 | Todo更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L227) | ✅ |
+| Todo更新時の日時 | Todo更新時に`updatedAt`が更新前より後になり、`createdAt`は変化しない | [`updatesUpdatedAtWhenTodoChanges`](../src/test/java/com/github/ok200ok/api_todo/repository/TodoRepositoryTests.java#L283) | ✅ |
 
 ### タスク4-3: Todo一覧のDBページネーション
 
