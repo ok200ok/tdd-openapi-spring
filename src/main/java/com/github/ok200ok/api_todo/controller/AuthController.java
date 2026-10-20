@@ -7,8 +7,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.ok200ok.api_todo.dto.LoginRequest;
 import com.github.ok200ok.api_todo.dto.RegisterRequest;
 import com.github.ok200ok.api_todo.dto.RegisterResponse;
+import com.github.ok200ok.api_todo.dto.TokenResponse;
 import com.github.ok200ok.api_todo.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -47,5 +49,23 @@ public class AuthController {
 				TOKEN_TYPE,
 				result.expiresInSeconds());
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
+
+	/**
+	 * ログイン要求を受け取り、認証成功時のaccess tokenを返す
+	 *
+	 * @param request ログインに使用するユーザー名・パスワード
+	 * @return access tokenと有効期間を含む200 OK
+	 */
+	@PostMapping("/login")
+	public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
+		// 資格情報の検証はAuthServiceへ委譲し、ControllerはHTTP入出力の変換だけを担う
+		AuthService.LoginResult result = authService.login(
+				request.userName(), request.password());
+		TokenResponse response = new TokenResponse(
+				result.accessToken(),
+				TOKEN_TYPE,
+				result.expiresInSeconds());
+		return ResponseEntity.ok(response);
 	}
 }
