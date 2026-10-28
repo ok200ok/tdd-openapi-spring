@@ -49,6 +49,12 @@ open build/docs/javadoc/index.html
 
 Windowsの場合は `.\gradlew.bat javadoc` 
 
+## 🏗 アーキテクチャ図解
+
+レイヤー構成、認証・認可フロー、データモデルをMermaidで図解しています。実装を読む前の全体像把握や、設計判断の理由の確認に利用してください。
+
+- [アーキテクチャ図解（`docs/architecture.md`）](docs/architecture.md)
+
 ## 🗺 開発ロードマップ
 
 ### タスクの進め方
