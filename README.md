@@ -1,7 +1,8 @@
 # テスト駆動開発による `OpenAPI` 実装
 
-<img src="docs/images/openapi-sample.png" alt="SwaggerUIの画面" width="720">
-<img src="docs/images/javadoc-sample.png" alt="Javadocの画面" width="720">
+<img src="docs/images/openapi-sample.png" alt="SwaggerUIの画面スクリーンショット3つを結合した画像" width="720">
+<img src="docs/images/diagrams-sample.png" alt="システム全体フロー図、主要クラス・Beanフロー図、認証シーケンス図3つのMermaid図を結合した画像" width="720">
+<img src="docs/images/javadoc-sample.png" alt="Javadocの画面スクリーンショット2つを結合した画像" width="720">
 
 ## 🎯 学習目標
 
@@ -30,13 +31,24 @@
 - **AIエージェント**: `OpenCode`, `Github Copilot`
 - **その他**: Springモジュール（`Lombok`, `SpringBootDevTools`, `Validation`）
 
+## 📖 各種ドキュメント
+
+設計・テストの方針と仕様を `docs/` 配下にまとめています。実装の詳細に入る前に、目的に応じて参照してください。
+
+- [アーキテクチャ図解](docs/architecture.md): システム全体像・レイヤー構成・認証フロー・ER図をMermaidで図解し、設計判断の理由を説明
+- [API設計仕様](docs/api-design.md): 公開するパス、HTTPメソッド、ステータス、ページネーション、エラー形式を定義
+- [認証・認可設計仕様](docs/authentication-design.md): パスワードハッシュ、JWTの発行・検証、認可境界、失敗時の応答を定義
+- [データモデル設計仕様](docs/data-modeling.md): `users`・`todos` のテーブル定義、制約、リレーション、JPAマッピングを定義
+- [DTO・Validation設計仕様](docs/dto-validation.md): API入出力のDTO項目、入力制約、Problem Detailsのエラー拡張を定義
+- [テストケース一覧](docs/test-case-catalog.md): タスクごとに合意したテストケース、期待結果、検証レイヤー、実行状態を集約
+
 ## 📚 Javadocドキュメント
 
 ソース内のJavadocからクラスやメソッドの仕様文書を生成
 
 ### 🌐 公開サイト（GitHub Pages）
 
-`main` ブランチへマージするたびに `.github/workflows/javadoc-pages.yaml` がJavadocをビルドしてGitHub Pagesへ自動デプロイします。
+`main` ブランチへマージするたびに `.github/workflows/javadoc.yaml` がJavadocをビルドしてGitHub Pagesへ自動デプロイします。
 
 - **公開URL**: https://ok200ok.github.io/tdd-openapi-spring/
 
@@ -48,12 +60,6 @@ open build/docs/javadoc/index.html
 ```
 
 Windowsの場合は `.\gradlew.bat javadoc` 
-
-## 🏗 アーキテクチャ図解
-
-レイヤー構成、認証・認可フロー、データモデルをMermaidで図解しています。実装を読む前の全体像把握や、設計判断の理由の確認に利用してください。
-
-- [アーキテクチャ図解（`docs/architecture.md`）](docs/architecture.md)
 
 ## 🗺 開発ロードマップ
 
@@ -167,3 +173,12 @@ miseをシェルで有効化済みなら、`mise exec --`を省略できるの�
 ```
 
 いずれもGradle Wrapperがプロジェクト指定のGradleを使用します。
+
+### 📘 Swagger UI
+
+アプリ起動後、ブラウザーで以下へアクセスすると、ControllerとDTOから生成されたOpenAPI仕様を確認できます。Swagger UI上からAPIを試すこともできます。
+
+- **Swagger UI**: http://localhost:8080/swagger-ui.html （`/swagger-ui/index.html`へリダイレクト）
+- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+
+登録・ログインAPIは認証なしで実行できます。Todo APIはBearer JWTが必要なため、ログインで取得したaccess tokenをSwagger UIの`Authorize`へ設定してから実行してください。
