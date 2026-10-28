@@ -1,5 +1,8 @@
 # テスト駆動開発による `OpenAPI` 実装
 
+<img src="docs/images/openapi-sample.png" alt="SwaggerUIの画面" width="720">
+<img src="docs/images/javadoc-sample.png" alt="Javadocの画面" width="720">
+
 ## 🎯 学習目標
 
 **プロジェクトの目的**：実践を通して以下のスキルや知識を習得する
